@@ -18,10 +18,13 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const message_entity_1 = require("./entities/message.entity");
 const pagination_dto_1 = require("../common/dto/pagination.dto");
+const mail_service_1 = require("../mail/mail.service");
 let MessagesService = class MessagesService {
     repo;
-    constructor(repo) {
+    mailService;
+    constructor(repo, mailService) {
         this.repo = repo;
+        this.mailService = mailService;
     }
     async findAll(paginationDto) {
         const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
@@ -58,7 +61,19 @@ let MessagesService = class MessagesService {
     }
     async create(dto) {
         const item = this.repo.create(dto);
-        return this.repo.save(item);
+        const saved = await this.repo.save(item);
+        try {
+            await this.mailService.sendMail({
+                from: process.env.SMTP_FROM || process.env.SMTP_USER,
+                to: saved.email,
+                subject: 'Accusé de réception - ESSG',
+                text: `Bonjour ${saved.prenom} ${saved.nom},\n\nNous avons bien reçu votre message concernant : ${saved.sujet}.\n\nNous vous répondrons dans les plus brefs délais.\n\nCordialement,\nL'équipe ESSG`,
+            });
+        }
+        catch (error) {
+            console.error('Erreur lors de l\'envoi de l\'accusé de réception', error);
+        }
+        return saved;
     }
     async update(id, dto) {
         await this.repo.update(id, dto);
@@ -72,6 +87,7 @@ exports.MessagesService = MessagesService;
 exports.MessagesService = MessagesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(message_entity_1.Message)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        mail_service_1.MailService])
 ], MessagesService);
 //# sourceMappingURL=messages.service.js.map

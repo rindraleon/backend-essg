@@ -7,12 +7,14 @@ import {
   PaginationDto,
   PaginationResponse,
 } from '../common/dto/pagination.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class MessagesService {
   constructor(
     @InjectRepository(Message)
     private readonly repo: Repository<Message>,
+    private readonly mailService: MailService,
   ) {}
 
   async findAll(
@@ -63,7 +65,20 @@ export class MessagesService {
 
   async create(dto: CreateMessageDto): Promise<Message> {
     const item = this.repo.create(dto);
-    return this.repo.save(item);
+    const saved = await this.repo.save(item);
+
+    try {
+      await this.mailService.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to: saved.email,
+        subject: 'Accusé de réception - ESSG',
+        text: `Bonjour ${saved.prenom} ${saved.nom},\n\nNous avons bien reçu votre message concernant : ${saved.sujet}.\n\nNous vous répondrons dans les plus brefs délais.\n\nCordialement,\nL'équipe ESSG`,
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de l\'accusé de réception', error);
+    }
+
+    return saved;
   }
 
   async update(id: number, dto: UpdateMessageDto): Promise<Message> {

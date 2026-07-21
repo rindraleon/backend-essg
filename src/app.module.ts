@@ -13,6 +13,7 @@ import { NewsModule } from './news/news.module';
 import { UploadModule } from './upload/upload.module';
 import { RessourcesHumainesModule } from './ressources-humaines/ressources-humaines.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     RessourcesHumainesModule,
     UploadModule,
     DashboardModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

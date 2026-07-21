@@ -34,7 +34,6 @@ export class MessagesController {
     return this.service.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() dto: CreateMessageDto) {
     return this.service.create(dto);

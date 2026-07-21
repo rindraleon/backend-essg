@@ -22,6 +22,7 @@ const news_module_1 = require("./news/news.module");
 const upload_module_1 = require("./upload/upload.module");
 const ressources_humaines_module_1 = require("./ressources-humaines/ressources-humaines.module");
 const dashboard_module_1 = require("./dashboard/dashboard.module");
+const mail_module_1 = require("./mail/mail.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -42,6 +43,7 @@ exports.AppModule = AppModule = __decorate([
             ressources_humaines_module_1.RessourcesHumainesModule,
             upload_module_1.UploadModule,
             dashboard_module_1.DashboardModule,
+            mail_module_1.MailModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

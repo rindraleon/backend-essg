@@ -2,9 +2,11 @@ import { Repository } from 'typeorm';
 import { Message } from './entities/message.entity';
 import { CreateMessageDto, UpdateMessageDto } from './dto/create-message.dto';
 import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
+import { MailService } from '../mail/mail.service';
 export declare class MessagesService {
     private readonly repo;
-    constructor(repo: Repository<Message>);
+    private readonly mailService;
+    constructor(repo: Repository<Message>, mailService: MailService);
     findAll(paginationDto: PaginationDto): Promise<PaginationResponse<Message>>;
     search(query: string, paginationDto: PaginationDto): Promise<PaginationResponse<Message>>;
     findOne(id: number): Promise<Message>;
