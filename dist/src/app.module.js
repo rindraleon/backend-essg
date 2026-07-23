@@ -23,6 +23,7 @@ const upload_module_1 = require("./upload/upload.module");
 const ressources_humaines_module_1 = require("./ressources-humaines/ressources-humaines.module");
 const dashboard_module_1 = require("./dashboard/dashboard.module");
 const mail_module_1 = require("./mail/mail.module");
+const admissions_module_1 = require("./admissions/admissions.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -44,6 +45,7 @@ exports.AppModule = AppModule = __decorate([
             upload_module_1.UploadModule,
             dashboard_module_1.DashboardModule,
             mail_module_1.MailModule,
+            admissions_module_1.AdmissionsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

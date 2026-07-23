@@ -6,23 +6,22 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UsersModule = void 0;
+exports.AdmissionsModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
-const users_controller_1 = require("./users.controller");
-const users_service_1 = require("./users.service");
-const user_entity_1 = require("./entities/user.entity");
-const upload_module_1 = require("../upload/upload.module");
+const admissions_service_1 = require("./admissions.service");
+const admissions_controller_1 = require("./admissions.controller");
+const admission_entity_1 = require("./entities/admission.entity");
 const mail_module_1 = require("../mail/mail.module");
-let UsersModule = class UsersModule {
+let AdmissionsModule = class AdmissionsModule {
 };
-exports.UsersModule = UsersModule;
-exports.UsersModule = UsersModule = __decorate([
+exports.AdmissionsModule = AdmissionsModule;
+exports.AdmissionsModule = AdmissionsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.Utilisateur]), upload_module_1.UploadModule, mail_module_1.MailModule],
-        controllers: [users_controller_1.UsersController],
-        providers: [users_service_1.UsersService],
-        exports: [users_service_1.UsersService, typeorm_1.TypeOrmModule],
+        imports: [typeorm_1.TypeOrmModule.forFeature([admission_entity_1.Admission]), mail_module_1.MailModule],
+        controllers: [admissions_controller_1.AdmissionsController],
+        providers: [admissions_service_1.AdmissionsService],
+        exports: [admissions_service_1.AdmissionsService],
     })
-], UsersModule);
-//# sourceMappingURL=users.module.js.map
+], AdmissionsModule);
+//# sourceMappingURL=admissions.module.js.map

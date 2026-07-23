@@ -1,4 +1,5 @@
 import { Repository } from 'typeorm';
+import { MailService } from '../mail/mail.service';
 import { Utilisateur } from './entities/user.entity';
 import { CreateUtilisateurDto } from './dto/create-user.dto';
 import { UpdateUtilisateurDto } from './dto/update-user.dto';
@@ -6,7 +7,9 @@ import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto'
 type SanitizedUtilisateur = Omit<Utilisateur, 'motDePasse'>;
 export declare class UsersService {
     private readonly repo;
-    constructor(repo: Repository<Utilisateur>);
+    private readonly mailService;
+    private readonly logger;
+    constructor(repo: Repository<Utilisateur>, mailService: MailService);
     private sanitizeUser;
     findAll(paginationDto: PaginationDto): Promise<PaginationResponse<SanitizedUtilisateur>>;
     search(query: string, paginationDto: PaginationDto): Promise<PaginationResponse<SanitizedUtilisateur>>;

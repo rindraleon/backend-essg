@@ -44,18 +44,23 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var UsersService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bcrypt = __importStar(require("bcrypt"));
+const mail_service_1 = require("../mail/mail.service");
 const user_entity_1 = require("./entities/user.entity");
 const pagination_dto_1 = require("../common/dto/pagination.dto");
-let UsersService = class UsersService {
+let UsersService = UsersService_1 = class UsersService {
     repo;
-    constructor(repo) {
+    mailService;
+    logger = new common_1.Logger(UsersService_1.name);
+    constructor(repo, mailService) {
         this.repo = repo;
+        this.mailService = mailService;
     }
     sanitizeUser = (user) => {
         const { motDePasse, ...rest } = user;
@@ -104,9 +109,18 @@ let UsersService = class UsersService {
         const existing = await this.findByEmail(dto.email);
         if (existing)
             throw new common_1.ConflictException('Cet email existe déjà');
-        const hashedPassword = await bcrypt.hash(dto.motDePasse, 10);
+        const plainPassword = dto.motDePasse;
+        const hashedPassword = await bcrypt.hash(plainPassword, 10);
         const user = this.repo.create({ ...dto, motDePasse: hashedPassword });
         const saved = await this.repo.save(user);
+        try {
+            const siteUrl = process.env.APP_URL || 'http://localhost:3000';
+            await this.mailService.sendWelcomeEmail(saved.email, saved.nom, saved.prenom, plainPassword, siteUrl);
+            this.logger.log(`Welcome email sent to ${saved.email}`);
+        }
+        catch (error) {
+            this.logger.error(`Failed to send welcome email to ${saved.email}`, error);
+        }
         return this.sanitizeUser(saved);
     }
     async update(id, dto) {
@@ -125,9 +139,10 @@ let UsersService = class UsersService {
     }
 };
 exports.UsersService = UsersService;
-exports.UsersService = UsersService = __decorate([
+exports.UsersService = UsersService = UsersService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.Utilisateur)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        mail_service_1.MailService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

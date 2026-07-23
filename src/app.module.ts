@@ -14,6 +14,7 @@ import { UploadModule } from './upload/upload.module';
 import { RessourcesHumainesModule } from './ressources-humaines/ressources-humaines.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { MailModule } from './mail/mail.module';
+import { AdmissionsModule } from './admissions/admissions.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { MailModule } from './mail/mail.module';
     UploadModule,
     DashboardModule,
     MailModule,
+    AdmissionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
