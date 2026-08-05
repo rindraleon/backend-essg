@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -11,10 +6,7 @@ import { MailService } from '../mail/mail.service';
 import { Utilisateur } from './entities/user.entity';
 import { CreateUtilisateurDto } from './dto/create-user.dto';
 import { UpdateUtilisateurDto } from './dto/update-user.dto';
-import {
-  PaginationDto,
-  PaginationResponse,
-} from '../common/dto/pagination.dto';
+import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
 
 type SanitizedUtilisateur = Omit<Utilisateur, 'motDePasse'>;
 
@@ -34,9 +26,7 @@ export class UsersService {
     return rest as SanitizedUtilisateur;
   };
 
-  async findAll(
-    paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<SanitizedUtilisateur>> {
+  async findAll(paginationDto: PaginationDto): Promise<PaginationResponse<SanitizedUtilisateur>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -114,10 +104,7 @@ export class UsersService {
     return this.sanitizeUser(saved);
   }
 
-  async update(
-    id: number,
-    dto: UpdateUtilisateurDto,
-  ): Promise<SanitizedUtilisateur> {
+  async update(id: number, dto: UpdateUtilisateurDto): Promise<SanitizedUtilisateur> {
     if (dto.motDePasse) {
       dto.motDePasse = await bcrypt.hash(dto.motDePasse, 10);
     }

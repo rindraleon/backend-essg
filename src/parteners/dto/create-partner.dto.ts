@@ -4,12 +4,7 @@ export class CreatePartenaireDto {
   @IsString()
   nom: string = '';
 
-  @IsIn([
-    'Entreprise',
-    'Institution',
-    'Organisation',
-    'Autre',
-  ])
+  @IsIn(['Entreprise', 'Institution', 'Organisation', 'Autre'])
   type: 'Entreprise' | 'Institution' | 'Organisation' | 'Autre' = 'Entreprise';
 
   @IsString()

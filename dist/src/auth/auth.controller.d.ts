@@ -12,21 +12,21 @@ export declare class AuthController {
             userId: number;
             email: string;
         };
-    }): Promise<{
+    }): {
         valid: boolean;
         user: {
             userId: number;
             email: string;
         };
-    }>;
+    };
     me(req: {
         user: {
             userId: number;
             email: string;
         };
-    }): Promise<{
+    }): {
         userId: number;
         email: string;
-    }>;
+    };
 }
 export {};

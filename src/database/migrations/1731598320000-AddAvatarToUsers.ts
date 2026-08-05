@@ -11,7 +11,7 @@ export class AddAvatarToUsers1731598320000 implements MigrationInterface {
         type: 'varchar',
         length: '255',
         isNullable: true,
-      })
+      }),
     );
   }
 

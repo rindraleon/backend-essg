@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
+import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { RessourceHumaine } from './entities/ressource-humaine.entity';
-import { CreateRessourceHumaineDto, UpdateRessourceHumaineDto } from './dto/create-ressource-humaine.dto';
 import {
-  PaginationDto,
-  PaginationResponse,
-} from '../common/dto/pagination.dto';
+  CreateRessourceHumaineDto,
+  UpdateRessourceHumaineDto,
+} from './dto/create-ressource-humaine.dto';
+import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
 
 function generateSlug(nom: string, prenom: string): string {
   return `${nom}-${prenom}`
@@ -24,9 +25,7 @@ export class RessourcesHumainesService {
     private readonly repo: Repository<RessourceHumaine>,
   ) {}
 
-  async findAll(
-    paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<RessourceHumaine>> {
+  async findAll(paginationDto: PaginationDto): Promise<PaginationResponse<RessourceHumaine>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -71,7 +70,7 @@ export class RessourcesHumainesService {
         .where('ressource.actif = :actif', { actif: true })
         .andWhere(
           '(ressource.nom ILIKE :search OR ressource.prenom ILIKE :search OR ressource.poste ILIKE :search)',
-          { search: searchTerm }
+          { search: searchTerm },
         )
         .orderBy(sortBy ? `ressource.${sortBy}` : 'ressource.ordre', sortOrder)
         .skip(skip)
@@ -109,7 +108,7 @@ export class RessourcesHumainesService {
   }
 
   async update(id: number, dto: UpdateRessourceHumaineDto): Promise<RessourceHumaine> {
-    const updateData: any = { ...dto };
+    const updateData: QueryDeepPartialEntity<RessourceHumaine> = { ...dto };
 
     if (dto.nom || dto.prenom) {
       const current = await this.findOne(id);

@@ -3,10 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { Projet } from './entities/project.entity';
 import { CreateProjetDto, UpdateProjetDto } from './dto/create-project.dto';
-import {
-  PaginationDto,
-  PaginationResponse,
-} from '../common/dto/pagination.dto';
+import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -15,9 +12,7 @@ export class ProjectsService {
     private readonly repo: Repository<Projet>,
   ) {}
 
-  async findAll(
-    paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<Projet>> {
+  async findAll(paginationDto: PaginationDto): Promise<PaginationResponse<Projet>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -30,10 +25,7 @@ export class ProjectsService {
     return new PaginationResponse(data, total, page, limit);
   }
 
-  async search(
-    query: string,
-    paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<Projet>> {
+  async search(query: string, paginationDto: PaginationDto): Promise<PaginationResponse<Projet>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -41,8 +33,7 @@ export class ProjectsService {
 
     if (query) {
       whereCondition.titre = query as FindOptionsWhere<Projet>['titre'];
-      whereCondition.description =
-        query as FindOptionsWhere<Projet>['description'];
+      whereCondition.description = query as FindOptionsWhere<Projet>['description'];
     }
 
     const [data, total] = await this.repo.findAndCount({

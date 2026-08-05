@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Admission, AdmissionStatus } from './entities/admission.entity';
@@ -30,7 +30,7 @@ export class AdmissionsService {
         process.env.APP_URL || 'http://localhost:3000',
       );
     } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'accusé de réception', error);
+      console.error("Erreur lors de l'envoi de l'accusé de réception", error);
     }
 
     return saved;
@@ -52,7 +52,7 @@ export class AdmissionsService {
 
   async updateStatus(id: number, updateStatusDto: UpdateAdmissionStatusDto): Promise<Admission> {
     const admission = await this.findOne(id);
-    
+
     admission.statut = updateStatusDto.statut;
     admission.commentaire = updateStatusDto.commentaire || admission.commentaire;
 

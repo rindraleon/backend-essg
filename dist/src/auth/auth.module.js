@@ -25,12 +25,15 @@ exports.AuthModule = AuthModule = __decorate([
             passport_1.PassportModule.register({ defaultStrategy: 'jwt' }),
             jwt_1.JwtModule.registerAsync({
                 inject: [config_1.ConfigService],
-                useFactory: (config) => ({
-                    secret: config.get('JWT_SECRET', 'essg-default-secret-key-change-in-production'),
-                    signOptions: {
-                        expiresIn: config.get('JWT_EXPIRATION', '24h'),
-                    },
-                }),
+                useFactory: (config) => {
+                    const expiresIn = config.get('JWT_EXPIRATION') ?? '24h';
+                    return {
+                        secret: config.get('JWT_SECRET', 'essg-default-secret-key-change-in-production'),
+                        signOptions: {
+                            expiresIn,
+                        },
+                    };
+                },
             }),
         ],
         controllers: [auth_controller_1.AuthController],

@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsOptional, IsBoolean, IsEnum, IsDateString } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsEnum, IsDateString } from 'class-validator';
 import { AdmissionStatus } from '../entities/admission.entity';
 
 export class CreateAdmissionDto {

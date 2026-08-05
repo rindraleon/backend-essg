@@ -1,4 +1,14 @@
-import { IsString, IsOptional, IsBoolean, IsInt, IsEmail, MinLength, MaxLength, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  IsEmail,
+  MinLength,
+  MaxLength,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateRessourceHumaineDto {

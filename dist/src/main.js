@@ -40,6 +40,7 @@ const config_1 = require("@nestjs/config");
 const common_1 = require("@nestjs/common");
 const path_1 = require("path");
 const express = __importStar(require("express"));
+const fs = __importStar(require("node:fs"));
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const configService = app.get(config_1.ConfigService);
@@ -67,11 +68,16 @@ async function bootstrap() {
         .build();
     const document = swagger_1.SwaggerModule.createDocument(app, config);
     swagger_1.SwaggerModule.setup('docs', app, document);
-    app.use('/uploads', express.static((0, path_1.join)(process.cwd(), 'uploads')));
+    const uploadPath = configService.get('UPLOAD_PATH') || 'uploads';
+    if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+        console.log(`Created ${uploadPath} directory`);
+    }
+    app.use(`/${uploadPath}`, express.static((0, path_1.join)(process.cwd(), uploadPath)));
     const port = configService.get('APP_PORT') || 3000;
     await app.listen(port);
     console.debug(`Application is running on: http://localhost:${port}`);
     console.debug(`Documentation is running on: http://localhost:${port}/docs`);
 }
-bootstrap();
+void bootstrap();
 //# sourceMappingURL=main.js.map

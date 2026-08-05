@@ -5,16 +5,19 @@ import { Utilisateur } from '../users/entities/user.entity';
 import { Formation } from '../formations/entities/formation.entity';
 import { Actualite } from '../news/entities/news-item.entity';
 import { Projet } from '../projects/entities/project.entity';
+import { Partenaire } from '../parteners/entities/partner.entity';
+import { RessourceHumaine } from '../ressources-humaines/entities/ressource-humaine.entity';
+import { Admission } from '../admissions/entities/admission.entity';
 
 export interface DashboardStats {
   totalUsers: number;
   totalFormations: number;
   totalNews: number;
   totalProjects: number;
-  usersChange: string;
-  formationsChange: string;
-  newsChange: string;
-  projectsChange: string;
+  totalPartners: number;
+  totalAdmissions: number;
+  totalResources: number;
+  
 }
 
 export interface Activity {
@@ -41,14 +44,23 @@ export class DashboardService {
     private readonly newsRepository: Repository<Actualite>,
     @InjectRepository(Projet)
     private readonly projectRepository: Repository<Projet>,
+    @InjectRepository(Partenaire)
+    private readonly partnerRepository: Repository<Partenaire>,
+    @InjectRepository(Admission)
+    private readonly admissionRepository: Repository<Admission>,
+    @InjectRepository(RessourceHumaine)
+    private readonly resourceRepository: Repository<RessourceHumaine>,
   ) {}
 
   async getStats(): Promise<DashboardStats> {
-    const [totalUsers, totalFormations, totalNews, totalProjects] = await Promise.all([
+    const [totalUsers, totalFormations, totalNews, totalProjects, totalPartners, totalAdmissions, totalResources] = await Promise.all([
       this.userRepository.count(),
       this.formationRepository.count(),
       this.newsRepository.count(),
       this.projectRepository.count(),
+      this.partnerRepository.count(),
+      this.admissionRepository.count(),
+      this.resourceRepository.count(),
     ]);
 
     return {
@@ -56,10 +68,10 @@ export class DashboardService {
       totalFormations,
       totalNews,
       totalProjects,
-      usersChange: '+12%',
-      formationsChange: '+5%',
-      newsChange: '+8%',
-      projectsChange: '+3%',
+      totalPartners,
+      totalAdmissions,
+      totalResources,
+      
     };
   }
 
@@ -81,7 +93,7 @@ export class DashboardService {
     recentUsers.forEach((user) => {
       activities.push({
         id: user.id,
-        user: `${user.prenom} ${user.nom}`,
+        user: `${user.nom} ${user.prenom}`,
         action: "s'est inscrit sur la plateforme",
         time: this.formatTime(user.creeLe),
         type: 'user',

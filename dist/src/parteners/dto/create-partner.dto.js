@@ -27,12 +27,7 @@ __decorate([
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "nom", void 0);
 __decorate([
-    (0, class_validator_1.IsIn)([
-        'Entreprise',
-        'Institution',
-        'Organisation',
-        'Autre',
-    ]),
+    (0, class_validator_1.IsIn)(['Entreprise', 'Institution', 'Organisation', 'Autre']),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "type", void 0);
 __decorate([

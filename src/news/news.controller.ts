@@ -47,10 +47,7 @@ export class NewsController {
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateActualiteDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateActualiteDto) {
     return this.service.update(id, dto);
   }
 

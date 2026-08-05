@@ -11,10 +11,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { FormationsService } from './formations.service';
-import {
-  CreateFormationDto,
-  UpdateFormationDto,
-} from './dto/create-formation.dto';
+import { CreateFormationDto, UpdateFormationDto } from './dto/create-formation.dto';
 import { PaginationQueryDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
@@ -50,10 +47,7 @@ export class FormationsController {
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateFormationDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateFormationDto) {
     return this.service.update(id, dto);
   }
 

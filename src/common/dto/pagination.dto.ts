@@ -27,13 +27,13 @@ export class PaginationDto {
 // DTO pour accepter les paramètres de pagination depuis les query strings
 export class PaginationQueryDto {
   @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
+  @Transform(({ value }) => parseInt(String(value), 10))
   @IsInt()
   @Min(1)
   page?: number = 1;
 
   @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
+  @Transform(({ value }) => parseInt(String(value), 10))
   @IsInt()
   @Min(1)
   @Max(100)

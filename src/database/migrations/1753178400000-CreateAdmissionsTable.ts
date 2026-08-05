@@ -91,7 +91,7 @@ export class CreateAdmissionsTable1753178400000 implements MigrationInterface {
           },
         ],
       }),
-      true
+      true,
     );
 
     await queryRunner.createIndex(
@@ -99,7 +99,7 @@ export class CreateAdmissionsTable1753178400000 implements MigrationInterface {
       new TableIndex({
         name: 'IDX_ADMISSIONS_EMAIL',
         columnNames: ['email'],
-      })
+      }),
     );
 
     await queryRunner.createIndex(
@@ -107,7 +107,7 @@ export class CreateAdmissionsTable1753178400000 implements MigrationInterface {
       new TableIndex({
         name: 'IDX_ADMISSIONS_STATUT',
         columnNames: ['statut'],
-      })
+      }),
     );
 
     await queryRunner.createIndex(
@@ -115,7 +115,7 @@ export class CreateAdmissionsTable1753178400000 implements MigrationInterface {
       new TableIndex({
         name: 'IDX_ADMISSIONS_CREE_LE',
         columnNames: ['creeLe'],
-      })
+      }),
     );
   }
 

@@ -39,8 +39,7 @@ let PartnersService = class PartnersService {
         const whereCondition = {};
         if (query) {
             whereCondition.nom = query;
-            whereCondition.description =
-                query;
+            whereCondition.description = query;
         }
         const [data, total] = await this.repo.findAndCount({
             where: whereCondition,

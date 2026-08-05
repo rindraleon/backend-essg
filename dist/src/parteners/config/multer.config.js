@@ -14,18 +14,18 @@ const storage = (0, multer_1.diskStorage)({
         cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + (0, node_crypto_1.randomInt)(0, 1E9);
+        const uniqueSuffix = Date.now() + '-' + (0, node_crypto_1.randomInt)(0, 1e9);
         const ext = (0, path_1.extname)(file.originalname);
         cb(null, `logo-${uniqueSuffix}${ext}`);
     },
 });
-const fileFilter = (req, file, cb) => {
+const fileFilter = (_req, file, cb) => {
     const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (allowedMimes.includes(file.mimetype)) {
         cb(null, true);
     }
     else {
-        cb(new Error('Format d\'image non supporté. Utilisez JPG, PNG, GIF ou WebP.'), false);
+        cb(new Error('Unsupported image format. Use JPG, PNG, GIF, or WebP.'));
     }
 };
 exports.uploadConfig = {

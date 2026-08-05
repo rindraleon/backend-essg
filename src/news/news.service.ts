@@ -1,12 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
+import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { Actualite } from './entities/news-item.entity';
 import { CreateActualiteDto, UpdateActualiteDto } from './dto/create-news.dto';
-import {
-  PaginationDto,
-  PaginationResponse,
-} from '../common/dto/pagination.dto';
+import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
 
 function generateSlug(title: string): string {
   return title
@@ -24,9 +22,7 @@ export class NewsService {
     private readonly repo: Repository<Actualite>,
   ) {}
 
-  async findAll(
-    paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<Actualite>> {
+  async findAll(paginationDto: PaginationDto): Promise<PaginationResponse<Actualite>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -89,13 +85,13 @@ export class NewsService {
   }
 
   async update(id: number, dto: UpdateActualiteDto): Promise<Actualite> {
-    const updateData: any = { ...dto };
-    
+    const updateData: QueryDeepPartialEntity<Actualite> = { ...dto };
+
     // Si le titre est modifié, régénérer le slug
     if (dto.titre) {
       updateData.slug = generateSlug(dto.titre);
     }
-    
+
     // Fournir des valeurs par défaut pour les champs optionnels
     if (dto.resume !== undefined) {
       updateData.resume = dto.resume || '';
@@ -109,7 +105,7 @@ export class NewsService {
     if (dto.image !== undefined) {
       updateData.image = dto.image || '';
     }
-    
+
     await this.repo.update(id, updateData);
     return this.findOne(id);
   }

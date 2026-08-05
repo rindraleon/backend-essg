@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UnauthorizedException,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, UseGuards, Request } from '@nestjs/common';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -34,13 +27,13 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('verify')
-  async verify(@Request() req: { user: { userId: number; email: string } }) {
+  verify(@Request() req: { user: { userId: number; email: string } }) {
     return { valid: true, user: req.user };
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('me')
-  async me(@Request() req: { user: { userId: number; email: string } }) {
+  me(@Request() req: { user: { userId: number; email: string } }) {
     return req.user;
   }
 }

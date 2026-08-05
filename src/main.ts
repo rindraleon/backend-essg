@@ -5,17 +5,20 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
 import * as express from 'express';
+import * as fs from 'node:fs';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
   // Global validation pipe
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-    forbidNonWhitelisted: false,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: false,
+    }),
+  );
 
   // CORS configuration
   app.enableCors({
@@ -42,7 +45,15 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   // Servir les fichiers statiques (uploads)
-  app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
+  const uploadPath = configService.get<string>('UPLOAD_PATH') || 'uploads';
+
+  // Créer le dossier uploads s'il n'existe pas
+  if (!fs.existsSync(uploadPath)) {
+    fs.mkdirSync(uploadPath, { recursive: true });
+    console.log(`Created ${uploadPath} directory`);
+  }
+
+  app.use(`/${uploadPath}`, express.static(join(process.cwd(), uploadPath)));
 
   const port = configService.get<number>('APP_PORT') || 3000;
   await app.listen(port);
@@ -51,4 +62,4 @@ async function bootstrap() {
   console.debug(`Documentation is running on: http://localhost:${port}/docs`);
 }
 
-bootstrap();
+void bootstrap();

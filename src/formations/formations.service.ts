@@ -1,15 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Formation } from './entities/formation.entity';
-import {
-  CreateFormationDto,
-  UpdateFormationDto,
-} from './dto/create-formation.dto';
-import {
-  PaginationDto,
-  PaginationResponse,
-} from '../common/dto/pagination.dto';
+import { CreateFormationDto, UpdateFormationDto } from './dto/create-formation.dto';
+import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class FormationsService {
@@ -18,9 +12,7 @@ export class FormationsService {
     private readonly repo: Repository<Formation>,
   ) {}
 
-  async findAll(
-    paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<Formation>> {
+  async findAll(paginationDto: PaginationDto): Promise<PaginationResponse<Formation>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 

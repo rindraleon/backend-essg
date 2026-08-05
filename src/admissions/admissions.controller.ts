@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFiles,
+} from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { AdmissionsService } from './admissions.service';
 import { CreateAdmissionDto } from './dto/create-admission.dto';
@@ -39,7 +49,10 @@ export class AdmissionsController {
   }
 
   @Patch(':id/status')
-  updateStatus(@Param('id') id: string, @Body() updateAdmissionStatusDto: UpdateAdmissionStatusDto) {
+  updateStatus(
+    @Param('id') id: string,
+    @Body() updateAdmissionStatusDto: UpdateAdmissionStatusDto,
+  ) {
     return this.admissionsService.updateStatus(+id, updateAdmissionStatusDto);
   }
 

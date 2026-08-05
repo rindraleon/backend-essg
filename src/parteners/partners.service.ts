@@ -2,14 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { Partenaire } from './entities/partner.entity';
-import {
-  CreatePartenaireDto,
-  UpdatePartenaireDto,
-} from './dto/create-partner.dto';
-import {
-  PaginationDto,
-  PaginationResponse,
-} from '../common/dto/pagination.dto';
+import { CreatePartenaireDto, UpdatePartenaireDto } from './dto/create-partner.dto';
+import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class PartnersService {
@@ -18,9 +12,7 @@ export class PartnersService {
     private readonly repo: Repository<Partenaire>,
   ) {}
 
-  async findAll(
-    paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<Partenaire>> {
+  async findAll(paginationDto: PaginationDto): Promise<PaginationResponse<Partenaire>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -44,8 +36,7 @@ export class PartnersService {
 
     if (query) {
       whereCondition.nom = query as FindOptionsWhere<Partenaire>['nom'];
-      whereCondition.description =
-        query as FindOptionsWhere<Partenaire>['description'];
+      whereCondition.description = query as FindOptionsWhere<Partenaire>['description'];
     }
 
     const [data, total] = await this.repo.findAndCount({

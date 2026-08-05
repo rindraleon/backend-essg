@@ -13,10 +13,7 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { PartnersService } from './partners.service';
-import {
-  CreatePartenaireDto,
-  UpdatePartenaireDto,
-} from './dto/create-partner.dto';
+import { CreatePartenaireDto, UpdatePartenaireDto } from './dto/create-partner.dto';
 import { PaginationQueryDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -44,10 +41,7 @@ export class PartnersController {
   @UseGuards(JwtAuthGuard)
   @Post()
   @UseInterceptors(FileInterceptor('logo', uploadConfig))
-  create(
-    @Body() dto: CreatePartenaireDto,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
+  create(@Body() dto: CreatePartenaireDto, @UploadedFile() file: Express.Multer.File) {
     if (file) {
       dto.logo = `/uploads/images/${file.filename}`;
     }

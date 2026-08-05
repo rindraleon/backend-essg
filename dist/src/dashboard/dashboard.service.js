@@ -20,33 +20,44 @@ const user_entity_1 = require("../users/entities/user.entity");
 const formation_entity_1 = require("../formations/entities/formation.entity");
 const news_item_entity_1 = require("../news/entities/news-item.entity");
 const project_entity_1 = require("../projects/entities/project.entity");
+const partner_entity_1 = require("../parteners/entities/partner.entity");
+const ressource_humaine_entity_1 = require("../ressources-humaines/entities/ressource-humaine.entity");
+const admission_entity_1 = require("../admissions/entities/admission.entity");
 let DashboardService = class DashboardService {
     userRepository;
     formationRepository;
     newsRepository;
     projectRepository;
-    constructor(userRepository, formationRepository, newsRepository, projectRepository) {
+    partnerRepository;
+    admissionRepository;
+    resourceRepository;
+    constructor(userRepository, formationRepository, newsRepository, projectRepository, partnerRepository, admissionRepository, resourceRepository) {
         this.userRepository = userRepository;
         this.formationRepository = formationRepository;
         this.newsRepository = newsRepository;
         this.projectRepository = projectRepository;
+        this.partnerRepository = partnerRepository;
+        this.admissionRepository = admissionRepository;
+        this.resourceRepository = resourceRepository;
     }
     async getStats() {
-        const [totalUsers, totalFormations, totalNews, totalProjects] = await Promise.all([
+        const [totalUsers, totalFormations, totalNews, totalProjects, totalPartners, totalAdmissions, totalResources] = await Promise.all([
             this.userRepository.count(),
             this.formationRepository.count(),
             this.newsRepository.count(),
             this.projectRepository.count(),
+            this.partnerRepository.count(),
+            this.admissionRepository.count(),
+            this.resourceRepository.count(),
         ]);
         return {
             totalUsers,
             totalFormations,
             totalNews,
             totalProjects,
-            usersChange: '+12%',
-            formationsChange: '+5%',
-            newsChange: '+8%',
-            projectsChange: '+3%',
+            totalPartners,
+            totalAdmissions,
+            totalResources,
         };
     }
     async getRecentActivities() {
@@ -64,7 +75,7 @@ let DashboardService = class DashboardService {
         recentUsers.forEach((user) => {
             activities.push({
                 id: user.id,
-                user: `${user.prenom} ${user.nom}`,
+                user: `${user.nom} ${user.prenom}`,
                 action: "s'est inscrit sur la plateforme",
                 time: this.formatTime(user.creeLe),
                 type: 'user',
@@ -115,7 +126,13 @@ exports.DashboardService = DashboardService = __decorate([
     __param(1, (0, typeorm_1.InjectRepository)(formation_entity_1.Formation)),
     __param(2, (0, typeorm_1.InjectRepository)(news_item_entity_1.Actualite)),
     __param(3, (0, typeorm_1.InjectRepository)(project_entity_1.Projet)),
+    __param(4, (0, typeorm_1.InjectRepository)(partner_entity_1.Partenaire)),
+    __param(5, (0, typeorm_1.InjectRepository)(admission_entity_1.Admission)),
+    __param(6, (0, typeorm_1.InjectRepository)(ressource_humaine_entity_1.RessourceHumaine)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository])

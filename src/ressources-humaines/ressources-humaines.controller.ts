@@ -11,7 +11,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { RessourcesHumainesService } from './ressources-humaines.service';
-import { CreateRessourceHumaineDto, UpdateRessourceHumaineDto } from './dto/create-ressource-humaine.dto';
+import {
+  CreateRessourceHumaineDto,
+  UpdateRessourceHumaineDto,
+} from './dto/create-ressource-humaine.dto';
 import { PaginationQueryDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
@@ -42,10 +45,7 @@ export class RessourcesHumainesController {
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateRessourceHumaineDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateRessourceHumaineDto) {
     return this.service.update(id, dto);
   }
 

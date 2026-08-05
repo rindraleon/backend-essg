@@ -1,11 +1,4 @@
-import {
-  IsString,
-  IsArray,
-  IsBoolean,
-  IsOptional,
-  IsIn,
-  IsInt,
-} from 'class-validator';
+import { IsString, IsArray, IsBoolean, IsOptional, IsIn, IsInt } from 'class-validator';
 
 export class CreateFormationDto {
   @IsString()

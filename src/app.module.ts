@@ -20,6 +20,7 @@ import { AdmissionsModule } from './admissions/admissions.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
     DatabaseModule,
     UsersModule,

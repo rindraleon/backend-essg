@@ -1,10 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import nodemailer, {
+  type SendMailOptions,
+  type SentMessageInfo,
+  type Transporter,
+} from 'nodemailer';
+
+function formatRecipient(to: SendMailOptions['to']): string {
+  return JSON.stringify(to) ?? 'unknown recipient';
+}
 
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
-  private transporter: nodemailer.Transporter;
+  private readonly transporter: Transporter<SentMessageInfo>;
 
   constructor() {
     this.transporter = nodemailer.createTransport({
@@ -18,12 +26,17 @@ export class MailService {
     });
   }
 
-  async sendMail(options: nodemailer.SendMailOptions): Promise<void> {
+  async sendMail(options: SendMailOptions): Promise<void> {
+    const recipient = formatRecipient(options.to);
+
     try {
       await this.transporter.sendMail(options);
-      this.logger.log(`Email sent to ${options.to}`);
+      this.logger.log(`Email sent to ${recipient}`);
     } catch (error) {
-      this.logger.error(`Failed to send email to ${options.to}`, error);
+      this.logger.error(
+        `Failed to send email to ${recipient}`,
+        error instanceof Error ? error.stack : error,
+      );
       throw error;
     }
   }
@@ -36,7 +49,7 @@ export class MailService {
     siteUrl: string,
   ): Promise<void> {
     const subject = 'Accusé de réception - Candidature ESSG';
-    
+
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="fr">
@@ -160,7 +173,7 @@ export class MailService {
     siteUrl: string,
   ): Promise<void> {
     const subject = 'Bienvenue sur ESSG - Votre compte a été créé';
-    
+
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="fr">

@@ -53,14 +53,14 @@ class PaginationQueryDto {
 exports.PaginationQueryDto = PaginationQueryDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_transformer_1.Transform)(({ value }) => parseInt(value, 10)),
+    (0, class_transformer_1.Transform)(({ value }) => parseInt(String(value), 10)),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(1),
     __metadata("design:type", Number)
 ], PaginationQueryDto.prototype, "page", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_transformer_1.Transform)(({ value }) => parseInt(value, 10)),
+    (0, class_transformer_1.Transform)(({ value }) => parseInt(String(value), 10)),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(1),
     (0, class_validator_1.Max)(100),

@@ -2,6 +2,12 @@ import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
+interface RequestWithUser {
+  user?: {
+    role: string;
+  };
+}
+
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
@@ -16,16 +22,17 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const { user } = context.switchToHttp().getRequest();
-    
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
+    const user = request.user;
+
     if (!user || !user.role) {
       throw new ForbiddenException('Accès refusé');
     }
 
     const hasRole = requiredRoles.includes(user.role);
-    
+
     if (!hasRole) {
-      throw new ForbiddenException('Vous n\'avez pas les permissions nécessaires');
+      throw new ForbiddenException("Vous n'avez pas les permissions nécessaires");
     }
 
     return true;

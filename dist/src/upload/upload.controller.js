@@ -15,28 +15,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UploadController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
-const multer_1 = require("multer");
-const path_1 = require("path");
-const fs_1 = require("fs");
-const storage = (0, multer_1.diskStorage)({
-    destination: (req, file, cb) => {
-        const uploadDir = (0, path_1.join)(process.cwd(), 'uploads');
-        if (!(0, fs_1.existsSync)(uploadDir)) {
-            (0, fs_1.mkdirSync)(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, uniqueSuffix + (0, path_1.extname)(file.originalname));
-    },
-});
+const upload_service_1 = require("./upload.service");
+const multer_config_1 = require("../parteners/config/multer.config");
 let UploadController = class UploadController {
+    uploadService;
+    constructor(uploadService) {
+        this.uploadService = uploadService;
+    }
     uploadFile(file) {
         if (!file)
             throw new common_1.BadRequestException('No file uploaded');
         return {
-            url: `/uploads/${file.filename}`,
+            url: this.uploadService.getAvatarUrl(file.filename),
             filename: file.filename,
         };
     }
@@ -44,13 +34,14 @@ let UploadController = class UploadController {
 exports.UploadController = UploadController;
 __decorate([
     (0, common_1.Post)('image'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', { storage })),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', multer_config_1.uploadConfig)),
     __param(0, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], UploadController.prototype, "uploadFile", null);
 exports.UploadController = UploadController = __decorate([
-    (0, common_1.Controller)('upload')
+    (0, common_1.Controller)('upload'),
+    __metadata("design:paramtypes", [upload_service_1.UploadService])
 ], UploadController);
 //# sourceMappingURL=upload.controller.js.map

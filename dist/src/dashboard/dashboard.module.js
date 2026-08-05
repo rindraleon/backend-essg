@@ -15,14 +15,15 @@ const user_entity_1 = require("../users/entities/user.entity");
 const formation_entity_1 = require("../formations/entities/formation.entity");
 const news_item_entity_1 = require("../news/entities/news-item.entity");
 const project_entity_1 = require("../projects/entities/project.entity");
+const partner_entity_1 = require("../parteners/entities/partner.entity");
+const admission_entity_1 = require("../admissions/entities/admission.entity");
+const ressource_humaine_entity_1 = require("../ressources-humaines/entities/ressource-humaine.entity");
 let DashboardModule = class DashboardModule {
 };
 exports.DashboardModule = DashboardModule;
 exports.DashboardModule = DashboardModule = __decorate([
     (0, common_1.Module)({
-        imports: [
-            typeorm_1.TypeOrmModule.forFeature([user_entity_1.Utilisateur, formation_entity_1.Formation, news_item_entity_1.Actualite, project_entity_1.Projet]),
-        ],
+        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.Utilisateur, formation_entity_1.Formation, news_item_entity_1.Actualite, project_entity_1.Projet, partner_entity_1.Partenaire, admission_entity_1.Admission, ressource_humaine_entity_1.RessourceHumaine])],
         controllers: [dashboard_controller_1.DashboardController],
         providers: [dashboard_service_1.DashboardService],
         exports: [dashboard_service_1.DashboardService],

@@ -35,7 +35,7 @@ let AdmissionsService = class AdmissionsService {
             await this.mailService.sendAdmissionConfirmationEmail(saved.email, saved.nom, saved.prenom, saved.formation, process.env.APP_URL || 'http://localhost:3000');
         }
         catch (error) {
-            console.error('Erreur lors de l\'envoi de l\'accusé de réception', error);
+            console.error("Erreur lors de l'envoi de l'accusé de réception", error);
         }
         return saved;
     }

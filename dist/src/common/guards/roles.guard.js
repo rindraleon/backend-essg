@@ -26,13 +26,14 @@ let RolesGuard = class RolesGuard {
         if (!requiredRoles || requiredRoles.length === 0) {
             return true;
         }
-        const { user } = context.switchToHttp().getRequest();
+        const request = context.switchToHttp().getRequest();
+        const user = request.user;
         if (!user || !user.role) {
             throw new common_1.ForbiddenException('Accès refusé');
         }
         const hasRole = requiredRoles.includes(user.role);
         if (!hasRole) {
-            throw new common_1.ForbiddenException('Vous n\'avez pas les permissions nécessaires');
+            throw new common_1.ForbiddenException("Vous n'avez pas les permissions nécessaires");
         }
         return true;
     }

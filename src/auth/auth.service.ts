@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException, OnModuleInit } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -32,14 +28,8 @@ export class AuthService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    const adminEmail = this.configService.get<string>(
-      'ADMIN_EMAIL',
-      'admin@essg.sn',
-    );
-    const adminPassword = this.configService.get<string>(
-      'ADMIN_PASSWORD',
-      'Admin@2026',
-    );
+    const adminEmail = this.configService.get<string>('ADMIN_EMAIL', 'admin@essg.sn');
+    const adminPassword = this.configService.get<string>('ADMIN_PASSWORD', 'Admin@2026');
 
     const existingAdmin = await this.userRepo.findOne({
       where: { email: adminEmail },

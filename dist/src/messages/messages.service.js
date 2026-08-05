@@ -71,7 +71,7 @@ let MessagesService = class MessagesService {
             });
         }
         catch (error) {
-            console.error('Erreur lors de l\'envoi de l\'accusé de réception', error);
+            console.error("Erreur lors de l'envoi de l'accusé de réception", error);
         }
         return saved;
     }

@@ -43,10 +43,10 @@ let AuthController = class AuthController {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
     }
-    async verify(req) {
+    verify(req) {
         return { valid: true, user: req.user };
     }
-    async me(req) {
+    me(req) {
         return req.user;
     }
 };
@@ -64,7 +64,7 @@ __decorate([
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verify", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
@@ -72,7 +72,7 @@ __decorate([
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "me", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),

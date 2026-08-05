@@ -1,9 +1,9 @@
-import * as nodemailer from 'nodemailer';
+import { type SendMailOptions } from 'nodemailer';
 export declare class MailService {
     private readonly logger;
-    private transporter;
+    private readonly transporter;
     constructor();
-    sendMail(options: nodemailer.SendMailOptions): Promise<void>;
+    sendMail(options: SendMailOptions): Promise<void>;
     sendAdmissionConfirmationEmail(email: string, nom: string, prenom: string, formation: string, siteUrl: string): Promise<void>;
     sendWelcomeEmail(email: string, nom: string, prenom: string, motDePasse: string, siteUrl: string): Promise<void>;
 }

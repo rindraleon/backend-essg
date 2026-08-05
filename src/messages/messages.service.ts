@@ -3,10 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { Message } from './entities/message.entity';
 import { CreateMessageDto, UpdateMessageDto } from './dto/create-message.dto';
-import {
-  PaginationDto,
-  PaginationResponse,
-} from '../common/dto/pagination.dto';
+import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
 import { MailService } from '../mail/mail.service';
 
 @Injectable()
@@ -17,9 +14,7 @@ export class MessagesService {
     private readonly mailService: MailService,
   ) {}
 
-  async findAll(
-    paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<Message>> {
+  async findAll(paginationDto: PaginationDto): Promise<PaginationResponse<Message>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -32,10 +27,7 @@ export class MessagesService {
     return new PaginationResponse(data, total, page, limit);
   }
 
-  async search(
-    query: string,
-    paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<Message>> {
+  async search(query: string, paginationDto: PaginationDto): Promise<PaginationResponse<Message>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -75,7 +67,7 @@ export class MessagesService {
         text: `Bonjour ${saved.prenom} ${saved.nom},\n\nNous avons bien reçu votre message concernant : ${saved.sujet}.\n\nNous vous répondrons dans les plus brefs délais.\n\nCordialement,\nL'équipe ESSG`,
       });
     } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'accusé de réception', error);
+      console.error("Erreur lors de l'envoi de l'accusé de réception", error);
     }
 
     return saved;
