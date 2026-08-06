@@ -37,6 +37,11 @@ export class RessourcesHumainesController {
     return this.service.findOne(id);
   }
 
+  @Get('slug/:slug')
+  findBySlug(@Param('slug') slug: string) {
+    return this.service.findBySlug(slug);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() dto: CreateRessourceHumaineDto) {

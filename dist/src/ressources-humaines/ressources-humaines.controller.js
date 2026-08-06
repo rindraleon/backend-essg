@@ -32,6 +32,9 @@ let RessourcesHumainesController = class RessourcesHumainesController {
     findOne(id) {
         return this.service.findOne(id);
     }
+    findBySlug(slug) {
+        return this.service.findBySlug(slug);
+    }
     create(dto) {
         return this.service.create(dto);
     }
@@ -65,6 +68,13 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], RessourcesHumainesController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Get)('slug/:slug'),
+    __param(0, (0, common_1.Param)('slug')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], RessourcesHumainesController.prototype, "findBySlug", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)(),

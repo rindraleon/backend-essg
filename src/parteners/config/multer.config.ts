@@ -1,5 +1,4 @@
 import { diskStorage } from 'multer';
-import type { FileFilterCallback } from 'multer';
 import type { Request } from 'express';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'node:fs';
@@ -25,13 +24,13 @@ const storage = diskStorage({
 });
 
 // Filtre pour n'accepter que les images
-const fileFilter = (_req: Request, file: Express.Multer.File, cb: FileFilterCallback): void => {
+const fileFilter = (_req: Request, file: Express.Multer.File, cb: any): void => {
   const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Unsupported image format. Use JPG, PNG, GIF, or WebP.'));
+    cb(new Error('Unsupported image format. Use JPG, PNG, GIF, or WebP.'), false);
   }
 };
 

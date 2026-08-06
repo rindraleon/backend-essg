@@ -1,5 +1,6 @@
 export declare class CreatePartenaireDto {
     nom: string;
+    slug?: string;
     type: 'Entreprise' | 'Institution' | 'Organisation' | 'Autre';
     secteur: string;
     description: string;

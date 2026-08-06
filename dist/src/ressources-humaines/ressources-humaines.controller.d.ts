@@ -7,6 +7,7 @@ export declare class RessourcesHumainesController {
     findAll(paginationDto: PaginationQueryDto): Promise<import("../common/dto/pagination.dto").PaginationResponse<import("./entities/ressource-humaine.entity").RessourceHumaine>>;
     search(query: string, paginationDto: PaginationQueryDto): Promise<import("../common/dto/pagination.dto").PaginationResponse<import("./entities/ressource-humaine.entity").RessourceHumaine>>;
     findOne(id: number): Promise<import("./entities/ressource-humaine.entity").RessourceHumaine>;
+    findBySlug(slug: string): Promise<import("./entities/ressource-humaine.entity").RessourceHumaine>;
     create(dto: CreateRessourceHumaineDto): Promise<import("./entities/ressource-humaine.entity").RessourceHumaine>;
     update(id: number, dto: UpdateRessourceHumaineDto): Promise<import("./entities/ressource-humaine.entity").RessourceHumaine>;
     remove(id: number): Promise<void>;

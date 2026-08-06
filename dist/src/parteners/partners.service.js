@@ -18,6 +18,15 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const partner_entity_1 = require("./entities/partner.entity");
 const pagination_dto_1 = require("../common/dto/pagination.dto");
+const generateSlug = (text) => {
+    return text
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '');
+};
 let PartnersService = class PartnersService {
     repo;
     constructor(repo) {
@@ -49,6 +58,24 @@ let PartnersService = class PartnersService {
         });
         return new pagination_dto_1.PaginationResponse(data, total, page, limit);
     }
+    async findById(id) {
+        const item = await this.repo.findOne({ where: { id } });
+        if (!item)
+            throw new common_1.NotFoundException('Partenaire non trouvé');
+        return item;
+    }
+    async findBySlug(slug) {
+        const item = await this.repo.findOne({ where: { slug } });
+        if (!item)
+            throw new common_1.NotFoundException('Partenaire non trouvé');
+        return item;
+    }
+    async findByName(nom) {
+        const item = await this.repo.findOne({ where: { nom } });
+        if (!item)
+            throw new common_1.NotFoundException('Partenaire non trouvé');
+        return item;
+    }
     async findOne(id) {
         const item = await this.repo.findOne({ where: { id } });
         if (!item)
@@ -56,15 +83,19 @@ let PartnersService = class PartnersService {
         return item;
     }
     async create(dto) {
+        const slug = dto.slug || generateSlug(dto.nom);
         const item = this.repo.create({
             ...dto,
+            slug,
             dateDebut: new Date(dto.dateDebut),
         });
         return this.repo.save(item);
     }
     async update(id, dto) {
+        const slug = dto.slug || generateSlug(dto.nom);
         await this.repo.update(id, {
             ...dto,
+            slug,
             dateDebut: new Date(dto.dateDebut),
         });
         return this.findOne(id);

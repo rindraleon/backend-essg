@@ -8,6 +8,9 @@ export class Partenaire {
   @Column()
   nom!: string;
 
+  @Column({ unique: true })
+  slug!: string;
+
   @Column({ type: 'text', default: 'Entreprise' })
   type!: 'Entreprise' | 'Institution' | 'Organisation' | 'Autre';
 

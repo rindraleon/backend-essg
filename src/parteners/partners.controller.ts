@@ -38,6 +38,16 @@ export class PartnersController {
     return this.service.findOne(id);
   }
 
+  @Get('slug/:slug')
+  findBySlug(@Param('slug') slug: string) {
+    return this.service.findBySlug(slug);
+  }
+
+  @Get('name/:nom')
+  findByName(@Param('nom') nom: string) {
+    return this.service.findByName(nom);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post()
   @UseInterceptors(FileInterceptor('logo', uploadConfig))

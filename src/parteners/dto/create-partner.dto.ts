@@ -4,6 +4,10 @@ export class CreatePartenaireDto {
   @IsString()
   nom: string = '';
 
+  @IsString()
+  @IsOptional()
+  slug?: string;
+
   @IsIn(['Entreprise', 'Institution', 'Organisation', 'Autre'])
   type: 'Entreprise' | 'Institution' | 'Organisation' | 'Autre' = 'Entreprise';
 

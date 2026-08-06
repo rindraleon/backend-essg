@@ -82,6 +82,12 @@ let RessourcesHumainesService = class RessourcesHumainesService {
             throw new common_1.NotFoundException('Ressource humaine non trouvée');
         return item;
     }
+    async findBySlug(slug) {
+        const item = await this.repo.findOne({ where: { slug } });
+        if (!item)
+            throw new common_1.NotFoundException('Ressource humaine non trouvée');
+        return item;
+    }
     async create(dto) {
         const slug = generateSlug(dto.nom, dto.prenom);
         const item = this.repo.create({

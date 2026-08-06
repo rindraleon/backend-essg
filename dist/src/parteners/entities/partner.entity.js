@@ -14,6 +14,7 @@ const typeorm_1 = require("typeorm");
 let Partenaire = class Partenaire {
     id;
     nom;
+    slug;
     type;
     secteur;
     description;
@@ -33,6 +34,10 @@ __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Partenaire.prototype, "nom", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ unique: true }),
+    __metadata("design:type", String)
+], Partenaire.prototype, "slug", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'text', default: 'Entreprise' }),
     __metadata("design:type", String)

@@ -9,6 +9,7 @@ export declare class RessourcesHumainesService {
     findAllIncludingInactive(paginationDto: PaginationDto): Promise<PaginationResponse<RessourceHumaine>>;
     search(query: string, paginationDto: PaginationDto): Promise<PaginationResponse<RessourceHumaine>>;
     findOne(id: number): Promise<RessourceHumaine>;
+    findBySlug(slug: string): Promise<RessourceHumaine>;
     create(dto: CreateRessourceHumaineDto): Promise<RessourceHumaine>;
     update(id: number, dto: UpdateRessourceHumaineDto): Promise<RessourceHumaine>;
     remove(id: number): Promise<void>;

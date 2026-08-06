@@ -34,6 +34,12 @@ let PartnersController = class PartnersController {
     findOne(id) {
         return this.service.findOne(id);
     }
+    findBySlug(slug) {
+        return this.service.findBySlug(slug);
+    }
+    findByName(nom) {
+        return this.service.findByName(nom);
+    }
     create(dto, file) {
         if (file) {
             dto.logo = `/uploads/images/${file.filename}`;
@@ -73,6 +79,20 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], PartnersController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Get)('slug/:slug'),
+    __param(0, (0, common_1.Param)('slug')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PartnersController.prototype, "findBySlug", null);
+__decorate([
+    (0, common_1.Get)('name/:nom'),
+    __param(0, (0, common_1.Param)('nom')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PartnersController.prototype, "findByName", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)(),

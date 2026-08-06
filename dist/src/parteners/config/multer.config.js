@@ -25,7 +25,7 @@ const fileFilter = (_req, file, cb) => {
         cb(null, true);
     }
     else {
-        cb(new Error('Unsupported image format. Use JPG, PNG, GIF, or WebP.'));
+        cb(new Error('Unsupported image format. Use JPG, PNG, GIF, or WebP.'), false);
     }
 };
 exports.uploadConfig = {

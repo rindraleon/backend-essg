@@ -95,6 +95,12 @@ export class RessourcesHumainesService {
     return item;
   }
 
+  async findBySlug(slug: string): Promise<RessourceHumaine> {
+    const item = await this.repo.findOne({ where: { slug } });
+    if (!item) throw new NotFoundException('Ressource humaine non trouvée');
+    return item;
+  }
+
   async create(dto: CreateRessourceHumaineDto): Promise<RessourceHumaine> {
     const slug = generateSlug(dto.nom, dto.prenom);
     const item = this.repo.create({
