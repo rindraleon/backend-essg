@@ -13,72 +13,162 @@ exports.validate = validate;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 class EnvironmentVariables {
-    DB_HOST = 'localhost';
-    DB_PORT = 5432;
-    DB_USERNAME = 'postgres';
-    DB_PASSWORD = 'password';
-    DB_NAME = 'essg';
-    JWT_SECRET = 'essg-default-secret-key';
+    NODE_ENV = 'development';
+    POSTGRES_HOST = 'localhost';
+    POSTGRES_PORT = 5432;
+    POSTGRES_USER = 'postgres';
+    POSTGRES_PASSWORD = 'password';
+    POSTGRES_DB = 'essg';
+    APP_PORT = 3000;
+    APP_URL = 'http://localhost:3000';
+    UPLOAD_PATH = 'uploads';
+    JWT_SECRET = 'essg-default-secret-key-change-in-production';
     JWT_EXPIRATION = '24h';
-    PORT = 3001;
-    UPLOAD_DIR = 'public/uploads';
+    SMTP_HOST = 'smtp.gmail.com';
+    SMTP_PORT = 587;
+    SMTP_SECURE = false;
+    SMTP_USER = '';
+    SMTP_PASS = '';
+    SMTP_FROM = '';
+    MINIO_ENDPOINT = 'localhost';
+    MINIO_PORT = 9000;
+    MINIO_USE_SSL = false;
+    MINIO_ACCESS_KEY = '';
+    MINIO_SECRET_KEY = '';
+    MINIO_BUCKET = 'essg';
+    MINIO_PUBLIC_URL = '';
 }
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Object)
-], EnvironmentVariables.prototype, "DB_HOST", void 0);
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "NODE_ENV", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "POSTGRES_HOST", void 0);
 __decorate([
     (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Object)
-], EnvironmentVariables.prototype, "DB_PORT", void 0);
+    __metadata("design:type", Number)
+], EnvironmentVariables.prototype, "POSTGRES_PORT", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Object)
-], EnvironmentVariables.prototype, "DB_USERNAME", void 0);
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "POSTGRES_USER", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Object)
-], EnvironmentVariables.prototype, "DB_PASSWORD", void 0);
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "POSTGRES_PASSWORD", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Object)
-], EnvironmentVariables.prototype, "DB_NAME", void 0);
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "POSTGRES_DB", void 0);
+__decorate([
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], EnvironmentVariables.prototype, "APP_PORT", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "APP_URL", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "UPLOAD_PATH", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
 ], EnvironmentVariables.prototype, "JWT_SECRET", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
 ], EnvironmentVariables.prototype, "JWT_EXPIRATION", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "SMTP_HOST", void 0);
 __decorate([
     (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Object)
-], EnvironmentVariables.prototype, "PORT", void 0);
+    __metadata("design:type", Number)
+], EnvironmentVariables.prototype, "SMTP_PORT", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], EnvironmentVariables.prototype, "SMTP_SECURE", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Object)
-], EnvironmentVariables.prototype, "UPLOAD_DIR", void 0);
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "SMTP_USER", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "SMTP_PASS", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "SMTP_FROM", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "MINIO_ENDPOINT", void 0);
+__decorate([
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], EnvironmentVariables.prototype, "MINIO_PORT", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], EnvironmentVariables.prototype, "MINIO_USE_SSL", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "MINIO_ACCESS_KEY", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "MINIO_SECRET_KEY", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "MINIO_BUCKET", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "MINIO_PUBLIC_URL", void 0);
 function validate(config) {
     const validatedConfig = (0, class_transformer_1.plainToInstance)(EnvironmentVariables, config, {
         enableImplicitConversion: true,
     });
-    const errors = (0, class_validator_1.validateSync)(validatedConfig, {
-        skipMissingProperties: false,
-    });
+    const errors = (0, class_validator_1.validateSync)(validatedConfig, { skipMissingProperties: false });
     if (errors.length > 0) {
-        throw new Error(errors.toString());
+        throw new Error(`Validation de la configuration échouée: ${errors.toString()}`);
     }
     return validatedConfig;
 }

@@ -28,11 +28,13 @@ class CreateProjetDto {
 exports.CreateProjetDto = CreateProjetDto;
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(150),
     __metadata("design:type", String)
 ], CreateProjetDto.prototype, "titre", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(150),
     __metadata("design:type", String)
 ], CreateProjetDto.prototype, "slug", void 0);
 __decorate([
@@ -41,20 +43,24 @@ __decorate([
 ], CreateProjetDto.prototype, "type", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(20),
     __metadata("design:type", String)
 ], CreateProjetDto.prototype, "date", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(10000),
     __metadata("design:type", String)
 ], CreateProjetDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.MaxLength)(100, { each: true }),
     __metadata("design:type", Array)
 ], CreateProjetDto.prototype, "partenaires", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
 ], CreateProjetDto.prototype, "image", void 0);
 __decorate([
@@ -68,16 +74,19 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreateProjetDto.prototype, "ville", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreateProjetDto.prototype, "pays", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(300),
     __metadata("design:type", String)
 ], CreateProjetDto.prototype, "adresse", void 0);
 class UpdateProjetDto extends CreateProjetDto {

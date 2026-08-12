@@ -1,12 +1,14 @@
 import { Repository } from 'typeorm';
-import { Actualite } from './entities/news-item.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { CreateActualiteDto, UpdateActualiteDto } from './dto/create-news.dto';
-import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
+import { Actualite } from './entities/news-item.entity';
 export declare class NewsService {
     private readonly repo;
     constructor(repo: Repository<Actualite>);
-    findAll(paginationDto: PaginationDto): Promise<PaginationResponse<Actualite>>;
-    search(query: string, paginationDto: PaginationDto): Promise<PaginationResponse<Actualite>>;
+    private findPaginated;
+    findAll(paginationDto: PaginationDto): Promise<PaginatedData<Actualite>>;
+    search(query: string, paginationDto: PaginationDto): Promise<PaginatedData<Actualite>>;
     findOne(id: number): Promise<Actualite>;
     findBySlug(slug: string): Promise<Actualite>;
     create(dto: CreateActualiteDto): Promise<Actualite>;

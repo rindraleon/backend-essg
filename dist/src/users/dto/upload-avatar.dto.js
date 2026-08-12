@@ -18,6 +18,7 @@ exports.UploadAvatarDto = UploadAvatarDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
 ], UploadAvatarDto.prototype, "avatar", void 0);
 //# sourceMappingURL=upload-avatar.dto.js.map

@@ -51,7 +51,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)({}, { message: 'Email invalide' }),
-    (0, class_validator_1.MaxLength)(150, { message: "L'email ne peut pas dépasser 150 caractères" }),
+    (0, class_validator_1.MaxLength)(120, { message: "L'email ne peut pas dépasser 120 caractères" }),
     __metadata("design:type", String)
 ], CreateRessourceHumaineDto.prototype, "email", void 0);
 __decorate([
@@ -120,7 +120,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)({}, { message: 'Email invalide' }),
-    (0, class_validator_1.MaxLength)(150, { message: "L'email ne peut pas dépasser 150 caractères" }),
+    (0, class_validator_1.MaxLength)(120, { message: "L'email ne peut pas dépasser 120 caractères" }),
     __metadata("design:type", String)
 ], UpdateRessourceHumaineDto.prototype, "email", void 0);
 __decorate([

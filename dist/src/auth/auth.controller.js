@@ -14,34 +14,17 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
-const class_validator_1 = require("class-validator");
-const auth_service_1 = require("./auth.service");
+const api_message_decorator_1 = require("../common/decorators/api-message.decorator");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
-class LoginDto {
-    email;
-    password;
-}
-__decorate([
-    (0, class_validator_1.IsEmail)(),
-    __metadata("design:type", String)
-], LoginDto.prototype, "email", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], LoginDto.prototype, "password", void 0);
+const auth_service_1 = require("./auth.service");
+const login_dto_1 = require("./dto/login.dto");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
         this.authService = authService;
     }
     async login(dto) {
-        try {
-            return await this.authService.login(dto.email, dto.password);
-        }
-        catch {
-            throw new common_1.UnauthorizedException('Invalid credentials');
-        }
+        return this.authService.login(dto.email, dto.password);
     }
     verify(req) {
         return { valid: true, user: req.user };
@@ -53,14 +36,16 @@ let AuthController = class AuthController {
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('login'),
+    (0, api_message_decorator_1.ApiMessage)('Connexion réussie'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [LoginDto]),
+    __metadata("design:paramtypes", [login_dto_1.LoginDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)('verify'),
+    (0, api_message_decorator_1.ApiMessage)('Session valide'),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -69,6 +54,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)('me'),
+    (0, api_message_decorator_1.ApiMessage)('Profil récupéré'),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

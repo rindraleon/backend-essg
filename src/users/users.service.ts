@@ -1,12 +1,15 @@
-import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { PaginatedData } from '../common/interfaces/api-response.interface';
+import { buildPaginatedData } from '../common/utils/pagination.util';
 import { MailService } from '../mail/mail.service';
-import { Utilisateur } from './entities/user.entity';
 import { CreateUtilisateurDto } from './dto/create-user.dto';
 import { UpdateUtilisateurDto } from './dto/update-user.dto';
-import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
+import { Utilisateur } from './entities/user.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { capitalize, toUpperCase } from '../common/utils/text.util';
 
 type SanitizedUtilisateur = Omit<Utilisateur, 'motDePasse'>;
 
@@ -20,50 +23,50 @@ export class UsersService {
     private readonly mailService: MailService,
   ) {}
 
-  private sanitizeUser = (user: Utilisateur): SanitizedUtilisateur => {
+  private sanitizeUser(user: Utilisateur): SanitizedUtilisateur {
     const { motDePasse, ...rest } = user;
     void motDePasse;
-    return rest as SanitizedUtilisateur;
-  };
+    return rest;
+  }
 
-  async findAll(paginationDto: PaginationDto): Promise<PaginationResponse<SanitizedUtilisateur>> {
+  private async findPaginated(
+    where: FindOptionsWhere<Utilisateur> | FindOptionsWhere<Utilisateur>[],
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedData<SanitizedUtilisateur>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
     const [users, total] = await this.repo.findAndCount({
+      where,
       order: sortBy ? { [sortBy]: sortOrder } : { id: 'ASC' },
       skip,
       take: limit,
     });
 
-    const sanitizedUsers = users.map(this.sanitizeUser);
-    return new PaginationResponse(sanitizedUsers, total, page, limit);
+    return buildPaginatedData(
+      users.map((user) => this.sanitizeUser(user)),
+      total,
+      page,
+      limit,
+    );
+  }
+
+  async findAll(paginationDto: PaginationDto): Promise<PaginatedData<SanitizedUtilisateur>> {
+    return this.findPaginated({}, paginationDto);
   }
 
   async search(
     query: string,
     paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<SanitizedUtilisateur>> {
-    const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
-    const skip = (page - 1) * limit;
-
-    const whereCondition: FindOptionsWhere<Utilisateur> = {};
-
-    if (query) {
-      whereCondition.nom = query as FindOptionsWhere<Utilisateur>['nom'];
-      whereCondition.prenom = query as FindOptionsWhere<Utilisateur>['prenom'];
-      whereCondition.email = query as FindOptionsWhere<Utilisateur>['email'];
-    }
-
-    const [users, total] = await this.repo.findAndCount({
-      where: whereCondition,
-      order: sortBy ? { [sortBy]: sortOrder } : { id: 'ASC' },
-      skip,
-      take: limit,
-    });
-
-    const sanitizedUsers = users.map(this.sanitizeUser);
-    return new PaginationResponse(sanitizedUsers, total, page, limit);
+  ): Promise<PaginatedData<SanitizedUtilisateur>> {
+    const where: FindOptionsWhere<Utilisateur>[] = query
+      ? [
+          { nom: ILike(`%${query}%`) },
+          { prenom: ILike(`%${query}%`) },
+          { email: ILike(`%${query}%`) },
+        ]
+      : [{}];
+    return this.findPaginated(where, paginationDto);
   }
 
   async findOne(id: number): Promise<SanitizedUtilisateur> {
@@ -80,36 +83,39 @@ export class UsersService {
     const existing = await this.findByEmail(dto.email);
     if (existing) throw new ConflictException('Cet email existe déjà');
 
-    const plainPassword = dto.motDePasse;
-    const hashedPassword = await bcrypt.hash(plainPassword, 10);
-    const user = this.repo.create({ ...dto, motDePasse: hashedPassword });
+    const hashedPassword = await bcrypt.hash(dto.motDePasse, 10);
+    const user = this.repo.create({
+      ...dto,
+      nom: toUpperCase(dto.nom),
+      prenom: capitalize(dto.prenom),
+      motDePasse: hashedPassword,
+    });
     const saved = await this.repo.save(user);
 
-    // Send welcome email with credentials
     try {
-      const siteUrl = process.env.APP_URL || 'http://localhost:3000';
-      await this.mailService.sendWelcomeEmail(
-        saved.email,
-        saved.nom,
-        saved.prenom,
-        plainPassword,
-        siteUrl,
-      );
-      this.logger.log(`Welcome email sent to ${saved.email}`);
+      await this.mailService.sendWelcomeEmail(saved.email, saved.nom, saved.prenom, dto.motDePasse);
+      this.logger.log(`Email de bienvenue envoyé à ${saved.email}`);
     } catch (error) {
-      this.logger.error(`Failed to send welcome email to ${saved.email}`, error);
-      // Don't throw error - user is created, email is secondary
+      this.logger.error(`Échec de l'envoi de l'email de bienvenue à ${saved.email}`, error);
     }
 
     return this.sanitizeUser(saved);
   }
 
   async update(id: number, dto: UpdateUtilisateurDto): Promise<SanitizedUtilisateur> {
+    const user = await this.findOne(id);
+    const data: Partial<Utilisateur> = { ...dto };
     if (dto.motDePasse) {
-      dto.motDePasse = await bcrypt.hash(dto.motDePasse, 10);
+      data.motDePasse = await bcrypt.hash(dto.motDePasse, 10);
     }
-    await this.repo.update(id, dto);
-    return this.findOne(id);
+    if (dto.nom) {
+      data.nom = toUpperCase(dto.nom);
+    }
+    if (dto.prenom) {
+      data.prenom = capitalize(dto.prenom);
+    }
+    await this.repo.update(id, data);
+    return this.findOne(user.id);
   }
 
   async updateAvatar(id: number, avatarUrl: string): Promise<SanitizedUtilisateur> {
@@ -118,6 +124,7 @@ export class UsersService {
   }
 
   async remove(id: number): Promise<void> {
-    await this.repo.delete(id);
+    const user = await this.findOne(id);
+    await this.repo.delete(user.id);
   }
 }

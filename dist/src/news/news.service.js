@@ -16,8 +16,9 @@ exports.NewsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
+const pagination_util_1 = require("../common/utils/pagination.util");
 const news_item_entity_1 = require("./entities/news-item.entity");
-const pagination_dto_1 = require("../common/dto/pagination.dto");
+const text_util_1 = require("../common/utils/text.util");
 function generateSlug(title) {
     return title
         .toLowerCase()
@@ -31,31 +32,25 @@ let NewsService = class NewsService {
     constructor(repo) {
         this.repo = repo;
     }
-    async findAll(paginationDto) {
+    async findPaginated(where, paginationDto) {
         const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
         const skip = (page - 1) * limit;
         const [data, total] = await this.repo.findAndCount({
+            where,
             order: sortBy ? { [sortBy]: sortOrder } : { date: 'DESC' },
             skip,
             take: limit,
         });
-        return new pagination_dto_1.PaginationResponse(data, total, page, limit);
+        return (0, pagination_util_1.buildPaginatedData)(data, total, page, limit);
+    }
+    async findAll(paginationDto) {
+        return this.findPaginated({}, paginationDto);
     }
     async search(query, paginationDto) {
-        const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
-        const skip = (page - 1) * limit;
-        const whereCondition = {};
-        if (query) {
-            whereCondition.titre = query;
-            whereCondition.contenu = query;
-        }
-        const [data, total] = await this.repo.findAndCount({
-            where: whereCondition,
-            order: sortBy ? { [sortBy]: sortOrder } : { date: 'DESC' },
-            skip,
-            take: limit,
-        });
-        return new pagination_dto_1.PaginationResponse(data, total, page, limit);
+        const where = query
+            ? [{ titre: (0, typeorm_2.ILike)(`%${query}%`) }, { contenu: (0, typeorm_2.ILike)(`%${query}%`) }]
+            : [{}];
+        return this.findPaginated(where, paginationDto);
     }
     async findOne(id) {
         const item = await this.repo.findOne({ where: { id } });
@@ -70,11 +65,14 @@ let NewsService = class NewsService {
         return item;
     }
     async create(dto) {
-        const slug = generateSlug(dto.titre);
         const item = this.repo.create({
             ...dto,
-            slug,
-            resume: dto.resume || '',
+            slug: dto.slug || generateSlug(dto.titre),
+            titre: (0, text_util_1.capitalize)(dto.titre),
+            categorie: (0, text_util_1.capitalize)(dto.categorie),
+            auteur: (0, text_util_1.capitalize)(dto.auteur),
+            resume: dto.resume ? (0, text_util_1.capitalize)(dto.resume) : dto.resume,
+            contenu: (0, text_util_1.capitalize)(dto.contenu),
             enVedette: dto.enVedette ?? false,
             statut: dto.statut ?? false,
             image: dto.image || '/images/hero-campus.jpg',
@@ -82,26 +80,25 @@ let NewsService = class NewsService {
         return this.repo.save(item);
     }
     async update(id, dto) {
+        await this.findOne(id);
         const updateData = { ...dto };
         if (dto.titre) {
+            updateData.titre = (0, text_util_1.capitalize)(dto.titre);
             updateData.slug = generateSlug(dto.titre);
         }
-        if (dto.resume !== undefined) {
-            updateData.resume = dto.resume || '';
-        }
-        if (dto.enVedette !== undefined) {
-            updateData.enVedette = dto.enVedette;
-        }
-        if (dto.statut !== undefined) {
-            updateData.statut = dto.statut;
-        }
-        if (dto.image !== undefined) {
-            updateData.image = dto.image || '';
-        }
+        if (dto.categorie)
+            updateData.categorie = (0, text_util_1.capitalize)(dto.categorie);
+        if (dto.auteur)
+            updateData.auteur = (0, text_util_1.capitalize)(dto.auteur);
+        if (dto.resume)
+            updateData.resume = (0, text_util_1.capitalize)(dto.resume);
+        if (dto.contenu)
+            updateData.contenu = (0, text_util_1.capitalize)(dto.contenu);
         await this.repo.update(id, updateData);
         return this.findOne(id);
     }
     async remove(id) {
+        await this.findOne(id);
         await this.repo.delete(id);
     }
 };

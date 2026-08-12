@@ -1,25 +1,40 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger } from '@nestjs/common';
-import { Response } from 'express';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@nestjs/common';
+import type { Response } from 'express';
+
+interface ExceptionBody {
+  message?: string | string[];
+  error?: string;
+}
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
 
-  catch(exception: HttpException, host: ArgumentsHost) {
+  catch(exception: HttpException, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const status = exception.getStatus();
+    const statusCode = exception.getStatus();
     const exceptionResponse = exception.getResponse();
 
-    this.logger.error(`HTTP ${status}: ${JSON.stringify(exceptionResponse)}`);
+    let message = 'Une erreur est survenue';
 
-    response.status(status).json({
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      message:
-        typeof exceptionResponse === 'string'
-          ? exceptionResponse
-          : (exceptionResponse as { message: string }).message,
+    if (typeof exceptionResponse === 'string') {
+      message = exceptionResponse;
+    } else if (exceptionResponse && typeof exceptionResponse === 'object') {
+      const body = exceptionResponse as ExceptionBody;
+      if (Array.isArray(body.message)) {
+        message = body.message.join(', ');
+      } else if (typeof body.message === 'string') {
+        message = body.message;
+      }
+    }
+
+    this.logger.error(`HTTP ${statusCode}: ${message}`);
+
+    response.status(statusCode).json({
+      statusCode,
+      message,
+      data: null,
     });
   }
 }

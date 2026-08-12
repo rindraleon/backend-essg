@@ -1,22 +1,34 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Admission, AdmissionStatus } from './entities/admission.entity';
+import { MailService } from '../mail/mail.service';
 import { CreateAdmissionDto } from './dto/create-admission.dto';
 import { UpdateAdmissionStatusDto } from './dto/update-admission-status.dto';
-import { MailService } from '../mail/mail.service';
+import { Admission, AdmissionStatus } from './entities/admission.entity';
+import { capitalize, toUpperCase } from '../common/utils/text.util';
 
 @Injectable()
 export class AdmissionsService {
+  private readonly logger = new Logger(AdmissionsService.name);
+
   constructor(
     @InjectRepository(Admission)
     private readonly admissionsRepository: Repository<Admission>,
     private readonly mailService: MailService,
   ) {}
 
+  private buildReference(id: number): string {
+    return `ESSG-${id}`;
+  }
+
   async create(createAdmissionDto: CreateAdmissionDto): Promise<Admission> {
     const admission = this.admissionsRepository.create({
       ...createAdmissionDto,
+      nom: toUpperCase(createAdmissionDto.nom),
+      prenom: capitalize(createAdmissionDto.prenom),
+      formation: capitalize(createAdmissionDto.formation),
+      diplomePrecedent: capitalize(createAdmissionDto.diplomePrecedent),
+      niveau: capitalize(createAdmissionDto.niveau),
       statut: AdmissionStatus.EN_ATTENTE,
     });
     const saved = await this.admissionsRepository.save(admission);
@@ -27,10 +39,11 @@ export class AdmissionsService {
         saved.nom,
         saved.prenom,
         saved.formation,
-        process.env.APP_URL || 'http://localhost:3000',
+        this.buildReference(saved.id),
       );
+      this.logger.log(`Accusé de réception envoyé à ${saved.email}`);
     } catch (error) {
-      console.error("Erreur lors de l'envoi de l'accusé de réception", error);
+      this.logger.error(`Échec de l'envoi de l'accusé de réception à ${saved.email}`, error);
     }
 
     return saved;
@@ -56,7 +69,28 @@ export class AdmissionsService {
     admission.statut = updateStatusDto.statut;
     admission.commentaire = updateStatusDto.commentaire || admission.commentaire;
 
-    return this.admissionsRepository.save(admission);
+    const saved = await this.admissionsRepository.save(admission);
+
+    await this.notifyStatusChange(saved);
+
+    return saved;
+  }
+
+  private async notifyStatusChange(admission: Admission): Promise<void> {
+    try {
+      await this.mailService.sendAdmissionStatusEmail(admission.email, {
+        nom: admission.nom,
+        prenom: admission.prenom,
+        formation: admission.formation,
+        reference: this.buildReference(admission.id),
+        statut: admission.statut,
+        date: new Date().toLocaleDateString('fr-FR'),
+        commentaire: admission.commentaire || undefined,
+      });
+      this.logger.log(`Notification de statut envoyée à ${admission.email}`);
+    } catch (error) {
+      this.logger.error(`Échec de la notification de statut à ${admission.email}`, error);
+    }
   }
 
   async remove(id: number): Promise<void> {

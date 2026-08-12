@@ -15,20 +15,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
-const multer_1 = require("multer");
-const node_path_1 = require("node:path");
-const uuid_1 = require("uuid");
-const users_service_1 = require("./users.service");
-const create_user_dto_1 = require("./dto/create-user.dto");
-const update_user_dto_1 = require("./dto/update-user.dto");
+const api_message_decorator_1 = require("../common/decorators/api-message.decorator");
 const pagination_dto_1 = require("../common/dto/pagination.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
+const multer_config_1 = require("../common/storage/multer.config");
+const storage_service_1 = require("../common/storage/storage.service");
+const create_user_dto_1 = require("./dto/create-user.dto");
+const update_user_dto_1 = require("./dto/update-user.dto");
+const users_service_1 = require("./users.service");
 let UsersController = class UsersController {
     service;
-    constructor(service) {
+    storageService;
+    constructor(service, storageService) {
         this.service = service;
+        this.storageService = storageService;
     }
     findAll(paginationDto) {
         return this.service.findAll(paginationDto);
@@ -42,22 +44,23 @@ let UsersController = class UsersController {
     create(dto) {
         return this.service.create(dto);
     }
-    update(id, dto, req) {
+    async update(id, dto, req) {
         if (req.user.role !== 'admin' && req.user.userId !== id) {
-            throw new Error('Vous ne pouvez modifier que votre propre profil');
+            throw new common_1.ForbiddenException('Vous ne pouvez modifier que votre propre profil');
         }
         return this.service.update(id, dto);
     }
     async uploadAvatar(id, file, req) {
         if (req.user.role !== 'admin' && req.user.userId !== id) {
-            throw new Error('Vous ne pouvez modifier que votre propre avatar');
+            throw new common_1.ForbiddenException('Vous ne pouvez modifier que votre propre avatar');
         }
         if (!file) {
-            throw new Error('Aucun fichier fourni');
+            throw new common_1.ForbiddenException('Aucun fichier fourni');
         }
-        const avatarUrl = `/uploads/images/${file.filename}`;
-        const updatedUser = await this.service.updateAvatar(id, avatarUrl);
-        return updatedUser;
+        const result = await this.storageService.upload(file.buffer, file.originalname, {
+            mimetype: file.mimetype,
+        });
+        return this.service.updateAvatar(id, result.url);
     }
     remove(id) {
         return this.service.remove(id);
@@ -66,6 +69,7 @@ let UsersController = class UsersController {
 exports.UsersController = UsersController;
 __decorate([
     (0, common_1.Get)(),
+    (0, api_message_decorator_1.ApiMessage)('Utilisateurs récupérés'),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [pagination_dto_1.PaginationQueryDto]),
@@ -73,6 +77,7 @@ __decorate([
 ], UsersController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('search'),
+    (0, api_message_decorator_1.ApiMessage)('Recherche effectuée'),
     __param(0, (0, common_1.Query)('q')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
@@ -81,6 +86,7 @@ __decorate([
 ], UsersController.prototype, "search", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, api_message_decorator_1.ApiMessage)('Utilisateur récupéré'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -89,6 +95,8 @@ __decorate([
 __decorate([
     (0, roles_decorator_1.Roles)('admin'),
     (0, common_1.Post)(),
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
+    (0, api_message_decorator_1.ApiMessage)('Utilisateur créé avec succès'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_user_dto_1.CreateUtilisateurDto]),
@@ -96,34 +104,18 @@ __decorate([
 ], UsersController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)(':id'),
+    (0, api_message_decorator_1.ApiMessage)('Utilisateur mis à jour'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, update_user_dto_1.UpdateUtilisateurDto, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], UsersController.prototype, "update", null);
 __decorate([
     (0, common_1.Post)(':id/avatar'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('avatar', {
-        storage: (0, multer_1.diskStorage)({
-            destination: (0, node_path_1.join)('uploads', 'images'),
-            filename: (req, file, callback) => {
-                const uniqueName = `${(0, uuid_1.v4)()}${(0, node_path_1.extname)(file.originalname)}`;
-                callback(null, uniqueName);
-            },
-        }),
-        fileFilter: (req, file, callback) => {
-            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-            const extension = (0, node_path_1.extname)(file.originalname).toLowerCase();
-            if (allowedExtensions.includes(extension)) {
-                callback(null, true);
-            }
-            else {
-                callback(new Error('Type de fichier non autorisé'), false);
-            }
-        },
-    })),
+    (0, api_message_decorator_1.ApiMessage)('Avatar mis à jour'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('avatar', multer_config_1.imageUploadOptions)),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.UploadedFile)()),
     __param(2, (0, common_1.Request)()),
@@ -134,6 +126,7 @@ __decorate([
 __decorate([
     (0, roles_decorator_1.Roles)('admin'),
     (0, common_1.Delete)(':id'),
+    (0, api_message_decorator_1.ApiMessage)('Utilisateur supprimé'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -142,6 +135,7 @@ __decorate([
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    __metadata("design:paramtypes", [users_service_1.UsersService])
+    __metadata("design:paramtypes", [users_service_1.UsersService,
+        storage_service_1.StorageService])
 ], UsersController);
 //# sourceMappingURL=users.controller.js.map

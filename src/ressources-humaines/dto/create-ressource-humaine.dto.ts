@@ -34,7 +34,7 @@ export class CreateRessourceHumaineDto {
 
   @IsOptional()
   @IsEmail({}, { message: 'Email invalide' })
-  @MaxLength(150, { message: "L'email ne peut pas dépasser 150 caractères" })
+  @MaxLength(120, { message: "L'email ne peut pas dépasser 120 caractères" })
   email?: string;
 
   @IsOptional()
@@ -84,7 +84,7 @@ export class UpdateRessourceHumaineDto {
 
   @IsOptional()
   @IsEmail({}, { message: 'Email invalide' })
-  @MaxLength(150, { message: "L'email ne peut pas dépasser 150 caractères" })
+  @MaxLength(120, { message: "L'email ne peut pas dépasser 120 caractères" })
   email?: string;
 
   @IsOptional()

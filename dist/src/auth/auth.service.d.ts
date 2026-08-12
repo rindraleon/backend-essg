@@ -1,6 +1,6 @@
 import { OnModuleInit } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import { Utilisateur } from '../users/entities/user.entity';
 export interface AuthPayload {
@@ -15,7 +15,7 @@ export declare class AuthService implements OnModuleInit {
     private readonly jwtService;
     private readonly configService;
     private readonly userRepo;
-    private initialized;
+    private readonly logger;
     constructor(jwtService: JwtService, configService: ConfigService, userRepo: Repository<Utilisateur>);
     onModuleInit(): Promise<void>;
     validateUser(email: string, password: string): Promise<{

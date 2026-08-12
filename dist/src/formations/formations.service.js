@@ -16,8 +16,9 @@ exports.FormationsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
+const pagination_util_1 = require("../common/utils/pagination.util");
 const formation_entity_1 = require("./entities/formation.entity");
-const pagination_dto_1 = require("../common/dto/pagination.dto");
+const text_util_1 = require("../common/utils/text.util");
 let FormationsService = class FormationsService {
     repo;
     constructor(repo) {
@@ -31,18 +32,13 @@ let FormationsService = class FormationsService {
             skip,
             take: limit,
         });
-        return new pagination_dto_1.PaginationResponse(data, total, page, limit);
+        return (0, pagination_util_1.buildPaginatedData)(data, total, page, limit);
     }
     async search(query, paginationDto) {
         const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
         const skip = (page - 1) * limit;
         if (!query) {
-            const [data, total] = await this.repo.findAndCount({
-                order: sortBy ? { [sortBy]: sortOrder } : { id: 'ASC' },
-                skip,
-                take: limit,
-            });
-            return new pagination_dto_1.PaginationResponse(data, total, page, limit);
+            return this.findAll(paginationDto);
         }
         const [data, total] = await this.repo
             .createQueryBuilder('formation')
@@ -53,29 +49,64 @@ let FormationsService = class FormationsService {
             .skip(skip)
             .take(limit)
             .getManyAndCount();
-        return new pagination_dto_1.PaginationResponse(data, total, page, limit);
+        return (0, pagination_util_1.buildPaginatedData)(data, total, page, limit);
     }
     async findOne(id) {
         const item = await this.repo.findOne({ where: { id } });
         if (!item)
-            throw new common_1.NotFoundException('Formation not found');
+            throw new common_1.NotFoundException('Formation non trouvée');
         return item;
     }
     async findBySlug(slug) {
         const item = await this.repo.findOne({ where: { slug } });
         if (!item)
-            throw new common_1.NotFoundException('Formation not found');
+            throw new common_1.NotFoundException('Formation non trouvée');
         return item;
     }
     async create(dto) {
-        const item = this.repo.create(dto);
+        const item = this.repo.create({
+            ...dto,
+            titre: (0, text_util_1.capitalize)(dto.titre),
+            duree: (0, text_util_1.capitalize)(dto.duree),
+            description: (0, text_util_1.capitalize)(dto.description),
+            responsable: dto.responsable ? (0, text_util_1.capitalize)(dto.responsable) : dto.responsable,
+            domaine: (0, text_util_1.capitalizeArray)(dto.domaine),
+            objectifs: (0, text_util_1.capitalizeArray)(dto.objectifs),
+            debouches: (0, text_util_1.capitalizeArray)(dto.debouches),
+            conditions: (0, text_util_1.capitalizeArray)(dto.conditions ?? []),
+            competences: (0, text_util_1.capitalizeArray)(dto.competences ?? []),
+            programme: (0, text_util_1.capitalizeArray)(dto.programme),
+        });
         return this.repo.save(item);
     }
     async update(id, dto) {
-        await this.repo.update(id, dto);
+        await this.findOne(id);
+        const updateData = { ...dto };
+        if (dto.titre)
+            updateData.titre = (0, text_util_1.capitalize)(dto.titre);
+        if (dto.duree)
+            updateData.duree = (0, text_util_1.capitalize)(dto.duree);
+        if (dto.description)
+            updateData.description = (0, text_util_1.capitalize)(dto.description);
+        if (dto.responsable)
+            updateData.responsable = (0, text_util_1.capitalize)(dto.responsable);
+        if (dto.domaine)
+            updateData.domaine = (0, text_util_1.capitalizeArray)(dto.domaine);
+        if (dto.objectifs)
+            updateData.objectifs = (0, text_util_1.capitalizeArray)(dto.objectifs);
+        if (dto.debouches)
+            updateData.debouches = (0, text_util_1.capitalizeArray)(dto.debouches);
+        if (dto.conditions)
+            updateData.conditions = (0, text_util_1.capitalizeArray)(dto.conditions);
+        if (dto.competences)
+            updateData.competences = (0, text_util_1.capitalizeArray)(dto.competences);
+        if (dto.programme)
+            updateData.programme = (0, text_util_1.capitalizeArray)(dto.programme);
+        await this.repo.update(id, updateData);
         return this.findOne(id);
     }
     async remove(id) {
+        await this.findOne(id);
         await this.repo.delete(id);
     }
 };

@@ -14,10 +14,11 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RessourcesHumainesController = void 0;
 const common_1 = require("@nestjs/common");
-const ressources_humaines_service_1 = require("./ressources-humaines.service");
-const create_ressource_humaine_dto_1 = require("./dto/create-ressource-humaine.dto");
+const api_message_decorator_1 = require("../common/decorators/api-message.decorator");
 const pagination_dto_1 = require("../common/dto/pagination.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const create_ressource_humaine_dto_1 = require("./dto/create-ressource-humaine.dto");
+const ressources_humaines_service_1 = require("./ressources-humaines.service");
 let RessourcesHumainesController = class RessourcesHumainesController {
     service;
     constructor(service) {
@@ -48,6 +49,7 @@ let RessourcesHumainesController = class RessourcesHumainesController {
 exports.RessourcesHumainesController = RessourcesHumainesController;
 __decorate([
     (0, common_1.Get)(),
+    (0, api_message_decorator_1.ApiMessage)('Ressources humaines récupérées'),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [pagination_dto_1.PaginationQueryDto]),
@@ -55,6 +57,7 @@ __decorate([
 ], RessourcesHumainesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('search'),
+    (0, api_message_decorator_1.ApiMessage)('Recherche effectuée'),
     __param(0, (0, common_1.Query)('q')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
@@ -63,6 +66,7 @@ __decorate([
 ], RessourcesHumainesController.prototype, "search", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, api_message_decorator_1.ApiMessage)('Ressource humaine récupérée'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -70,6 +74,7 @@ __decorate([
 ], RessourcesHumainesController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Get)('slug/:slug'),
+    (0, api_message_decorator_1.ApiMessage)('Ressource humaine récupérée'),
     __param(0, (0, common_1.Param)('slug')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -78,6 +83,8 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)(),
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
+    (0, api_message_decorator_1.ApiMessage)('Ressource humaine créée avec succès'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_ressource_humaine_dto_1.CreateRessourceHumaineDto]),
@@ -86,6 +93,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Put)(':id'),
+    (0, api_message_decorator_1.ApiMessage)('Ressource humaine mise à jour'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -95,6 +103,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Delete)(':id'),
+    (0, api_message_decorator_1.ApiMessage)('Ressource humaine supprimée'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),

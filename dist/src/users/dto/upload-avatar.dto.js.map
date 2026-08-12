@@ -1,1 +1,1 @@
-{"version":3,"file":"upload-avatar.dto.js","sourceRoot":"","sources":["../../../../src/users/dto/upload-avatar.dto.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,qDAAuD;AAEvD,MAAa,eAAe;IAG1B,MAAM,CAAU;CACjB;AAJD,0CAIC;AADC;IAFC,IAAA,0BAAQ,GAAE;IACV,IAAA,4BAAU,GAAE;;+CACG"}
+{"version":3,"file":"upload-avatar.dto.js","sourceRoot":"","sources":["../../../../src/users/dto/upload-avatar.dto.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,qDAAkE;AAElE,MAAa,eAAe;IAI1B,MAAM,CAAU;CACjB;AALD,0CAKC;AADC;IAHC,IAAA,0BAAQ,GAAE;IACV,IAAA,4BAAU,GAAE;IACZ,IAAA,2BAAS,EAAC,GAAG,CAAC;;+CACC"}

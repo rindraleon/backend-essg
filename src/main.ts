@@ -1,26 +1,31 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ValidationPipe } from '@nestjs/common';
-import { join } from 'path';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as express from 'express';
 import * as fs from 'node:fs';
+import { join } from 'node:path';
+import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
+  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       transform: true,
-      forbidNonWhitelisted: false,
+      forbidNonWhitelisted: true,
     }),
   );
 
-  // CORS configuration
+  app.useGlobalInterceptors(new TransformInterceptor());
+  app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
+
   app.enableCors({
     origin: [
       'http://localhost:5000',
@@ -34,32 +39,26 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
   });
 
-  // Swagger config
-  const config = new DocumentBuilder()
-    .setTitle('Backend ITDC')
-    .setDescription('Documentation des API ITDC')
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Backend ESSG')
+    .setDescription('Documentation des API ESSG')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);
 
-  // Servir les fichiers statiques (uploads)
   const uploadPath = configService.get<string>('UPLOAD_PATH') || 'uploads';
-
-  // Créer le dossier uploads s'il n'existe pas
   if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath, { recursive: true });
-    console.log(`Created ${uploadPath} directory`);
   }
-
   app.use(`/${uploadPath}`, express.static(join(process.cwd(), uploadPath)));
 
   const port = configService.get<number>('APP_PORT') || 3000;
   await app.listen(port);
-  console.debug(`Application is running on: http://localhost:${port}`);
-
-  console.debug(`Documentation is running on: http://localhost:${port}/docs`);
+  logger.log(`Application démarrée sur http://localhost:${port}`);
+  logger.log(`Documentation disponible sur http://localhost:${port}/docs`);
 }
 
 void bootstrap();

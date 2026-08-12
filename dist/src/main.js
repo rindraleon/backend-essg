@@ -33,22 +33,28 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-const core_1 = require("@nestjs/core");
-const app_module_1 = require("./app.module");
-const swagger_1 = require("@nestjs/swagger");
-const config_1 = require("@nestjs/config");
 const common_1 = require("@nestjs/common");
-const path_1 = require("path");
+const config_1 = require("@nestjs/config");
+const core_1 = require("@nestjs/core");
+const swagger_1 = require("@nestjs/swagger");
 const express = __importStar(require("express"));
 const fs = __importStar(require("node:fs"));
+const node_path_1 = require("node:path");
+const app_module_1 = require("./app.module");
+const all_exceptions_filter_1 = require("./common/filters/all-exceptions.filter");
+const http_exception_filter_1 = require("./common/filters/http-exception.filter");
+const transform_interceptor_1 = require("./common/interceptors/transform.interceptor");
 async function bootstrap() {
+    const logger = new common_1.Logger('Bootstrap');
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const configService = app.get(config_1.ConfigService);
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,
         transform: true,
-        forbidNonWhitelisted: false,
+        forbidNonWhitelisted: true,
     }));
+    app.useGlobalInterceptors(new transform_interceptor_1.TransformInterceptor());
+    app.useGlobalFilters(new all_exceptions_filter_1.AllExceptionsFilter(), new http_exception_filter_1.HttpExceptionFilter());
     app.enableCors({
         origin: [
             'http://localhost:5000',
@@ -61,23 +67,23 @@ async function bootstrap() {
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
     });
-    const config = new swagger_1.DocumentBuilder()
-        .setTitle('Backend ITDC')
-        .setDescription('Documentation des API ITDC')
+    const swaggerConfig = new swagger_1.DocumentBuilder()
+        .setTitle('Backend ESSG')
+        .setDescription('Documentation des API ESSG')
         .setVersion('1.0')
+        .addBearerAuth()
         .build();
-    const document = swagger_1.SwaggerModule.createDocument(app, config);
+    const document = swagger_1.SwaggerModule.createDocument(app, swaggerConfig);
     swagger_1.SwaggerModule.setup('docs', app, document);
     const uploadPath = configService.get('UPLOAD_PATH') || 'uploads';
     if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, { recursive: true });
-        console.log(`Created ${uploadPath} directory`);
     }
-    app.use(`/${uploadPath}`, express.static((0, path_1.join)(process.cwd(), uploadPath)));
+    app.use(`/${uploadPath}`, express.static((0, node_path_1.join)(process.cwd(), uploadPath)));
     const port = configService.get('APP_PORT') || 3000;
     await app.listen(port);
-    console.debug(`Application is running on: http://localhost:${port}`);
-    console.debug(`Documentation is running on: http://localhost:${port}/docs`);
+    logger.log(`Application démarrée sur http://localhost:${port}`);
+    logger.log(`Documentation disponible sur http://localhost:${port}/docs`);
 }
 void bootstrap();
 //# sourceMappingURL=main.js.map

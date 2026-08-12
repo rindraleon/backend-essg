@@ -1,9 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
-import { Projet } from './entities/project.entity';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedData } from '../common/interfaces/api-response.interface';
+import { buildPaginatedData } from '../common/utils/pagination.util';
 import { CreateProjetDto, UpdateProjetDto } from './dto/create-project.dto';
-import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
+import { Projet } from './entities/project.entity';
+import { capitalize, capitalizeArray } from '../common/utils/text.util';
 
 @Injectable()
 export class ProjectsService {
@@ -12,38 +15,32 @@ export class ProjectsService {
     private readonly repo: Repository<Projet>,
   ) {}
 
-  async findAll(paginationDto: PaginationDto): Promise<PaginationResponse<Projet>> {
+  private async findPaginated(
+    where: FindOptionsWhere<Projet> | FindOptionsWhere<Projet>[],
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedData<Projet>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
     const [data, total] = await this.repo.findAndCount({
+      where,
       order: sortBy ? { [sortBy]: sortOrder } : { id: 'ASC' },
       skip,
       take: limit,
     });
 
-    return new PaginationResponse(data, total, page, limit);
+    return buildPaginatedData(data, total, page, limit);
   }
 
-  async search(query: string, paginationDto: PaginationDto): Promise<PaginationResponse<Projet>> {
-    const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
-    const skip = (page - 1) * limit;
+  async findAll(paginationDto: PaginationDto): Promise<PaginatedData<Projet>> {
+    return this.findPaginated({}, paginationDto);
+  }
 
-    const whereCondition: FindOptionsWhere<Projet> = {};
-
-    if (query) {
-      whereCondition.titre = query as FindOptionsWhere<Projet>['titre'];
-      whereCondition.description = query as FindOptionsWhere<Projet>['description'];
-    }
-
-    const [data, total] = await this.repo.findAndCount({
-      where: whereCondition,
-      order: sortBy ? { [sortBy]: sortOrder } : { id: 'ASC' },
-      skip,
-      take: limit,
-    });
-
-    return new PaginationResponse(data, total, page, limit);
+  async search(query: string, paginationDto: PaginationDto): Promise<PaginatedData<Projet>> {
+    const where: FindOptionsWhere<Projet>[] = query
+      ? [{ titre: ILike(`%${query}%`) }, { description: ILike(`%${query}%`) }]
+      : [{}];
+    return this.findPaginated(where, paginationDto);
   }
 
   async findOne(id: number): Promise<Projet> {
@@ -59,16 +56,33 @@ export class ProjectsService {
   }
 
   async create(dto: CreateProjetDto): Promise<Projet> {
-    const item = this.repo.create(dto);
+    const item = this.repo.create({
+      ...dto,
+      titre: capitalize(dto.titre),
+      description: capitalize(dto.description),
+      ville: dto.ville ? capitalize(dto.ville) : dto.ville,
+      pays: dto.pays ? capitalize(dto.pays) : dto.pays,
+      adresse: dto.adresse ? capitalize(dto.adresse) : dto.adresse,
+      partenaires: capitalizeArray(dto.partenaires),
+    });
     return this.repo.save(item);
   }
 
   async update(id: number, dto: UpdateProjetDto): Promise<Projet> {
-    await this.repo.update(id, dto);
+    await this.findOne(id);
+    const updateData: Partial<Projet> = { ...dto };
+    if (dto.titre) updateData.titre = capitalize(dto.titre);
+    if (dto.description) updateData.description = capitalize(dto.description);
+    if (dto.ville) updateData.ville = capitalize(dto.ville);
+    if (dto.pays) updateData.pays = capitalize(dto.pays);
+    if (dto.adresse) updateData.adresse = capitalize(dto.adresse);
+    if (dto.partenaires) updateData.partenaires = capitalizeArray(dto.partenaires);
+    await this.repo.update(id, updateData);
     return this.findOne(id);
   }
 
   async remove(id: number): Promise<void> {
+    await this.findOne(id);
     await this.repo.delete(id);
   }
 }

@@ -15,31 +15,31 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UploadController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
+const api_message_decorator_1 = require("../common/decorators/api-message.decorator");
+const multer_config_1 = require("../common/storage/multer.config");
 const upload_service_1 = require("./upload.service");
-const multer_config_1 = require("../parteners/config/multer.config");
 let UploadController = class UploadController {
     uploadService;
     constructor(uploadService) {
         this.uploadService = uploadService;
     }
-    uploadFile(file) {
+    async uploadImage(file) {
         if (!file)
-            throw new common_1.BadRequestException('No file uploaded');
-        return {
-            url: this.uploadService.getAvatarUrl(file.filename),
-            filename: file.filename,
-        };
+            throw new common_1.BadRequestException('Aucun fichier fourni');
+        return this.uploadService.uploadImage(file);
     }
 };
 exports.UploadController = UploadController;
 __decorate([
     (0, common_1.Post)('image'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', multer_config_1.uploadConfig)),
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
+    (0, api_message_decorator_1.ApiMessage)('Image téléversée avec succès'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', multer_config_1.imageUploadOptions)),
     __param(0, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], UploadController.prototype, "uploadFile", null);
+    __metadata("design:returntype", Promise)
+], UploadController.prototype, "uploadImage", null);
 exports.UploadController = UploadController = __decorate([
     (0, common_1.Controller)('upload'),
     __metadata("design:paramtypes", [upload_service_1.UploadService])

@@ -27,31 +27,38 @@ exports.CreateActualiteDto = CreateActualiteDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(150),
     __metadata("design:type", String)
 ], CreateActualiteDto.prototype, "slug", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(150),
     __metadata("design:type", String)
 ], CreateActualiteDto.prototype, "titre", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(60),
     __metadata("design:type", String)
 ], CreateActualiteDto.prototype, "categorie", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(20),
     __metadata("design:type", String)
 ], CreateActualiteDto.prototype, "date", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(5000),
     __metadata("design:type", String)
 ], CreateActualiteDto.prototype, "resume", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(30000),
     __metadata("design:type", String)
 ], CreateActualiteDto.prototype, "contenu", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreateActualiteDto.prototype, "auteur", void 0);
 __decorate([
@@ -62,6 +69,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
 ], CreateActualiteDto.prototype, "image", void 0);
 __decorate([

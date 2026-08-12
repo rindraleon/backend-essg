@@ -1,6 +1,7 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { DashboardService } from './dashboard.service';
+import { ApiMessage } from '../common/decorators/api-message.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { DashboardService } from './dashboard.service';
 
 @Controller('dashboard')
 export class DashboardController {
@@ -8,29 +9,33 @@ export class DashboardController {
 
   @Get('stats')
   @UseGuards(JwtAuthGuard)
+  @ApiMessage('Statistiques récupérées')
   getStats() {
     return this.dashboardService.getStats();
   }
 
   @Get('recent-activities')
   @UseGuards(JwtAuthGuard)
+  @ApiMessage('Activités récentes récupérées')
   getRecentActivities() {
     return this.dashboardService.getRecentActivities();
   }
 
   @Get('overview')
   @UseGuards(JwtAuthGuard)
+  @ApiMessage('Aperçu récupéré')
   getOverview() {
     return this.dashboardService.getOverview();
   }
 
-  // Public endpoint for dashboard stats (no auth required)
   @Get('public/stats')
+  @ApiMessage('Statistiques récupérées')
   getPublicStats() {
     return this.dashboardService.getStats();
   }
 
   @Get('public/recent-activities')
+  @ApiMessage('Activités récentes récupérées')
   getPublicRecentActivities() {
     return this.dashboardService.getRecentActivities();
   }

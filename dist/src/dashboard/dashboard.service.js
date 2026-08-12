@@ -41,7 +41,7 @@ let DashboardService = class DashboardService {
         this.resourceRepository = resourceRepository;
     }
     async getStats() {
-        const [totalUsers, totalFormations, totalNews, totalProjects, totalPartners, totalAdmissions, totalResources] = await Promise.all([
+        const [totalUsers, totalFormations, totalNews, totalProjects, totalPartners, totalAdmissions, totalResources,] = await Promise.all([
             this.userRepository.count(),
             this.formationRepository.count(),
             this.newsRepository.count(),

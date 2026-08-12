@@ -16,38 +16,33 @@ exports.ProjectsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
+const pagination_util_1 = require("../common/utils/pagination.util");
 const project_entity_1 = require("./entities/project.entity");
-const pagination_dto_1 = require("../common/dto/pagination.dto");
+const text_util_1 = require("../common/utils/text.util");
 let ProjectsService = class ProjectsService {
     repo;
     constructor(repo) {
         this.repo = repo;
     }
-    async findAll(paginationDto) {
+    async findPaginated(where, paginationDto) {
         const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
         const skip = (page - 1) * limit;
         const [data, total] = await this.repo.findAndCount({
+            where,
             order: sortBy ? { [sortBy]: sortOrder } : { id: 'ASC' },
             skip,
             take: limit,
         });
-        return new pagination_dto_1.PaginationResponse(data, total, page, limit);
+        return (0, pagination_util_1.buildPaginatedData)(data, total, page, limit);
+    }
+    async findAll(paginationDto) {
+        return this.findPaginated({}, paginationDto);
     }
     async search(query, paginationDto) {
-        const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
-        const skip = (page - 1) * limit;
-        const whereCondition = {};
-        if (query) {
-            whereCondition.titre = query;
-            whereCondition.description = query;
-        }
-        const [data, total] = await this.repo.findAndCount({
-            where: whereCondition,
-            order: sortBy ? { [sortBy]: sortOrder } : { id: 'ASC' },
-            skip,
-            take: limit,
-        });
-        return new pagination_dto_1.PaginationResponse(data, total, page, limit);
+        const where = query
+            ? [{ titre: (0, typeorm_2.ILike)(`%${query}%`) }, { description: (0, typeorm_2.ILike)(`%${query}%`) }]
+            : [{}];
+        return this.findPaginated(where, paginationDto);
     }
     async findOne(id) {
         const item = await this.repo.findOne({ where: { id } });
@@ -62,14 +57,37 @@ let ProjectsService = class ProjectsService {
         return item;
     }
     async create(dto) {
-        const item = this.repo.create(dto);
+        const item = this.repo.create({
+            ...dto,
+            titre: (0, text_util_1.capitalize)(dto.titre),
+            description: (0, text_util_1.capitalize)(dto.description),
+            ville: dto.ville ? (0, text_util_1.capitalize)(dto.ville) : dto.ville,
+            pays: dto.pays ? (0, text_util_1.capitalize)(dto.pays) : dto.pays,
+            adresse: dto.adresse ? (0, text_util_1.capitalize)(dto.adresse) : dto.adresse,
+            partenaires: (0, text_util_1.capitalizeArray)(dto.partenaires),
+        });
         return this.repo.save(item);
     }
     async update(id, dto) {
-        await this.repo.update(id, dto);
+        await this.findOne(id);
+        const updateData = { ...dto };
+        if (dto.titre)
+            updateData.titre = (0, text_util_1.capitalize)(dto.titre);
+        if (dto.description)
+            updateData.description = (0, text_util_1.capitalize)(dto.description);
+        if (dto.ville)
+            updateData.ville = (0, text_util_1.capitalize)(dto.ville);
+        if (dto.pays)
+            updateData.pays = (0, text_util_1.capitalize)(dto.pays);
+        if (dto.adresse)
+            updateData.adresse = (0, text_util_1.capitalize)(dto.adresse);
+        if (dto.partenaires)
+            updateData.partenaires = (0, text_util_1.capitalizeArray)(dto.partenaires);
+        await this.repo.update(id, updateData);
         return this.findOne(id);
     }
     async remove(id) {
+        await this.findOne(id);
         await this.repo.delete(id);
     }
 };

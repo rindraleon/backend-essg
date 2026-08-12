@@ -9,9 +9,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PaginationResponse = exports.PaginationQueryDto = exports.PaginationDto = void 0;
-const class_validator_1 = require("class-validator");
+exports.PaginationQueryDto = exports.PaginationDto = void 0;
 const class_transformer_1 = require("class-transformer");
+const class_validator_1 = require("class-validator");
 class PaginationDto {
     page = 1;
     limit = 10;
@@ -35,62 +35,27 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsIn)(['date', 'titre', 'categorie', 'id', 'creeLe', 'misAJourLe', 'ordre']),
+    (0, class_validator_1.MaxLength)(50),
     __metadata("design:type", String)
 ], PaginationDto.prototype, "sortBy", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsIn)(['ASC', 'DESC']),
     __metadata("design:type", String)
 ], PaginationDto.prototype, "sortOrder", void 0);
-class PaginationQueryDto {
+class PaginationQueryDto extends PaginationDto {
     page = 1;
     limit = 10;
-    sortBy;
-    sortOrder = 'ASC';
 }
 exports.PaginationQueryDto = PaginationQueryDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_transformer_1.Transform)(({ value }) => parseInt(String(value), 10)),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(1),
+    (0, class_transformer_1.Type)(() => Number),
     __metadata("design:type", Number)
 ], PaginationQueryDto.prototype, "page", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_transformer_1.Transform)(({ value }) => parseInt(String(value), 10)),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(1),
-    (0, class_validator_1.Max)(100),
+    (0, class_transformer_1.Type)(() => Number),
     __metadata("design:type", Number)
 ], PaginationQueryDto.prototype, "limit", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsIn)(['date', 'titre', 'categorie', 'id', 'creeLe', 'misAJourLe', 'ordre']),
-    __metadata("design:type", String)
-], PaginationQueryDto.prototype, "sortBy", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsIn)(['ASC', 'DESC']),
-    __metadata("design:type", String)
-], PaginationQueryDto.prototype, "sortOrder", void 0);
-class PaginationResponse {
-    data;
-    total;
-    page;
-    limit;
-    totalPages;
-    constructor(data, total, page, limit) {
-        this.data = data;
-        this.total = total;
-        this.page = page;
-        this.limit = limit;
-        this.totalPages = Math.ceil(total / limit);
-    }
-}
-exports.PaginationResponse = PaginationResponse;
 //# sourceMappingURL=pagination.dto.js.map

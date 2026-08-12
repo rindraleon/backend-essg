@@ -1,6 +1,6 @@
-import { Injectable, UnauthorizedException, OnModuleInit } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { Injectable, Logger, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -18,7 +18,7 @@ export interface JwtPayload {
 
 @Injectable()
 export class AuthService implements OnModuleInit {
-  private initialized = false;
+  private readonly logger = new Logger(AuthService.name);
 
   constructor(
     private readonly jwtService: JwtService,
@@ -49,12 +49,10 @@ export class AuthService implements OnModuleInit {
       });
 
       await this.userRepo.save(admin);
-      console.log(`[Auth] Default admin account created: ${adminEmail}`);
+      this.logger.log(`Compte administrateur par défaut créé: ${adminEmail}`);
     } else {
-      console.log(`[Auth] Admin account already exists: ${adminEmail}`);
+      this.logger.log(`Compte administrateur déjà existant: ${adminEmail}`);
     }
-
-    this.initialized = true;
   }
 
   async validateUser(

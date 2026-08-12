@@ -1,14 +1,10 @@
 import { Module } from '@nestjs/common';
-import { MulterModule } from '@nestjs/platform-express';
-import { UploadService } from './upload.service';
+import { StorageModule } from '../common/storage/storage.module';
 import { UploadController } from './upload.controller';
+import { UploadService } from './upload.service';
 
 @Module({
-  imports: [
-    MulterModule.register({
-      storage: undefined,
-    }),
-  ],
+  imports: [StorageModule],
   controllers: [UploadController],
   providers: [UploadService],
   exports: [UploadService],

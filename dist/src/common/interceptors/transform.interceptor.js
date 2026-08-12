@@ -9,14 +9,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TransformInterceptor = void 0;
 const common_1 = require("@nestjs/common");
 const operators_1 = require("rxjs/operators");
+const api_message_decorator_1 = require("../decorators/api-message.decorator");
+function defaultMessage(statusCode) {
+    switch (statusCode) {
+        case common_1.HttpStatus.CREATED:
+            return 'Ressource créée avec succès';
+        case common_1.HttpStatus.NO_CONTENT:
+            return 'Opération effectuée avec succès';
+        default:
+            return 'Données récupérées avec succès';
+    }
+}
 let TransformInterceptor = class TransformInterceptor {
     intercept(context, next) {
-        const response = context.switchToHttp().getResponse();
-        const statusCode = response.statusCode ?? 200;
+        const ctx = context.switchToHttp();
+        const response = ctx.getResponse();
+        const statusCode = response.statusCode ?? common_1.HttpStatus.OK;
+        const handler = context.getHandler();
+        const metadataMessage = Reflect.getMetadata(api_message_decorator_1.API_MESSAGE_KEY, handler);
+        const message = metadataMessage ?? defaultMessage(statusCode);
         return next.handle().pipe((0, operators_1.map)((data) => ({
-            data,
             statusCode,
-            timestamp: new Date().toISOString(),
+            message,
+            data: data ?? null,
         })));
     }
 };

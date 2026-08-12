@@ -8,8 +8,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DatabaseModule = void 0;
 const common_1 = require("@nestjs/common");
-const typeorm_1 = require("@nestjs/typeorm");
 const config_1 = require("@nestjs/config");
+const typeorm_1 = require("@nestjs/typeorm");
 let DatabaseModule = class DatabaseModule {
 };
 exports.DatabaseModule = DatabaseModule;
@@ -19,18 +19,21 @@ exports.DatabaseModule = DatabaseModule = __decorate([
             typeorm_1.TypeOrmModule.forRootAsync({
                 imports: [config_1.ConfigModule],
                 inject: [config_1.ConfigService],
-                useFactory: (configService) => ({
-                    type: 'postgres',
-                    host: configService.get('POSTGRES_HOST'),
-                    port: configService.get('POSTGRES_PORT'),
-                    username: configService.get('POSTGRES_USER'),
-                    password: configService.get('POSTGRES_PASSWORD'),
-                    database: configService.get('POSTGRES_DB'),
-                    entities: [__dirname + '/../**/*.entity.{js,ts}'],
-                    synchronize: true,
-                    logger: 'advanced-console',
-                    logging: ['query', 'error'],
-                }),
+                useFactory: (configService) => {
+                    const isProduction = configService.get('NODE_ENV') === 'production';
+                    return {
+                        type: 'postgres',
+                        host: configService.get('POSTGRES_HOST', 'localhost'),
+                        port: configService.get('POSTGRES_PORT', 5432),
+                        username: configService.get('POSTGRES_USER', 'postgres'),
+                        password: configService.get('POSTGRES_PASSWORD', 'password'),
+                        database: configService.get('POSTGRES_DB', 'essg'),
+                        entities: [__dirname + '/../**/*.entity.{js,ts}'],
+                        synchronize: !isProduction,
+                        logger: 'advanced-console',
+                        logging: isProduction ? ['error'] : ['query', 'error'],
+                    };
+                },
             }),
         ],
     })

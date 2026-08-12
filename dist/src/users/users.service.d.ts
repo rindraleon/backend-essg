@@ -1,9 +1,10 @@
 import { Repository } from 'typeorm';
+import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { MailService } from '../mail/mail.service';
-import { Utilisateur } from './entities/user.entity';
 import { CreateUtilisateurDto } from './dto/create-user.dto';
 import { UpdateUtilisateurDto } from './dto/update-user.dto';
-import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
+import { Utilisateur } from './entities/user.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
 type SanitizedUtilisateur = Omit<Utilisateur, 'motDePasse'>;
 export declare class UsersService {
     private readonly repo;
@@ -11,8 +12,9 @@ export declare class UsersService {
     private readonly logger;
     constructor(repo: Repository<Utilisateur>, mailService: MailService);
     private sanitizeUser;
-    findAll(paginationDto: PaginationDto): Promise<PaginationResponse<SanitizedUtilisateur>>;
-    search(query: string, paginationDto: PaginationDto): Promise<PaginationResponse<SanitizedUtilisateur>>;
+    private findPaginated;
+    findAll(paginationDto: PaginationDto): Promise<PaginatedData<SanitizedUtilisateur>>;
+    search(query: string, paginationDto: PaginationDto): Promise<PaginatedData<SanitizedUtilisateur>>;
     findOne(id: number): Promise<SanitizedUtilisateur>;
     findByEmail(email: string): Promise<Utilisateur | null>;
     create(dto: CreateUtilisateurDto): Promise<SanitizedUtilisateur>;

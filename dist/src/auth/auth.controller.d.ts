@@ -1,32 +1,21 @@
 import { AuthService } from './auth.service';
-declare class LoginDto {
+import { LoginDto } from './dto/login.dto';
+interface AuthUser {
+    userId: number;
     email: string;
-    password: string;
 }
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
     login(dto: LoginDto): Promise<import("./auth.service").AuthPayload>;
     verify(req: {
-        user: {
-            userId: number;
-            email: string;
-        };
+        user: AuthUser;
     }): {
         valid: boolean;
-        user: {
-            userId: number;
-            email: string;
-        };
+        user: AuthUser;
     };
     me(req: {
-        user: {
-            userId: number;
-            email: string;
-        };
-    }): {
-        userId: number;
-        email: string;
-    };
+        user: AuthUser;
+    }): AuthUser;
 }
 export {};

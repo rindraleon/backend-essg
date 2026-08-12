@@ -17,7 +17,6 @@ export interface DashboardStats {
   totalPartners: number;
   totalAdmissions: number;
   totalResources: number;
-  
 }
 
 export interface Activity {
@@ -53,7 +52,15 @@ export class DashboardService {
   ) {}
 
   async getStats(): Promise<DashboardStats> {
-    const [totalUsers, totalFormations, totalNews, totalProjects, totalPartners, totalAdmissions, totalResources] = await Promise.all([
+    const [
+      totalUsers,
+      totalFormations,
+      totalNews,
+      totalProjects,
+      totalPartners,
+      totalAdmissions,
+      totalResources,
+    ] = await Promise.all([
       this.userRepository.count(),
       this.formationRepository.count(),
       this.newsRepository.count(),
@@ -71,7 +78,6 @@ export class DashboardService {
       totalPartners,
       totalAdmissions,
       totalResources,
-      
     };
   }
 

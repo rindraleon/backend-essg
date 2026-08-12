@@ -1,5 +1,5 @@
-import { IsOptional, IsInt, Min, Max, IsString, IsIn } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Type } from 'class-transformer';
+import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 
 export class PaginationDto {
   @IsOptional()
@@ -15,53 +15,20 @@ export class PaginationDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['date', 'titre', 'categorie', 'id', 'creeLe', 'misAJourLe', 'ordre'])
-  sortBy?: 'date' | 'titre' | 'categorie' | 'id' | 'creeLe' | 'misAJourLe' | 'ordre';
+  @MaxLength(50)
+  sortBy?: string;
 
   @IsOptional()
-  @IsString()
   @IsIn(['ASC', 'DESC'])
   sortOrder?: 'ASC' | 'DESC' = 'ASC';
 }
 
-// DTO pour accepter les paramètres de pagination depuis les query strings
-export class PaginationQueryDto {
+export class PaginationQueryDto extends PaginationDto {
   @IsOptional()
-  @Transform(({ value }) => parseInt(String(value), 10))
-  @IsInt()
-  @Min(1)
+  @Type(() => Number)
   page?: number = 1;
 
   @IsOptional()
-  @Transform(({ value }) => parseInt(String(value), 10))
-  @IsInt()
-  @Min(1)
-  @Max(100)
+  @Type(() => Number)
   limit?: number = 10;
-
-  @IsOptional()
-  @IsString()
-  @IsIn(['date', 'titre', 'categorie', 'id', 'creeLe', 'misAJourLe', 'ordre'])
-  sortBy?: 'date' | 'titre' | 'categorie' | 'id' | 'creeLe' | 'misAJourLe' | 'ordre';
-
-  @IsOptional()
-  @IsString()
-  @IsIn(['ASC', 'DESC'])
-  sortOrder?: 'ASC' | 'DESC' = 'ASC';
-}
-
-export class PaginationResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-
-  constructor(data: T[], total: number, page: number, limit: number) {
-    this.data = data;
-    this.total = total;
-    this.page = page;
-    this.limit = limit;
-    this.totalPages = Math.ceil(total / limit);
-  }
 }

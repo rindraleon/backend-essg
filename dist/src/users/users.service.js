@@ -51,9 +51,10 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bcrypt = __importStar(require("bcrypt"));
+const pagination_util_1 = require("../common/utils/pagination.util");
 const mail_service_1 = require("../mail/mail.service");
 const user_entity_1 = require("./entities/user.entity");
-const pagination_dto_1 = require("../common/dto/pagination.dto");
+const text_util_1 = require("../common/utils/text.util");
 let UsersService = UsersService_1 = class UsersService {
     repo;
     mailService;
@@ -62,39 +63,34 @@ let UsersService = UsersService_1 = class UsersService {
         this.repo = repo;
         this.mailService = mailService;
     }
-    sanitizeUser = (user) => {
+    sanitizeUser(user) {
         const { motDePasse, ...rest } = user;
         void motDePasse;
         return rest;
-    };
-    async findAll(paginationDto) {
+    }
+    async findPaginated(where, paginationDto) {
         const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
         const skip = (page - 1) * limit;
         const [users, total] = await this.repo.findAndCount({
+            where,
             order: sortBy ? { [sortBy]: sortOrder } : { id: 'ASC' },
             skip,
             take: limit,
         });
-        const sanitizedUsers = users.map(this.sanitizeUser);
-        return new pagination_dto_1.PaginationResponse(sanitizedUsers, total, page, limit);
+        return (0, pagination_util_1.buildPaginatedData)(users.map((user) => this.sanitizeUser(user)), total, page, limit);
+    }
+    async findAll(paginationDto) {
+        return this.findPaginated({}, paginationDto);
     }
     async search(query, paginationDto) {
-        const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
-        const skip = (page - 1) * limit;
-        const whereCondition = {};
-        if (query) {
-            whereCondition.nom = query;
-            whereCondition.prenom = query;
-            whereCondition.email = query;
-        }
-        const [users, total] = await this.repo.findAndCount({
-            where: whereCondition,
-            order: sortBy ? { [sortBy]: sortOrder } : { id: 'ASC' },
-            skip,
-            take: limit,
-        });
-        const sanitizedUsers = users.map(this.sanitizeUser);
-        return new pagination_dto_1.PaginationResponse(sanitizedUsers, total, page, limit);
+        const where = query
+            ? [
+                { nom: (0, typeorm_2.ILike)(`%${query}%`) },
+                { prenom: (0, typeorm_2.ILike)(`%${query}%`) },
+                { email: (0, typeorm_2.ILike)(`%${query}%`) },
+            ]
+            : [{}];
+        return this.findPaginated(where, paginationDto);
     }
     async findOne(id) {
         const user = await this.repo.findOne({ where: { id } });
@@ -109,33 +105,45 @@ let UsersService = UsersService_1 = class UsersService {
         const existing = await this.findByEmail(dto.email);
         if (existing)
             throw new common_1.ConflictException('Cet email existe déjà');
-        const plainPassword = dto.motDePasse;
-        const hashedPassword = await bcrypt.hash(plainPassword, 10);
-        const user = this.repo.create({ ...dto, motDePasse: hashedPassword });
+        const hashedPassword = await bcrypt.hash(dto.motDePasse, 10);
+        const user = this.repo.create({
+            ...dto,
+            nom: (0, text_util_1.toUpperCase)(dto.nom),
+            prenom: (0, text_util_1.capitalize)(dto.prenom),
+            motDePasse: hashedPassword,
+        });
         const saved = await this.repo.save(user);
         try {
-            const siteUrl = process.env.APP_URL || 'http://localhost:3000';
-            await this.mailService.sendWelcomeEmail(saved.email, saved.nom, saved.prenom, plainPassword, siteUrl);
-            this.logger.log(`Welcome email sent to ${saved.email}`);
+            await this.mailService.sendWelcomeEmail(saved.email, saved.nom, saved.prenom, dto.motDePasse);
+            this.logger.log(`Email de bienvenue envoyé à ${saved.email}`);
         }
         catch (error) {
-            this.logger.error(`Failed to send welcome email to ${saved.email}`, error);
+            this.logger.error(`Échec de l'envoi de l'email de bienvenue à ${saved.email}`, error);
         }
         return this.sanitizeUser(saved);
     }
     async update(id, dto) {
+        const user = await this.findOne(id);
+        const data = { ...dto };
         if (dto.motDePasse) {
-            dto.motDePasse = await bcrypt.hash(dto.motDePasse, 10);
+            data.motDePasse = await bcrypt.hash(dto.motDePasse, 10);
         }
-        await this.repo.update(id, dto);
-        return this.findOne(id);
+        if (dto.nom) {
+            data.nom = (0, text_util_1.toUpperCase)(dto.nom);
+        }
+        if (dto.prenom) {
+            data.prenom = (0, text_util_1.capitalize)(dto.prenom);
+        }
+        await this.repo.update(id, data);
+        return this.findOne(user.id);
     }
     async updateAvatar(id, avatarUrl) {
         await this.repo.update(id, { avatar: avatarUrl });
         return this.findOne(id);
     }
     async remove(id) {
-        await this.repo.delete(id);
+        const user = await this.findOne(id);
+        await this.repo.delete(user.id);
     }
 };
 exports.UsersService = UsersService;

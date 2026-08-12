@@ -11,8 +11,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardController = void 0;
 const common_1 = require("@nestjs/common");
-const dashboard_service_1 = require("./dashboard.service");
+const api_message_decorator_1 = require("../common/decorators/api-message.decorator");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const dashboard_service_1 = require("./dashboard.service");
 let DashboardController = class DashboardController {
     dashboardService;
     constructor(dashboardService) {
@@ -38,6 +39,7 @@ exports.DashboardController = DashboardController;
 __decorate([
     (0, common_1.Get)('stats'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, api_message_decorator_1.ApiMessage)('Statistiques récupérées'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
@@ -45,6 +47,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('recent-activities'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, api_message_decorator_1.ApiMessage)('Activités récentes récupérées'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
@@ -52,18 +55,21 @@ __decorate([
 __decorate([
     (0, common_1.Get)('overview'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, api_message_decorator_1.ApiMessage)('Aperçu récupéré'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], DashboardController.prototype, "getOverview", null);
 __decorate([
     (0, common_1.Get)('public/stats'),
+    (0, api_message_decorator_1.ApiMessage)('Statistiques récupérées'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], DashboardController.prototype, "getPublicStats", null);
 __decorate([
     (0, common_1.Get)('public/recent-activities'),
+    (0, api_message_decorator_1.ApiMessage)('Activités récentes récupérées'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)

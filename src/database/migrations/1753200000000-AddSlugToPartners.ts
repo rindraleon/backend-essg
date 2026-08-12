@@ -25,7 +25,9 @@ export class AddSlugToPartners1753200000000 implements MigrationInterface {
     );
 
     // Étape 2 : Peupler les slugs pour les données existantes
-    const partners = await queryRunner.query('SELECT id, nom FROM partners WHERE slug IS NULL');
+    const partners = (await queryRunner.query(
+      'SELECT id, nom FROM partners WHERE slug IS NULL',
+    )) as Array<{ id: number; nom: string }>;
     for (const partner of partners) {
       const slug = this.generateSlug(partner.nom);
       await queryRunner.query('UPDATE partners SET slug = $1 WHERE id = $2', [slug, partner.id]);

@@ -14,15 +14,26 @@ let HttpExceptionFilter = HttpExceptionFilter_1 = class HttpExceptionFilter {
     catch(exception, host) {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse();
-        const status = exception.getStatus();
+        const statusCode = exception.getStatus();
         const exceptionResponse = exception.getResponse();
-        this.logger.error(`HTTP ${status}: ${JSON.stringify(exceptionResponse)}`);
-        response.status(status).json({
-            statusCode: status,
-            timestamp: new Date().toISOString(),
-            message: typeof exceptionResponse === 'string'
-                ? exceptionResponse
-                : exceptionResponse.message,
+        let message = 'Une erreur est survenue';
+        if (typeof exceptionResponse === 'string') {
+            message = exceptionResponse;
+        }
+        else if (exceptionResponse && typeof exceptionResponse === 'object') {
+            const body = exceptionResponse;
+            if (Array.isArray(body.message)) {
+                message = body.message.join(', ');
+            }
+            else if (typeof body.message === 'string') {
+                message = body.message;
+            }
+        }
+        this.logger.error(`HTTP ${statusCode}: ${message}`);
+        response.status(statusCode).json({
+            statusCode,
+            message,
+            data: null,
         });
     }
 };

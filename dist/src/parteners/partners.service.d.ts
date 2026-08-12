@@ -1,16 +1,17 @@
 import { Repository } from 'typeorm';
-import { Partenaire } from './entities/partner.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { CreatePartenaireDto, UpdatePartenaireDto } from './dto/create-partner.dto';
-import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
+import { Partenaire } from './entities/partner.entity';
 export declare class PartnersService {
     private readonly repo;
     constructor(repo: Repository<Partenaire>);
-    findAll(paginationDto: PaginationDto): Promise<PaginationResponse<Partenaire>>;
-    search(query: string, paginationDto: PaginationDto): Promise<PaginationResponse<Partenaire>>;
-    findById(id: number): Promise<Partenaire>;
+    private findPaginated;
+    findAll(paginationDto: PaginationDto): Promise<PaginatedData<Partenaire>>;
+    search(query: string, paginationDto: PaginationDto): Promise<PaginatedData<Partenaire>>;
+    findOne(id: number): Promise<Partenaire>;
     findBySlug(slug: string): Promise<Partenaire>;
     findByName(nom: string): Promise<Partenaire>;
-    findOne(id: number): Promise<Partenaire>;
     create(dto: CreatePartenaireDto): Promise<Partenaire>;
     update(id: number, dto: UpdatePartenaireDto): Promise<Partenaire>;
     remove(id: number): Promise<void>;

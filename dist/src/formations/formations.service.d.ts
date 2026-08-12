@@ -1,12 +1,13 @@
 import { Repository } from 'typeorm';
-import { Formation } from './entities/formation.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { CreateFormationDto, UpdateFormationDto } from './dto/create-formation.dto';
-import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
+import { Formation } from './entities/formation.entity';
 export declare class FormationsService {
     private readonly repo;
     constructor(repo: Repository<Formation>);
-    findAll(paginationDto: PaginationDto): Promise<PaginationResponse<Formation>>;
-    search(query: string, paginationDto: PaginationDto): Promise<PaginationResponse<Formation>>;
+    findAll(paginationDto: PaginationDto): Promise<PaginatedData<Formation>>;
+    search(query: string, paginationDto: PaginationDto): Promise<PaginatedData<Formation>>;
     findOne(id: number): Promise<Formation>;
     findBySlug(slug: string): Promise<Formation>;
     create(dto: CreateFormationDto): Promise<Formation>;

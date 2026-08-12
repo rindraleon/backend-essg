@@ -25,11 +25,13 @@ class CreatePartenaireDto {
 exports.CreatePartenaireDto = CreatePartenaireDto;
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "nom", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(150),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "slug", void 0);
 __decorate([
@@ -38,25 +40,30 @@ __decorate([
 ], CreatePartenaireDto.prototype, "type", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "secteur", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(10000),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(200),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "siteWeb", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "logo", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "contact", void 0);
 __decorate([

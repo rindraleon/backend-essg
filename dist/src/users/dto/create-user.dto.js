@@ -23,19 +23,23 @@ class CreateUtilisateurDto {
 exports.CreateUtilisateurDto = CreateUtilisateurDto;
 __decorate([
     (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.MaxLength)(120),
     __metadata("design:type", String)
 ], CreateUtilisateurDto.prototype, "email", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(6),
+    (0, class_validator_1.MaxLength)(128),
     __metadata("design:type", String)
 ], CreateUtilisateurDto.prototype, "motDePasse", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreateUtilisateurDto.prototype, "prenom", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreateUtilisateurDto.prototype, "nom", void 0);
 __decorate([
@@ -51,6 +55,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
 ], CreateUtilisateurDto.prototype, "avatar", void 0);
 //# sourceMappingURL=create-user.dto.js.map

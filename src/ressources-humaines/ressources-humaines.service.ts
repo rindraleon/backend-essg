@@ -1,13 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
-import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { RessourceHumaine } from './entities/ressource-humaine.entity';
+import { Repository } from 'typeorm';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedData } from '../common/interfaces/api-response.interface';
+import { buildPaginatedData } from '../common/utils/pagination.util';
 import {
   CreateRessourceHumaineDto,
   UpdateRessourceHumaineDto,
 } from './dto/create-ressource-humaine.dto';
-import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
+import { RessourceHumaine } from './entities/ressource-humaine.entity';
+import { capitalize, toUpperCase } from '../common/utils/text.util';
 
 function generateSlug(nom: string, prenom: string): string {
   return `${nom}-${prenom}`
@@ -25,68 +27,58 @@ export class RessourcesHumainesService {
     private readonly repo: Repository<RessourceHumaine>,
   ) {}
 
-  async findAll(paginationDto: PaginationDto): Promise<PaginationResponse<RessourceHumaine>> {
+  private async findPaginated(
+    where: Record<string, unknown> | Record<string, unknown>[],
+    paginationDto: PaginationDto,
+    defaultOrder: Record<string, 'ASC' | 'DESC'> = { ordre: 'ASC', id: 'ASC' },
+  ): Promise<PaginatedData<RessourceHumaine>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
     const [data, total] = await this.repo.findAndCount({
-      where: { actif: true },
-      order: sortBy ? { [sortBy]: sortOrder } : { ordre: 'ASC', id: 'ASC' },
+      where,
+      order: sortBy ? { [sortBy]: sortOrder } : defaultOrder,
       skip,
       take: limit,
     });
 
-    return new PaginationResponse(data, total, page, limit);
+    return buildPaginatedData(data, total, page, limit);
+  }
+
+  async findAll(paginationDto: PaginationDto): Promise<PaginatedData<RessourceHumaine>> {
+    return this.findPaginated({ actif: true }, paginationDto);
   }
 
   async findAllIncludingInactive(
     paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<RessourceHumaine>> {
-    const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
-    const skip = (page - 1) * limit;
-
-    const [data, total] = await this.repo.findAndCount({
-      order: sortBy ? { [sortBy]: sortOrder } : { ordre: 'ASC', id: 'ASC' },
-      skip,
-      take: limit,
-    });
-
-    return new PaginationResponse(data, total, page, limit);
+  ): Promise<PaginatedData<RessourceHumaine>> {
+    return this.findPaginated({}, paginationDto);
   }
 
   async search(
     query: string,
     paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<RessourceHumaine>> {
+  ): Promise<PaginatedData<RessourceHumaine>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const whereCondition: FindOptionsWhere<RessourceHumaine> = { actif: true };
-
-    if (query) {
-      const searchTerm = `%${query}%`;
-      return this.repo
-        .createQueryBuilder('ressource')
-        .where('ressource.actif = :actif', { actif: true })
-        .andWhere(
-          '(ressource.nom ILIKE :search OR ressource.prenom ILIKE :search OR ressource.poste ILIKE :search)',
-          { search: searchTerm },
-        )
-        .orderBy(sortBy ? `ressource.${sortBy}` : 'ressource.ordre', sortOrder)
-        .skip(skip)
-        .take(limit)
-        .getManyAndCount()
-        .then(([data, total]) => new PaginationResponse(data, total, page, limit));
+    if (!query) {
+      return this.findAll(paginationDto);
     }
 
-    const [data, total] = await this.repo.findAndCount({
-      where: whereCondition,
-      order: sortBy ? { [sortBy]: sortOrder } : { ordre: 'ASC', id: 'ASC' },
-      skip,
-      take: limit,
-    });
+    const [data, total] = await this.repo
+      .createQueryBuilder('ressource')
+      .where('ressource.actif = :actif', { actif: true })
+      .andWhere(
+        '(ressource.nom ILIKE :search OR ressource.prenom ILIKE :search OR ressource.poste ILIKE :search)',
+        { search: `%${query}%` },
+      )
+      .orderBy(sortBy ? `ressource.${sortBy}` : 'ressource.ordre', sortOrder)
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
 
-    return new PaginationResponse(data, total, page, limit);
+    return buildPaginatedData(data, total, page, limit);
   }
 
   async findOne(id: number): Promise<RessourceHumaine> {
@@ -102,10 +94,13 @@ export class RessourcesHumainesService {
   }
 
   async create(dto: CreateRessourceHumaineDto): Promise<RessourceHumaine> {
-    const slug = generateSlug(dto.nom, dto.prenom);
     const item = this.repo.create({
       ...dto,
-      slug,
+      nom: toUpperCase(dto.nom),
+      prenom: capitalize(dto.prenom),
+      poste: capitalize(dto.poste),
+      description: dto.description ? capitalize(dto.description) : dto.description,
+      slug: generateSlug(dto.nom, dto.prenom),
       actif: dto.actif ?? true,
       ordre: dto.ordre ?? 0,
       photo: dto.photo || '',
@@ -114,30 +109,32 @@ export class RessourcesHumainesService {
   }
 
   async update(id: number, dto: UpdateRessourceHumaineDto): Promise<RessourceHumaine> {
-    const updateData: QueryDeepPartialEntity<RessourceHumaine> = { ...dto };
-
+    const current = await this.findOne(id);
+    const updateData: Partial<RessourceHumaine> = { ...dto };
+    if (dto.nom) {
+      updateData.nom = toUpperCase(dto.nom);
+    }
+    if (dto.prenom) {
+      updateData.prenom = capitalize(dto.prenom);
+    }
+    if (dto.poste) {
+      updateData.poste = capitalize(dto.poste);
+    }
+    if (dto.description) {
+      updateData.description = capitalize(dto.description);
+    }
     if (dto.nom || dto.prenom) {
-      const current = await this.findOne(id);
-      const nom = dto.nom || current.nom;
-      const prenom = dto.prenom || current.prenom;
-      updateData.slug = generateSlug(nom, prenom);
+      updateData.slug = generateSlug(
+        toUpperCase(dto.nom || current.nom),
+        capitalize(dto.prenom || current.prenom),
+      );
     }
-
-    if (dto.actif !== undefined) {
-      updateData.actif = dto.actif;
-    }
-    if (dto.ordre !== undefined) {
-      updateData.ordre = dto.ordre;
-    }
-    if (dto.photo !== undefined) {
-      updateData.photo = dto.photo || '';
-    }
-
     await this.repo.update(id, updateData);
     return this.findOne(id);
   }
 
   async remove(id: number): Promise<void> {
+    await this.findOne(id);
     await this.repo.delete(id);
   }
 }

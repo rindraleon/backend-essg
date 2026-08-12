@@ -24,6 +24,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(5000),
     __metadata("design:type", String)
 ], UpdateAdmissionStatusDto.prototype, "commentaire", void 0);
 //# sourceMappingURL=update-admission-status.dto.js.map

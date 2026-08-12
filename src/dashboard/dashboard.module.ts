@@ -11,7 +11,17 @@ import { Admission } from '../admissions/entities/admission.entity';
 import { RessourceHumaine } from '../ressources-humaines/entities/ressource-humaine.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Utilisateur, Formation, Actualite, Projet, Partenaire, Admission, RessourceHumaine])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Utilisateur,
+      Formation,
+      Actualite,
+      Projet,
+      Partenaire,
+      Admission,
+      RessourceHumaine,
+    ]),
+  ],
   controllers: [DashboardController],
   providers: [DashboardService],
   exports: [DashboardService],

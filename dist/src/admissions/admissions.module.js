@@ -9,16 +9,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdmissionsModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
-const admissions_service_1 = require("./admissions.service");
-const admissions_controller_1 = require("./admissions.controller");
-const admission_entity_1 = require("./entities/admission.entity");
+const storage_module_1 = require("../common/storage/storage.module");
 const mail_module_1 = require("../mail/mail.module");
+const admissions_controller_1 = require("./admissions.controller");
+const admissions_service_1 = require("./admissions.service");
+const admission_entity_1 = require("./entities/admission.entity");
 let AdmissionsModule = class AdmissionsModule {
 };
 exports.AdmissionsModule = AdmissionsModule;
 exports.AdmissionsModule = AdmissionsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([admission_entity_1.Admission]), mail_module_1.MailModule],
+        imports: [typeorm_1.TypeOrmModule.forFeature([admission_entity_1.Admission]), mail_module_1.MailModule, storage_module_1.StorageModule],
         controllers: [admissions_controller_1.AdmissionsController],
         providers: [admissions_service_1.AdmissionsService],
         exports: [admissions_service_1.AdmissionsService],

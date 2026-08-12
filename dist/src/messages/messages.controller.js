@@ -14,10 +14,11 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessagesController = void 0;
 const common_1 = require("@nestjs/common");
-const messages_service_1 = require("./messages.service");
-const create_message_dto_1 = require("./dto/create-message.dto");
+const api_message_decorator_1 = require("../common/decorators/api-message.decorator");
 const pagination_dto_1 = require("../common/dto/pagination.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const create_message_dto_1 = require("./dto/create-message.dto");
+const messages_service_1 = require("./messages.service");
 let MessagesController = class MessagesController {
     service;
     constructor(service) {
@@ -45,6 +46,7 @@ let MessagesController = class MessagesController {
 exports.MessagesController = MessagesController;
 __decorate([
     (0, common_1.Get)(),
+    (0, api_message_decorator_1.ApiMessage)('Messages récupérés'),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [pagination_dto_1.PaginationQueryDto]),
@@ -52,6 +54,7 @@ __decorate([
 ], MessagesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('search'),
+    (0, api_message_decorator_1.ApiMessage)('Recherche effectuée'),
     __param(0, (0, common_1.Query)('q')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
@@ -60,6 +63,7 @@ __decorate([
 ], MessagesController.prototype, "search", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, api_message_decorator_1.ApiMessage)('Message récupéré'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -67,6 +71,8 @@ __decorate([
 ], MessagesController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
+    (0, api_message_decorator_1.ApiMessage)('Message créé avec succès'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_message_dto_1.CreateMessageDto]),
@@ -75,6 +81,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Put)(':id'),
+    (0, api_message_decorator_1.ApiMessage)('Message mis à jour'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -84,6 +91,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Delete)(':id'),
+    (0, api_message_decorator_1.ApiMessage)('Message supprimé'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),

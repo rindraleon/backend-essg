@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
-import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { Actualite } from './entities/news-item.entity';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedData } from '../common/interfaces/api-response.interface';
+import { buildPaginatedData } from '../common/utils/pagination.util';
 import { CreateActualiteDto, UpdateActualiteDto } from './dto/create-news.dto';
-import { PaginationDto, PaginationResponse } from '../common/dto/pagination.dto';
+import { Actualite } from './entities/news-item.entity';
+import { capitalize } from '../common/utils/text.util';
 
 function generateSlug(title: string): string {
   return title
@@ -22,41 +24,32 @@ export class NewsService {
     private readonly repo: Repository<Actualite>,
   ) {}
 
-  async findAll(paginationDto: PaginationDto): Promise<PaginationResponse<Actualite>> {
+  private async findPaginated(
+    where: FindOptionsWhere<Actualite> | FindOptionsWhere<Actualite>[],
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedData<Actualite>> {
     const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
     const skip = (page - 1) * limit;
 
     const [data, total] = await this.repo.findAndCount({
+      where,
       order: sortBy ? { [sortBy]: sortOrder } : { date: 'DESC' },
       skip,
       take: limit,
     });
 
-    return new PaginationResponse(data, total, page, limit);
+    return buildPaginatedData(data, total, page, limit);
   }
 
-  async search(
-    query: string,
-    paginationDto: PaginationDto,
-  ): Promise<PaginationResponse<Actualite>> {
-    const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
-    const skip = (page - 1) * limit;
+  async findAll(paginationDto: PaginationDto): Promise<PaginatedData<Actualite>> {
+    return this.findPaginated({}, paginationDto);
+  }
 
-    const whereCondition: FindOptionsWhere<Actualite> = {};
-
-    if (query) {
-      whereCondition.titre = query as FindOptionsWhere<Actualite>['titre'];
-      whereCondition.contenu = query as FindOptionsWhere<Actualite>['contenu'];
-    }
-
-    const [data, total] = await this.repo.findAndCount({
-      where: whereCondition,
-      order: sortBy ? { [sortBy]: sortOrder } : { date: 'DESC' },
-      skip,
-      take: limit,
-    });
-
-    return new PaginationResponse(data, total, page, limit);
+  async search(query: string, paginationDto: PaginationDto): Promise<PaginatedData<Actualite>> {
+    const where: FindOptionsWhere<Actualite>[] = query
+      ? [{ titre: ILike(`%${query}%`) }, { contenu: ILike(`%${query}%`) }]
+      : [{}];
+    return this.findPaginated(where, paginationDto);
   }
 
   async findOne(id: number): Promise<Actualite> {
@@ -72,11 +65,14 @@ export class NewsService {
   }
 
   async create(dto: CreateActualiteDto): Promise<Actualite> {
-    const slug = generateSlug(dto.titre);
     const item = this.repo.create({
       ...dto,
-      slug,
-      resume: dto.resume || '',
+      slug: dto.slug || generateSlug(dto.titre),
+      titre: capitalize(dto.titre),
+      categorie: capitalize(dto.categorie),
+      auteur: capitalize(dto.auteur),
+      resume: dto.resume ? capitalize(dto.resume) : dto.resume,
+      contenu: capitalize(dto.contenu),
       enVedette: dto.enVedette ?? false,
       statut: dto.statut ?? false,
       image: dto.image || '/images/hero-campus.jpg',
@@ -85,32 +81,22 @@ export class NewsService {
   }
 
   async update(id: number, dto: UpdateActualiteDto): Promise<Actualite> {
-    const updateData: QueryDeepPartialEntity<Actualite> = { ...dto };
-
-    // Si le titre est modifié, régénérer le slug
+    await this.findOne(id);
+    const updateData: Partial<Actualite> = { ...dto };
     if (dto.titre) {
+      updateData.titre = capitalize(dto.titre);
       updateData.slug = generateSlug(dto.titre);
     }
-
-    // Fournir des valeurs par défaut pour les champs optionnels
-    if (dto.resume !== undefined) {
-      updateData.resume = dto.resume || '';
-    }
-    if (dto.enVedette !== undefined) {
-      updateData.enVedette = dto.enVedette;
-    }
-    if (dto.statut !== undefined) {
-      updateData.statut = dto.statut;
-    }
-    if (dto.image !== undefined) {
-      updateData.image = dto.image || '';
-    }
-
+    if (dto.categorie) updateData.categorie = capitalize(dto.categorie);
+    if (dto.auteur) updateData.auteur = capitalize(dto.auteur);
+    if (dto.resume) updateData.resume = capitalize(dto.resume);
+    if (dto.contenu) updateData.contenu = capitalize(dto.contenu);
     await this.repo.update(id, updateData);
     return this.findOne(id);
   }
 
   async remove(id: number): Promise<void> {
+    await this.findOne(id);
     await this.repo.delete(id);
   }
 }

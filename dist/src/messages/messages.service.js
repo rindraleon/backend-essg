@@ -11,47 +11,47 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var MessagesService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessagesService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const message_entity_1 = require("./entities/message.entity");
-const pagination_dto_1 = require("../common/dto/pagination.dto");
+const pagination_util_1 = require("../common/utils/pagination.util");
 const mail_service_1 = require("../mail/mail.service");
-let MessagesService = class MessagesService {
+const message_entity_1 = require("./entities/message.entity");
+const text_util_1 = require("../common/utils/text.util");
+let MessagesService = MessagesService_1 = class MessagesService {
     repo;
     mailService;
+    logger = new common_1.Logger(MessagesService_1.name);
     constructor(repo, mailService) {
         this.repo = repo;
         this.mailService = mailService;
     }
-    async findAll(paginationDto) {
+    async findPaginated(where, paginationDto) {
         const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
         const skip = (page - 1) * limit;
         const [data, total] = await this.repo.findAndCount({
+            where,
             order: sortBy ? { [sortBy]: sortOrder } : { creeLe: 'DESC' },
             skip,
             take: limit,
         });
-        return new pagination_dto_1.PaginationResponse(data, total, page, limit);
+        return (0, pagination_util_1.buildPaginatedData)(data, total, page, limit);
+    }
+    async findAll(paginationDto) {
+        return this.findPaginated({}, paginationDto);
     }
     async search(query, paginationDto) {
-        const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
-        const skip = (page - 1) * limit;
-        const whereCondition = {};
-        if (query) {
-            whereCondition.nom = query;
-            whereCondition.email = query;
-            whereCondition.message = query;
-        }
-        const [data, total] = await this.repo.findAndCount({
-            where: whereCondition,
-            order: sortBy ? { [sortBy]: sortOrder } : { creeLe: 'DESC' },
-            skip,
-            take: limit,
-        });
-        return new pagination_dto_1.PaginationResponse(data, total, page, limit);
+        const where = query
+            ? [
+                { nom: (0, typeorm_2.ILike)(`%${query}%`) },
+                { email: (0, typeorm_2.ILike)(`%${query}%`) },
+                { message: (0, typeorm_2.ILike)(`%${query}%`) },
+            ]
+            : [{}];
+        return this.findPaginated(where, paginationDto);
     }
     async findOne(id) {
         const item = await this.repo.findOne({ where: { id } });
@@ -60,31 +60,39 @@ let MessagesService = class MessagesService {
         return item;
     }
     async create(dto) {
-        const item = this.repo.create(dto);
+        const item = this.repo.create({
+            ...dto,
+            nom: (0, text_util_1.toUpperCase)(dto.nom),
+            prenom: (0, text_util_1.capitalize)(dto.prenom),
+            sujet: (0, text_util_1.capitalize)(dto.sujet),
+            message: (0, text_util_1.capitalize)(dto.message),
+        });
         const saved = await this.repo.save(item);
         try {
-            await this.mailService.sendMail({
-                from: process.env.SMTP_FROM || process.env.SMTP_USER,
-                to: saved.email,
-                subject: 'Accusé de réception - ESSG',
-                text: `Bonjour ${saved.prenom} ${saved.nom},\n\nNous avons bien reçu votre message concernant : ${saved.sujet}.\n\nNous vous répondrons dans les plus brefs délais.\n\nCordialement,\nL'équipe ESSG`,
+            await this.mailService.sendMessageReceiptEmail(saved.email, {
+                nom: saved.nom,
+                prenom: saved.prenom,
+                sujet: saved.sujet,
             });
+            this.logger.log(`Accusé de réception envoyé à ${saved.email}`);
         }
         catch (error) {
-            console.error("Erreur lors de l'envoi de l'accusé de réception", error);
+            this.logger.error(`Échec de l'envoi de l'accusé de réception à ${saved.email}`, error);
         }
         return saved;
     }
     async update(id, dto) {
+        await this.findOne(id);
         await this.repo.update(id, dto);
         return this.findOne(id);
     }
     async remove(id) {
+        await this.findOne(id);
         await this.repo.delete(id);
     }
 };
 exports.MessagesService = MessagesService;
-exports.MessagesService = MessagesService = __decorate([
+exports.MessagesService = MessagesService = MessagesService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(message_entity_1.Message)),
     __metadata("design:paramtypes", [typeorm_2.Repository,

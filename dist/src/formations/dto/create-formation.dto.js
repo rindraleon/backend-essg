@@ -34,15 +34,18 @@ class CreateFormationDto {
 exports.CreateFormationDto = CreateFormationDto;
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(150),
     __metadata("design:type", String)
 ], CreateFormationDto.prototype, "slug", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.MaxLength)(100, { each: true }),
     __metadata("design:type", Array)
 ], CreateFormationDto.prototype, "domaine", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(150),
     __metadata("design:type", String)
 ], CreateFormationDto.prototype, "titre", void 0);
 __decorate([
@@ -51,40 +54,48 @@ __decorate([
 ], CreateFormationDto.prototype, "niveau", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(60),
     __metadata("design:type", String)
 ], CreateFormationDto.prototype, "duree", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(10000),
     __metadata("design:type", String)
 ], CreateFormationDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.MaxLength)(1000, { each: true }),
     __metadata("design:type", Array)
 ], CreateFormationDto.prototype, "objectifs", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.MaxLength)(1000, { each: true }),
     __metadata("design:type", Array)
 ], CreateFormationDto.prototype, "debouches", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(10000),
     __metadata("design:type", String)
 ], CreateFormationDto.prototype, "conditionsAcces", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.MaxLength)(1000, { each: true }),
     __metadata("design:type", Array)
 ], CreateFormationDto.prototype, "programme", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.MaxLength)(1000, { each: true }),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Array)
 ], CreateFormationDto.prototype, "conditions", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.MaxLength)(1000, { each: true }),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Array)
 ], CreateFormationDto.prototype, "competences", void 0);
@@ -96,16 +107,19 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreateFormationDto.prototype, "responsable", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(120),
     __metadata("design:type", String)
 ], CreateFormationDto.prototype, "email", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
 ], CreateFormationDto.prototype, "image", void 0);
 __decorate([

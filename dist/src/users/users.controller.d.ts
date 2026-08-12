@@ -1,28 +1,34 @@
-import { UsersService } from './users.service';
+import { PaginationQueryDto } from '../common/dto/pagination.dto';
+import { StorageService } from '../common/storage/storage.service';
 import { CreateUtilisateurDto } from './dto/create-user.dto';
 import { UpdateUtilisateurDto } from './dto/update-user.dto';
-import { PaginationQueryDto } from '../common/dto/pagination.dto';
+import { UsersService } from './users.service';
+interface AuthUser {
+    userId: number;
+    role: string;
+}
 export declare class UsersController {
     private readonly service;
-    constructor(service: UsersService);
-    findAll(paginationDto: PaginationQueryDto): Promise<import("../common/dto/pagination.dto").PaginationResponse<{
+    private readonly storageService;
+    constructor(service: UsersService, storageService: StorageService);
+    findAll(paginationDto: PaginationQueryDto): Promise<import("../common/interfaces/api-response.interface").PaginatedData<{
         id: number;
         creeLe: Date;
         misAJourLe: Date;
-        email: string;
-        prenom: string;
         nom: string;
+        prenom: string;
+        email: string;
         role: "admin" | "editeur" | "lecteur";
         estActif: boolean;
         avatar?: string | undefined;
     }>>;
-    search(query: string, paginationDto: PaginationQueryDto): Promise<import("../common/dto/pagination.dto").PaginationResponse<{
+    search(query: string, paginationDto: PaginationQueryDto): Promise<import("../common/interfaces/api-response.interface").PaginatedData<{
         id: number;
         creeLe: Date;
         misAJourLe: Date;
-        email: string;
-        prenom: string;
         nom: string;
+        prenom: string;
+        email: string;
         role: "admin" | "editeur" | "lecteur";
         estActif: boolean;
         avatar?: string | undefined;
@@ -31,9 +37,9 @@ export declare class UsersController {
         id: number;
         creeLe: Date;
         misAJourLe: Date;
-        email: string;
-        prenom: string;
         nom: string;
+        prenom: string;
+        email: string;
         role: "admin" | "editeur" | "lecteur";
         estActif: boolean;
         avatar?: string | undefined;
@@ -42,44 +48,39 @@ export declare class UsersController {
         id: number;
         creeLe: Date;
         misAJourLe: Date;
-        email: string;
-        prenom: string;
         nom: string;
+        prenom: string;
+        email: string;
         role: "admin" | "editeur" | "lecteur";
         estActif: boolean;
         avatar?: string | undefined;
     }>;
     update(id: number, dto: UpdateUtilisateurDto, req: {
-        user: {
-            userId: number;
-            role: string;
-        };
+        user: AuthUser;
     }): Promise<{
         id: number;
         creeLe: Date;
         misAJourLe: Date;
-        email: string;
-        prenom: string;
         nom: string;
+        prenom: string;
+        email: string;
         role: "admin" | "editeur" | "lecteur";
         estActif: boolean;
         avatar?: string | undefined;
     }>;
     uploadAvatar(id: number, file: Express.Multer.File, req: {
-        user: {
-            userId: number;
-            role: string;
-        };
+        user: AuthUser;
     }): Promise<{
         id: number;
         creeLe: Date;
         misAJourLe: Date;
-        email: string;
-        prenom: string;
         nom: string;
+        prenom: string;
+        email: string;
         role: "admin" | "editeur" | "lecteur";
         estActif: boolean;
         avatar?: string | undefined;
     }>;
     remove(id: number): Promise<void>;
 }
+export {};

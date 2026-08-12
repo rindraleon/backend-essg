@@ -1,113 +1,108 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
   Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
-  UseGuards,
+  Post,
+  Put,
   Query,
   Request,
-  UseInterceptors,
   UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'node:path';
-import { v4 as uuidv4 } from 'uuid';
-import { UsersService } from './users.service';
-import { CreateUtilisateurDto } from './dto/create-user.dto';
-import { UpdateUtilisateurDto } from './dto/update-user.dto';
+import { ApiMessage } from '../common/decorators/api-message.decorator';
 import { PaginationQueryDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { imageUploadOptions } from '../common/storage/multer.config';
+import { StorageService } from '../common/storage/storage.service';
+import { CreateUtilisateurDto } from './dto/create-user.dto';
+import { UpdateUtilisateurDto } from './dto/update-user.dto';
+import { UsersService } from './users.service';
+
+interface AuthUser {
+  userId: number;
+  role: string;
+}
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
-  constructor(private readonly service: UsersService) {}
+  constructor(
+    private readonly service: UsersService,
+    private readonly storageService: StorageService,
+  ) {}
 
   @Get()
+  @ApiMessage('Utilisateurs récupérés')
   findAll(@Query() paginationDto: PaginationQueryDto) {
     return this.service.findAll(paginationDto);
   }
 
   @Get('search')
+  @ApiMessage('Recherche effectuée')
   search(@Query('q') query: string, @Query() paginationDto: PaginationQueryDto) {
     return this.service.search(query, paginationDto);
   }
 
   @Get(':id')
+  @ApiMessage('Utilisateur récupéré')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOne(id);
   }
 
   @Roles('admin')
   @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiMessage('Utilisateur créé avec succès')
   create(@Body() dto: CreateUtilisateurDto) {
     return this.service.create(dto);
   }
 
   @Put(':id')
-  update(
+  @ApiMessage('Utilisateur mis à jour')
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUtilisateurDto,
-    @Request() req: { user: { userId: number; role: string } },
+    @Request() req: { user: AuthUser },
   ) {
-    // Les utilisateurs ne peuvent modifier que leur propre profil
-    // Les admins peuvent modifier n'importe quel profil
     if (req.user.role !== 'admin' && req.user.userId !== id) {
-      throw new Error('Vous ne pouvez modifier que votre propre profil');
+      throw new ForbiddenException('Vous ne pouvez modifier que votre propre profil');
     }
     return this.service.update(id, dto);
   }
 
   @Post(':id/avatar')
-  @UseInterceptors(
-    FileInterceptor('avatar', {
-      storage: diskStorage({
-        destination: join('uploads', 'images'),
-        filename: (req, file, callback) => {
-          const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
-          callback(null, uniqueName);
-        },
-      }),
-      fileFilter: (req, file, callback) => {
-        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-        const extension = extname(file.originalname).toLowerCase();
-        if (allowedExtensions.includes(extension)) {
-          callback(null, true);
-        } else {
-          callback(new Error('Type de fichier non autorisé'), false);
-        }
-      },
-    }),
-  )
+  @ApiMessage('Avatar mis à jour')
+  @UseInterceptors(FileInterceptor('avatar', imageUploadOptions))
   async uploadAvatar(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: Express.Multer.File,
-    @Request() req: { user: { userId: number; role: string } },
+    @Request() req: { user: AuthUser },
   ) {
-    // Les utilisateurs ne peuvent modifier que leur propre avatar
-    // Les admins peuvent modifier n'importe quel avatar
     if (req.user.role !== 'admin' && req.user.userId !== id) {
-      throw new Error('Vous ne pouvez modifier que votre propre avatar');
+      throw new ForbiddenException('Vous ne pouvez modifier que votre propre avatar');
     }
-
     if (!file) {
-      throw new Error('Aucun fichier fourni');
+      throw new ForbiddenException('Aucun fichier fourni');
     }
-
-    const avatarUrl = `/uploads/images/${file.filename}`;
-    const updatedUser = await this.service.updateAvatar(id, avatarUrl);
-    return updatedUser;
+    const result = await this.storageService.upload(file.buffer, file.originalname, {
+      mimetype: file.mimetype,
+    });
+    return this.service.updateAvatar(id, result.url);
   }
 
   @Roles('admin')
   @Delete(':id')
+  @ApiMessage('Utilisateur supprimé')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.service.remove(id);
   }

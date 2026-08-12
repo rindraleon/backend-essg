@@ -44,20 +44,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var AuthService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
-const jwt_1 = require("@nestjs/jwt");
 const config_1 = require("@nestjs/config");
+const jwt_1 = require("@nestjs/jwt");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bcrypt = __importStar(require("bcrypt"));
 const user_entity_1 = require("../users/entities/user.entity");
-let AuthService = class AuthService {
+let AuthService = AuthService_1 = class AuthService {
     jwtService;
     configService;
     userRepo;
-    initialized = false;
+    logger = new common_1.Logger(AuthService_1.name);
     constructor(jwtService, configService, userRepo) {
         this.jwtService = jwtService;
         this.configService = configService;
@@ -81,12 +82,11 @@ let AuthService = class AuthService {
                 estActif: true,
             });
             await this.userRepo.save(admin);
-            console.log(`[Auth] Default admin account created: ${adminEmail}`);
+            this.logger.log(`Compte administrateur par défaut créé: ${adminEmail}`);
         }
         else {
-            console.log(`[Auth] Admin account already exists: ${adminEmail}`);
+            this.logger.log(`Compte administrateur déjà existant: ${adminEmail}`);
         }
-        this.initialized = true;
     }
     async validateUser(email, password) {
         const user = await this.userRepo.findOne({
@@ -129,7 +129,7 @@ let AuthService = class AuthService {
     }
 };
 exports.AuthService = AuthService;
-exports.AuthService = AuthService = __decorate([
+exports.AuthService = AuthService = AuthService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.Utilisateur)),
     __metadata("design:paramtypes", [jwt_1.JwtService,

@@ -9,17 +9,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PartnersModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
-const partners_service_1 = require("./partners.service");
-const partners_controller_1 = require("./partners.controller");
+const storage_module_1 = require("../common/storage/storage.module");
 const partner_entity_1 = require("./entities/partner.entity");
+const partners_controller_1 = require("./partners.controller");
+const partners_service_1 = require("./partners.service");
 let PartnersModule = class PartnersModule {
 };
 exports.PartnersModule = PartnersModule;
 exports.PartnersModule = PartnersModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([partner_entity_1.Partenaire])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([partner_entity_1.Partenaire]), storage_module_1.StorageModule],
         controllers: [partners_controller_1.PartnersController],
         providers: [partners_service_1.PartnersService],
+        exports: [partners_service_1.PartnersService],
     })
 ], PartnersModule);
 //# sourceMappingURL=partners.module.js.map
