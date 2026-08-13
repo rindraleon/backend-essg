@@ -7,4 +7,5 @@ export declare class PaginationDto {
 export declare class PaginationQueryDto extends PaginationDto {
     page?: number;
     limit?: number;
+    q?: string;
 }

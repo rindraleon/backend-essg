@@ -10,6 +10,7 @@ describe('MessagesController', () => {
     findOne: jest.Mock;
     create: jest.Mock;
     update: jest.Mock;
+    reply: jest.Mock;
     remove: jest.Mock;
   };
 
@@ -22,6 +23,7 @@ describe('MessagesController', () => {
       findOne: jest.fn().mockResolvedValue(item),
       create: jest.fn().mockResolvedValue(item),
       update: jest.fn().mockResolvedValue(item),
+      reply: jest.fn().mockResolvedValue(item),
       remove: jest.fn().mockResolvedValue(undefined),
     };
 
@@ -54,8 +56,16 @@ describe('MessagesController', () => {
 
   it('update delegates to service', async () => {
     const dto = {} as never;
-    await controller.update(1, dto);
-    expect(service.update).toHaveBeenCalledWith(1, dto);
+    const user = { userId: 1, email: 'admin@essg.mg', role: 'admin', prenom: 'A', nom: 'B' };
+    await controller.update(1, dto, user);
+    expect(service.update).toHaveBeenCalledWith(1, dto, user);
+  });
+
+  it('reply delegates to service', async () => {
+    const dto = { message: 'ok' };
+    const user = { userId: 1, email: 'admin@essg.mg', role: 'admin', prenom: 'A', nom: 'B' };
+    await controller.reply(1, dto, user);
+    expect(service.reply).toHaveBeenCalledWith(1, dto, user);
   });
 
   it('remove delegates to service', async () => {

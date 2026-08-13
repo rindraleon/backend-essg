@@ -11,6 +11,9 @@ describe('ActivityLogService', () => {
     save: jest.Mock;
     createQueryBuilder: jest.Mock;
     findOne: jest.Mock;
+    count: jest.Mock;
+    find: jest.Mock;
+    delete: jest.Mock;
   };
 
   const log: ActivityLog = {
@@ -41,6 +44,9 @@ describe('ActivityLogService', () => {
       save: jest.fn(),
       createQueryBuilder: jest.fn().mockReturnValue(qb),
       findOne: jest.fn(),
+      count: jest.fn().mockResolvedValue(1),
+      find: jest.fn().mockResolvedValue([]),
+      delete: jest.fn().mockResolvedValue({ affected: 0 }),
     };
 
     const module: TestingModule = await Test.createTestingModule({

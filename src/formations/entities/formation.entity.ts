@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
+import { slugify } from '../../common/utils/text.util';
 
 @Entity('formations')
 export class Formation {
@@ -13,6 +16,14 @@ export class Formation {
 
   @Column({ unique: true })
   slug: string;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  generateSlug(): void {
+    if (this.titre && !this.slug) {
+      this.slug = slugify(this.titre);
+    }
+  }
 
   @Column({ type: 'simple-json', default: '[]' })
   domaine: string[];

@@ -2,13 +2,11 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as express from 'express';
-import * as fs from 'node:fs';
-import { join } from 'node:path';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { createValidationException } from './common/utils/validation-messages';
 
 async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
@@ -19,12 +17,19 @@ async function bootstrap(): Promise<void> {
     new ValidationPipe({
       whitelist: true,
       transform: true,
+      transformOptions: { enableImplicitConversion: true },
       forbidNonWhitelisted: true,
+      exceptionFactory: createValidationException,
     }),
   );
 
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
+
+  const extraOrigins = (configService.get<string>('CORS_ORIGINS') || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
   app.enableCors({
     origin: [
@@ -32,7 +37,9 @@ async function bootstrap(): Promise<void> {
       'http://localhost:3000',
       'http://localhost:5173',
       'http://localhost:4173',
+      'http://localhost:8000',
       'https://gateway.tsirylab.com',
+      ...extraOrigins,
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -48,12 +55,6 @@ async function bootstrap(): Promise<void> {
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);
-
-  const uploadPath = configService.get<string>('UPLOAD_PATH') || 'uploads';
-  if (!fs.existsSync(uploadPath)) {
-    fs.mkdirSync(uploadPath, { recursive: true });
-  }
-  app.use(`/${uploadPath}`, express.static(join(process.cwd(), uploadPath)));
 
   const port = configService.get<number>('APP_PORT') || 3000;
   await app.listen(port);

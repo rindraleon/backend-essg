@@ -102,7 +102,7 @@ let AuthService = AuthService_1 = class AuthService {
     async login(email, password) {
         const user = await this.validateUser(email, password);
         if (!user)
-            throw new common_1.UnauthorizedException('Invalid credentials');
+            throw new common_1.UnauthorizedException('Identifiants invalides');
         const payload = { email: user.email, sub: user.id };
         return {
             accessToken: this.jwtService.sign(payload),

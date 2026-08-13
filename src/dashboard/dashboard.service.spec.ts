@@ -15,6 +15,7 @@ describe('DashboardService', () => {
   const makeRepo = (count: number) => ({
     count: jest.fn().mockResolvedValue(count),
     createQueryBuilder: jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
       limit: jest.fn().mockReturnThis(),
       getMany: jest.fn().mockResolvedValue([]),

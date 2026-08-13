@@ -31,4 +31,9 @@ export class PaginationQueryDto extends PaginationDto {
   @IsOptional()
   @Type(() => Number)
   limit?: number = 10;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  q?: string;
 }

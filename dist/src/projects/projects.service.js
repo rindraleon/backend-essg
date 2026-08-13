@@ -59,12 +59,14 @@ let ProjectsService = class ProjectsService {
     async create(dto) {
         const item = this.repo.create({
             ...dto,
+            slug: dto.slug?.trim() ? (0, text_util_1.slugify)(dto.slug) : (0, text_util_1.slugify)(dto.titre),
             titre: (0, text_util_1.capitalize)(dto.titre),
             description: (0, text_util_1.capitalize)(dto.description),
             ville: dto.ville ? (0, text_util_1.capitalize)(dto.ville) : dto.ville,
             pays: dto.pays ? (0, text_util_1.capitalize)(dto.pays) : dto.pays,
             adresse: dto.adresse ? (0, text_util_1.capitalize)(dto.adresse) : dto.adresse,
             partenaires: (0, text_util_1.capitalizeArray)(dto.partenaires),
+            galerie: dto.galerie ?? [],
         });
         return this.repo.save(item);
     }
@@ -83,6 +85,8 @@ let ProjectsService = class ProjectsService {
             updateData.adresse = (0, text_util_1.capitalize)(dto.adresse);
         if (dto.partenaires)
             updateData.partenaires = (0, text_util_1.capitalizeArray)(dto.partenaires);
+        if (dto.galerie)
+            updateData.galerie = dto.galerie;
         await this.repo.update(id, updateData);
         return this.findOne(id);
     }

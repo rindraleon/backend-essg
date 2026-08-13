@@ -10,6 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateFormationDto = exports.CreateFormationDto = void 0;
+const mapped_types_1 = require("@nestjs/mapped-types");
+const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 class CreateFormationDto {
     slug;
@@ -33,6 +35,7 @@ class CreateFormationDto {
 }
 exports.CreateFormationDto = CreateFormationDto;
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MaxLength)(150),
     __metadata("design:type", String)
@@ -128,10 +131,11 @@ __decorate([
     __metadata("design:type", Boolean)
 ], CreateFormationDto.prototype, "enVedette", void 0);
 __decorate([
+    (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], CreateFormationDto.prototype, "credits", void 0);
-class UpdateFormationDto extends CreateFormationDto {
+class UpdateFormationDto extends (0, mapped_types_1.PartialType)(CreateFormationDto) {
 }
 exports.UpdateFormationDto = UpdateFormationDto;
 //# sourceMappingURL=create-formation.dto.js.map

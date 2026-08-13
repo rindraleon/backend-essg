@@ -56,4 +56,24 @@ describe('TransformInterceptor', () => {
         done();
       });
   });
+
+  it('flattens paginated payloads into data + meta', (done) => {
+    interceptor
+      .intercept(createContext(HttpStatus.OK), {
+        handle: () =>
+          of({
+            items: [{ id: 1 }],
+            meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
+          }),
+      } as never)
+      .subscribe((result) => {
+        expect(result).toEqual({
+          statusCode: 200,
+          message: 'Données récupérées avec succès',
+          data: [{ id: 1 }],
+          meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
+        });
+        done();
+      });
+  });
 });

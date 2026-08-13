@@ -9,7 +9,8 @@ import type { Response } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { API_MESSAGE_KEY } from '../decorators/api-message.decorator';
-import { ApiResponse } from '../interfaces/api-response.interface';
+import { SKIP_TRANSFORM_KEY } from '../decorators/skip-transform.decorator';
+import { ApiResponse, PaginatedData } from '../interfaces/api-response.interface';
 
 function defaultMessage(statusCode: number): string {
   switch (statusCode as HttpStatus) {
@@ -22,22 +23,44 @@ function defaultMessage(statusCode: number): string {
   }
 }
 
+function isPaginatedData(value: unknown): value is PaginatedData<unknown> {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const candidate = value as Partial<PaginatedData<unknown>>;
+  return Array.isArray(candidate.items) && typeof candidate.meta === 'object' && candidate.meta !== null;
+}
+
 @Injectable()
-export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T>> {
-  intercept(context: ExecutionContext, next: CallHandler<T>): Observable<ApiResponse<T>> {
+export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<unknown>> {
+  intercept(context: ExecutionContext, next: CallHandler<T>): Observable<ApiResponse<unknown>> {
     const ctx = context.switchToHttp();
     const response = ctx.getResponse<Response>();
     const statusCode = response.statusCode ?? HttpStatus.OK;
     const handler = context.getHandler();
+    if (Reflect.getMetadata(SKIP_TRANSFORM_KEY, handler)) {
+      return next.handle() as Observable<ApiResponse<unknown>>;
+    }
     const metadataMessage = Reflect.getMetadata(API_MESSAGE_KEY, handler) as string | undefined;
     const message: string = metadataMessage ?? defaultMessage(statusCode);
 
     return next.handle().pipe(
-      map((data: T) => ({
-        statusCode,
-        message,
-        data: data ?? null,
-      })),
+      map((data: T) => {
+        if (isPaginatedData(data)) {
+          return {
+            statusCode,
+            message,
+            data: data.items,
+            meta: data.meta,
+          };
+        }
+
+        return {
+          statusCode,
+          message,
+          data: data ?? null,
+        };
+      }),
     );
   }
 }

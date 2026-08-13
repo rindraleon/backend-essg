@@ -17,16 +17,33 @@ exports.AdmissionsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
+const storage_service_1 = require("../common/storage/storage.service");
+const search_util_1 = require("../common/utils/search.util");
+const pagination_util_1 = require("../common/utils/pagination.util");
 const mail_service_1 = require("../mail/mail.service");
-const admission_entity_1 = require("./entities/admission.entity");
 const text_util_1 = require("../common/utils/text.util");
+const admission_entity_1 = require("./entities/admission.entity");
+const ADMISSION_SORT_FIELDS = [
+    'id',
+    'nom',
+    'prenom',
+    'email',
+    'telephone',
+    'formation',
+    'niveau',
+    'statut',
+    'creeLe',
+    'misAJourLe',
+];
 let AdmissionsService = AdmissionsService_1 = class AdmissionsService {
     admissionsRepository;
     mailService;
+    storageService;
     logger = new common_1.Logger(AdmissionsService_1.name);
-    constructor(admissionsRepository, mailService) {
+    constructor(admissionsRepository, mailService, storageService) {
         this.admissionsRepository = admissionsRepository;
         this.mailService = mailService;
+        this.storageService = storageService;
     }
     buildReference(id) {
         return `ESSG-${id}`;
@@ -51,10 +68,38 @@ let AdmissionsService = AdmissionsService_1 = class AdmissionsService {
         }
         return saved;
     }
-    async findAll() {
-        return this.admissionsRepository.find({
-            order: { creeLe: 'DESC' },
-        });
+    async findAll(query = {}) {
+        const { page = 1, limit = 10, sortBy, sortOrder = 'DESC', q, statut, niveau, formation, dateDebut, } = query;
+        const qb = this.admissionsRepository.createQueryBuilder('admission');
+        if (q?.trim()) {
+            const term = (0, search_util_1.buildIlikeTerm)(q);
+            qb.andWhere(`(admission.nom ILIKE :term ESCAPE '\\'
+          OR admission.prenom ILIKE :term ESCAPE '\\'
+          OR admission.email ILIKE :term ESCAPE '\\'
+          OR admission.telephone ILIKE :term ESCAPE '\\'
+          OR admission.formation ILIKE :term ESCAPE '\\')`, { term });
+        }
+        if (statut) {
+            qb.andWhere('admission.statut = :statut', { statut });
+        }
+        if (niveau && niveau !== 'all') {
+            qb.andWhere('admission.niveau ILIKE :niveau ESCAPE \'\\\'', {
+                niveau: (0, search_util_1.buildIlikeTerm)(niveau),
+            });
+        }
+        if (formation && formation !== 'all') {
+            qb.andWhere('admission.formation ILIKE :formation ESCAPE \'\\\'', {
+                formation: (0, search_util_1.buildIlikeTerm)(formation),
+            });
+        }
+        if (dateDebut) {
+            qb.andWhere('admission.creeLe >= :dateDebut', { dateDebut });
+        }
+        const orderField = (0, search_util_1.sanitizeSortField)(sortBy, ADMISSION_SORT_FIELDS) ?? 'creeLe';
+        qb.orderBy(`admission.${orderField}`, sortOrder === 'ASC' ? 'ASC' : 'DESC');
+        qb.skip((page - 1) * limit).take(limit);
+        const [items, total] = await qb.getManyAndCount();
+        return (0, pagination_util_1.buildPaginatedData)(items, total, page, limit);
     }
     async findOne(id) {
         const admission = await this.admissionsRepository.findOne({ where: { id } });
@@ -66,31 +111,72 @@ let AdmissionsService = AdmissionsService_1 = class AdmissionsService {
     async updateStatus(id, updateStatusDto) {
         const admission = await this.findOne(id);
         admission.statut = updateStatusDto.statut;
-        admission.commentaire = updateStatusDto.commentaire || admission.commentaire;
+        if (updateStatusDto.commentaire !== undefined) {
+            admission.commentaire = updateStatusDto.commentaire;
+        }
+        if (updateStatusDto.reponseDate !== undefined) {
+            admission.reponseDate = updateStatusDto.reponseDate || null;
+        }
+        if (updateStatusDto.reponseHeure !== undefined) {
+            admission.reponseHeure = updateStatusDto.reponseHeure || null;
+        }
+        if (updateStatusDto.reponseLieu !== undefined) {
+            admission.reponseLieu = updateStatusDto.reponseLieu || null;
+        }
+        if (updateStatusDto.reponseInstructions !== undefined) {
+            admission.reponseInstructions = updateStatusDto.reponseInstructions || null;
+        }
+        if (updateStatusDto.reponseMessage !== undefined) {
+            admission.reponseMessage = updateStatusDto.reponseMessage || null;
+        }
         const saved = await this.admissionsRepository.save(admission);
         await this.notifyStatusChange(saved);
         return saved;
     }
+    async getDocument(id, kind) {
+        if (kind !== 'cv' && kind !== 'lettre') {
+            throw new common_1.BadRequestException('Type de document invalide');
+        }
+        const admission = await this.findOne(id);
+        const storedUrl = kind === 'cv' ? admission.cvPath : admission.lettreMotivationPath;
+        if (!storedUrl) {
+            throw new common_1.NotFoundException('Document introuvable');
+        }
+        const objectName = this.storageService.extractObjectName(storedUrl);
+        const buffer = await this.storageService.download(objectName);
+        const filename = kind === 'cv'
+            ? `CV-${admission.nom}-${admission.prenom}.pdf`
+            : `Lettre-${admission.nom}-${admission.prenom}.pdf`;
+        return {
+            buffer,
+            filename,
+            mimetype: 'application/pdf',
+        };
+    }
     async notifyStatusChange(admission) {
-        try {
-            await this.mailService.sendAdmissionStatusEmail(admission.email, {
-                nom: admission.nom,
-                prenom: admission.prenom,
-                formation: admission.formation,
-                reference: this.buildReference(admission.id),
-                statut: admission.statut,
-                date: new Date().toLocaleDateString('fr-FR'),
-                commentaire: admission.commentaire || undefined,
-            });
-            this.logger.log(`Notification de statut envoyée à ${admission.email}`);
-        }
-        catch (error) {
-            this.logger.error(`Échec de la notification de statut à ${admission.email}`, error);
-        }
+        await this.mailService.sendAdmissionStatusEmail(admission.email, {
+            nom: admission.nom,
+            prenom: admission.prenom,
+            formation: admission.formation,
+            reference: this.buildReference(admission.id),
+            statut: admission.statut,
+            date: new Date().toLocaleDateString('fr-FR'),
+            commentaire: admission.commentaire || undefined,
+            reponseDate: admission.reponseDate || undefined,
+            reponseHeure: admission.reponseHeure || undefined,
+            reponseLieu: admission.reponseLieu || undefined,
+            reponseInstructions: admission.reponseInstructions || undefined,
+            reponseMessage: admission.reponseMessage || undefined,
+        });
+        this.logger.log(`Notification de statut envoyée à ${admission.email}`);
     }
     async remove(id) {
         const admission = await this.findOne(id);
         await this.admissionsRepository.remove(admission);
+        await Promise.all([
+            this.storageService.deleteStoredRef(admission.cvPath),
+            this.storageService.deleteStoredRef(admission.lettreMotivationPath),
+        ]);
     }
 };
 exports.AdmissionsService = AdmissionsService;
@@ -98,6 +184,7 @@ exports.AdmissionsService = AdmissionsService = AdmissionsService_1 = __decorate
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(admission_entity_1.Admission)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        mail_service_1.MailService])
+        mail_service_1.MailService,
+        storage_service_1.StorageService])
 ], AdmissionsService);
 //# sourceMappingURL=admissions.service.js.map

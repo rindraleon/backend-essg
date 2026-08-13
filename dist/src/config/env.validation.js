@@ -22,6 +22,9 @@ class EnvironmentVariables {
     APP_PORT = 3000;
     APP_URL = 'http://localhost:3000';
     UPLOAD_PATH = 'uploads';
+    PERF_LOG = 'false';
+    PERF_SQL = 'false';
+    PERF_SLOW_MS = '400';
     JWT_SECRET = 'essg-default-secret-key-change-in-production';
     JWT_EXPIRATION = '24h';
     SMTP_HOST = 'smtp.gmail.com';
@@ -37,6 +40,7 @@ class EnvironmentVariables {
     MINIO_SECRET_KEY = '';
     MINIO_BUCKET = 'essg';
     MINIO_PUBLIC_URL = '';
+    CORS_ORIGINS = '';
 }
 __decorate([
     (0, class_validator_1.IsString)(),
@@ -85,6 +89,21 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], EnvironmentVariables.prototype, "UPLOAD_PATH", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "PERF_LOG", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "PERF_SQL", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "PERF_SLOW_MS", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
@@ -162,6 +181,11 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], EnvironmentVariables.prototype, "MINIO_PUBLIC_URL", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "CORS_ORIGINS", void 0);
 function validate(config) {
     const validatedConfig = (0, class_transformer_1.plainToInstance)(EnvironmentVariables, config, {
         enableImplicitConversion: true,

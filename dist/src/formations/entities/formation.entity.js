@@ -11,9 +11,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Formation = void 0;
 const typeorm_1 = require("typeorm");
+const text_util_1 = require("../../common/utils/text.util");
 let Formation = class Formation {
     id;
     slug;
+    generateSlug() {
+        if (this.titre && !this.slug) {
+            this.slug = (0, text_util_1.slugify)(this.titre);
+        }
+    }
     domaine;
     titre;
     niveau;
@@ -43,6 +49,13 @@ __decorate([
     (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)
 ], Formation.prototype, "slug", void 0);
+__decorate([
+    (0, typeorm_1.BeforeInsert)(),
+    (0, typeorm_1.BeforeUpdate)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], Formation.prototype, "generateSlug", null);
 __decorate([
     (0, typeorm_1.Column)({ type: 'simple-json', default: '[]' }),
     __metadata("design:type", Array)

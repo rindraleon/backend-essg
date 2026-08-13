@@ -32,6 +32,9 @@ export class Actualite {
   @Column({ nullable: true })
   image?: string;
 
+  @Column({ type: 'simple-json', default: '[]' })
+  galerie!: string[];
+
   @Column({ type: 'boolean', default: false })
   enVedette!: boolean;
 

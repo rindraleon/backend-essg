@@ -1,8 +1,16 @@
-import { capitalize, capitalizeArray, toUpperCase } from './text.util';
+import { capitalize, capitalizeArray, slugify, toUpperCase } from './text.util';
 
 describe('text.util', () => {
   it('toUpperCase uppercases and trims the value', () => {
     expect(toUpperCase('  rindra leon  ')).toBe('RINDRA LEON');
+  });
+
+  it('slugify generates a URL-safe slug', () => {
+    expect(slugify('Géomatique et Applications')).toBe('geomatique-et-applications');
+  });
+
+  it('capitalizeArray accepts undefined', () => {
+    expect(capitalizeArray(undefined)).toEqual([]);
   });
 
   it('capitalize uppercases the first letter only', () => {

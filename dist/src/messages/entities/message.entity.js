@@ -20,6 +20,12 @@ let Message = class Message {
     sujet;
     message;
     lu;
+    luLe;
+    luPar;
+    reponse;
+    reponseSujet;
+    reponduLe;
+    reponduPar;
     creeLe;
     misAJourLe;
 };
@@ -45,6 +51,7 @@ __decorate([
     __metadata("design:type", String)
 ], Message.prototype, "telephone", void 0);
 __decorate([
+    (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Message.prototype, "sujet", void 0);
@@ -57,6 +64,31 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Message.prototype, "lu", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'timestamptz', nullable: true }),
+    __metadata("design:type", Object)
+], Message.prototype, "luLe", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 120, nullable: true }),
+    __metadata("design:type", Object)
+], Message.prototype, "luPar", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", Object)
+], Message.prototype, "reponse", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 200, nullable: true }),
+    __metadata("design:type", Object)
+], Message.prototype, "reponseSujet", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamptz', nullable: true }),
+    __metadata("design:type", Object)
+], Message.prototype, "reponduLe", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 120, nullable: true }),
+    __metadata("design:type", Object)
+], Message.prototype, "reponduPar", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' }),
     __metadata("design:type", Date)
 ], Message.prototype, "creeLe", void 0);

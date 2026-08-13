@@ -6,7 +6,7 @@ import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { buildPaginatedData } from '../common/utils/pagination.util';
 import { CreateProjetDto, UpdateProjetDto } from './dto/create-project.dto';
 import { Projet } from './entities/project.entity';
-import { capitalize, capitalizeArray } from '../common/utils/text.util';
+import { capitalize, capitalizeArray, slugify } from '../common/utils/text.util';
 
 @Injectable()
 export class ProjectsService {
@@ -58,12 +58,14 @@ export class ProjectsService {
   async create(dto: CreateProjetDto): Promise<Projet> {
     const item = this.repo.create({
       ...dto,
+      slug: dto.slug?.trim() ? slugify(dto.slug) : slugify(dto.titre),
       titre: capitalize(dto.titre),
       description: capitalize(dto.description),
       ville: dto.ville ? capitalize(dto.ville) : dto.ville,
       pays: dto.pays ? capitalize(dto.pays) : dto.pays,
       adresse: dto.adresse ? capitalize(dto.adresse) : dto.adresse,
       partenaires: capitalizeArray(dto.partenaires),
+      galerie: dto.galerie ?? [],
     });
     return this.repo.save(item);
   }
@@ -77,6 +79,7 @@ export class ProjectsService {
     if (dto.pays) updateData.pays = capitalize(dto.pays);
     if (dto.adresse) updateData.adresse = capitalize(dto.adresse);
     if (dto.partenaires) updateData.partenaires = capitalizeArray(dto.partenaires);
+    if (dto.galerie) updateData.galerie = dto.galerie;
     await this.repo.update(id, updateData);
     return this.findOne(id);
   }

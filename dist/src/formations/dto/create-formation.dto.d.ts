@@ -1,5 +1,5 @@
 export declare class CreateFormationDto {
-    slug: string;
+    slug?: string;
     domaine: string[];
     titre: string;
     niveau: 'Licence' | 'Master' | 'Doctorat';
@@ -11,12 +11,14 @@ export declare class CreateFormationDto {
     programme: string[];
     conditions?: string[];
     competences?: string[];
-    modules?: any[];
+    modules?: unknown[];
     responsable?: string;
     email?: string;
     image?: string;
     enVedette?: boolean;
     credits: number;
 }
-export declare class UpdateFormationDto extends CreateFormationDto {
+declare const UpdateFormationDto_base: import("@nestjs/mapped-types").MappedType<Partial<CreateFormationDto>>;
+export declare class UpdateFormationDto extends UpdateFormationDto_base {
 }
+export {};

@@ -55,15 +55,17 @@ let UsersController = class UsersController {
             throw new common_1.ForbiddenException('Vous ne pouvez modifier que votre propre avatar');
         }
         if (!file) {
-            throw new common_1.ForbiddenException('Aucun fichier fourni');
+            throw new common_1.ForbiddenException('Aucun fichier fourni. Envoyez une image (JPG, PNG, GIF ou WebP).');
         }
         const result = await this.storageService.upload(file.buffer, file.originalname, {
             mimetype: file.mimetype,
         });
         return this.service.updateAvatar(id, result.url);
     }
-    remove(id) {
-        return this.service.remove(id);
+    async remove(id) {
+        const current = await this.service.findOne(id);
+        await this.service.remove(id);
+        await this.storageService.deleteStoredRef(current.avatar);
     }
 };
 exports.UsersController = UsersController;
@@ -130,7 +132,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], UsersController.prototype, "remove", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),

@@ -1,9 +1,12 @@
+import { PartialType } from '@nestjs/mapped-types';
+import { Type } from 'class-transformer';
 import { IsString, IsArray, IsBoolean, IsOptional, IsIn, IsInt, MaxLength } from 'class-validator';
 
 export class CreateFormationDto {
+  @IsOptional()
   @IsString()
   @MaxLength(150)
-  slug: string;
+  slug?: string;
 
   @IsArray()
   @IsString({ each: true })
@@ -58,7 +61,7 @@ export class CreateFormationDto {
 
   @IsArray()
   @IsOptional()
-  modules?: any[];
+  modules?: unknown[];
 
   @IsString()
   @IsOptional()
@@ -79,8 +82,9 @@ export class CreateFormationDto {
   @IsOptional()
   enVedette?: boolean;
 
+  @Type(() => Number)
   @IsInt()
   credits: number;
 }
 
-export class UpdateFormationDto extends CreateFormationDto {}
+export class UpdateFormationDto extends PartialType(CreateFormationDto) {}

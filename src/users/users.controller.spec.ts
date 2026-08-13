@@ -17,7 +17,7 @@ describe('UsersController', () => {
     updateAvatar: jest.Mock;
     remove: jest.Mock;
   };
-  let storage: { upload: jest.Mock };
+  let storage: { upload: jest.Mock; deleteStoredRef: jest.Mock };
 
   const user = { id: 1, email: 'a@b.c' };
 
@@ -32,9 +32,12 @@ describe('UsersController', () => {
       remove: jest.fn().mockResolvedValue(undefined),
     };
     storage = {
-      upload: jest
-        .fn()
-        .mockResolvedValue({ url: '/uploads/x.png', objectName: 'x.png', bucket: 'essg' }),
+      upload: jest.fn().mockResolvedValue({
+        url: '/media/avatars/x.png',
+        objectName: 'avatars/x.png',
+        bucket: 'essg',
+      }),
+      deleteStoredRef: jest.fn().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -86,6 +89,6 @@ describe('UsersController', () => {
     } as Express.Multer.File;
     await controller.uploadAvatar(1, file, { user: { userId: 1, role: 'admin' } });
     expect(storage.upload).toHaveBeenCalled();
-    expect(service.updateAvatar).toHaveBeenCalledWith(1, '/uploads/x.png');
+    expect(service.updateAvatar).toHaveBeenCalledWith(1, '/media/avatars/x.png');
   });
 });

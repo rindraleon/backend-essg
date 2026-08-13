@@ -18,9 +18,11 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const pagination_util_1 = require("../common/utils/pagination.util");
+const search_util_1 = require("../common/utils/search.util");
 const mail_service_1 = require("../mail/mail.service");
 const message_entity_1 = require("./entities/message.entity");
 const text_util_1 = require("../common/utils/text.util");
+const MESSAGE_SORT_FIELDS = ['id', 'nom', 'prenom', 'email', 'sujet', 'lu', 'creeLe', 'misAJourLe'];
 let MessagesService = MessagesService_1 = class MessagesService {
     repo;
     mailService;
@@ -29,29 +31,41 @@ let MessagesService = MessagesService_1 = class MessagesService {
         this.repo = repo;
         this.mailService = mailService;
     }
-    async findPaginated(where, paginationDto) {
-        const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
-        const skip = (page - 1) * limit;
-        const [data, total] = await this.repo.findAndCount({
-            where,
-            order: sortBy ? { [sortBy]: sortOrder } : { creeLe: 'DESC' },
-            skip,
-            take: limit,
-        });
-        return (0, pagination_util_1.buildPaginatedData)(data, total, page, limit);
+    async findFiltered(queryDto = {}) {
+        const { page = 1, limit = 10, sortBy, sortOrder = 'DESC', q, sujet, lu, dateDebut, dateFin, } = queryDto;
+        const qb = this.repo.createQueryBuilder('message');
+        if (q?.trim()) {
+            const term = (0, search_util_1.buildIlikeTerm)(q);
+            qb.andWhere(`(message.nom ILIKE :term ESCAPE '\\\\'
+          OR message.prenom ILIKE :term ESCAPE '\\\\'
+          OR message.email ILIKE :term ESCAPE '\\\\'
+          OR message.telephone ILIKE :term ESCAPE '\\\\'
+          OR message.sujet ILIKE :term ESCAPE '\\\\'
+          OR message.message ILIKE :term ESCAPE '\\\\')`, { term });
+        }
+        if (sujet && sujet !== 'all') {
+            qb.andWhere('LOWER(message.sujet) = LOWER(:sujet)', { sujet });
+        }
+        if (typeof lu === 'boolean') {
+            qb.andWhere('message.lu = :lu', { lu });
+        }
+        if (dateDebut) {
+            qb.andWhere('message.creeLe >= :dateDebut', { dateDebut });
+        }
+        if (dateFin) {
+            qb.andWhere('message.creeLe <= :dateFin', { dateFin: `${dateFin}T23:59:59.999Z` });
+        }
+        const orderField = (0, search_util_1.sanitizeSortField)(sortBy, MESSAGE_SORT_FIELDS) ?? 'creeLe';
+        qb.orderBy(`message.${orderField}`, sortOrder === 'ASC' ? 'ASC' : 'DESC');
+        qb.skip((page - 1) * limit).take(limit);
+        const [items, total] = await qb.getManyAndCount();
+        return (0, pagination_util_1.buildPaginatedData)(items, total, page, limit);
     }
-    async findAll(paginationDto) {
-        return this.findPaginated({}, paginationDto);
+    async findAll(queryDto = {}) {
+        return this.findFiltered(queryDto);
     }
-    async search(query, paginationDto) {
-        const where = query
-            ? [
-                { nom: (0, typeorm_2.ILike)(`%${query}%`) },
-                { email: (0, typeorm_2.ILike)(`%${query}%`) },
-                { message: (0, typeorm_2.ILike)(`%${query}%`) },
-            ]
-            : [{}];
-        return this.findPaginated(where, paginationDto);
+    async search(query, queryDto = {}) {
+        return this.findFiltered({ ...queryDto, q: query || queryDto.q });
     }
     async findOne(id) {
         const item = await this.repo.findOne({ where: { id } });
@@ -81,10 +95,36 @@ let MessagesService = MessagesService_1 = class MessagesService {
         }
         return saved;
     }
-    async update(id, dto) {
-        await this.findOne(id);
-        await this.repo.update(id, dto);
-        return this.findOne(id);
+    async update(id, dto, reader) {
+        const item = await this.findOne(id);
+        if (dto.lu && !item.lu) {
+            item.lu = true;
+            item.luLe = new Date();
+            item.luPar = reader?.email ?? item.luPar;
+        }
+        else if (dto.lu === false) {
+            item.lu = false;
+        }
+        return this.repo.save(item);
+    }
+    async reply(id, dto, author) {
+        const item = await this.findOne(id);
+        const sujet = dto.sujet?.trim() || `Re : ${item.sujet}`;
+        await this.mailService.sendMessageReplyEmail({
+            to: item.email,
+            prenom: item.prenom,
+            nom: item.nom,
+            sujet,
+            message: dto.message,
+        });
+        item.lu = true;
+        item.luLe = item.luLe ?? new Date();
+        item.luPar = item.luPar ?? author.email;
+        item.reponse = dto.message;
+        item.reponseSujet = sujet;
+        item.reponduLe = new Date();
+        item.reponduPar = author.email;
+        return this.repo.save(item);
     }
     async remove(id) {
         await this.findOne(id);

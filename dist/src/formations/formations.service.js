@@ -17,8 +17,20 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const pagination_util_1 = require("../common/utils/pagination.util");
-const formation_entity_1 = require("./entities/formation.entity");
+const search_util_1 = require("../common/utils/search.util");
 const text_util_1 = require("../common/utils/text.util");
+const formation_entity_1 = require("./entities/formation.entity");
+const FORMATION_SORT_FIELDS = [
+    'id',
+    'titre',
+    'slug',
+    'niveau',
+    'duree',
+    'credits',
+    'enVedette',
+    'creeLe',
+    'misAJourLe',
+];
 let FormationsService = class FormationsService {
     repo;
     constructor(repo) {
@@ -27,8 +39,9 @@ let FormationsService = class FormationsService {
     async findAll(paginationDto) {
         const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
         const skip = (page - 1) * limit;
+        const orderField = (0, search_util_1.sanitizeSortField)(sortBy, FORMATION_SORT_FIELDS) ?? 'id';
         const [data, total] = await this.repo.findAndCount({
-            order: sortBy ? { [sortBy]: sortOrder } : { id: 'ASC' },
+            order: { [orderField]: sortOrder === 'DESC' ? 'DESC' : 'ASC' },
             skip,
             take: limit,
         });
@@ -37,15 +50,17 @@ let FormationsService = class FormationsService {
     async search(query, paginationDto) {
         const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
         const skip = (page - 1) * limit;
-        if (!query) {
+        if (!query?.trim()) {
             return this.findAll(paginationDto);
         }
+        const orderField = (0, search_util_1.sanitizeSortField)(sortBy, FORMATION_SORT_FIELDS) ?? 'id';
+        const term = `%${query.trim()}%`;
         const [data, total] = await this.repo
             .createQueryBuilder('formation')
-            .where('LOWER(formation.titre) LIKE LOWER(:query)', { query: `%${query}%` })
-            .orWhere('LOWER(formation.description) LIKE LOWER(:query)', { query: `%${query}%` })
-            .orWhere('formation.domaine::text LIKE LOWER(:query)', { query: `%${query}%` })
-            .orderBy(sortBy ? `formation.${sortBy}` : 'formation.id', sortOrder)
+            .where('LOWER(formation.titre) LIKE LOWER(:query)', { query: term })
+            .orWhere('LOWER(formation.description) LIKE LOWER(:query)', { query: term })
+            .orWhere('formation.domaine::text LIKE LOWER(:query)', { query: term })
+            .orderBy(`formation.${orderField}`, sortOrder === 'DESC' ? 'DESC' : 'ASC')
             .skip(skip)
             .take(limit)
             .getManyAndCount();
@@ -64,8 +79,10 @@ let FormationsService = class FormationsService {
         return item;
     }
     async create(dto) {
+        const slug = dto.slug?.trim() ? (0, text_util_1.slugify)(dto.slug) : (0, text_util_1.slugify)(dto.titre);
         const item = this.repo.create({
             ...dto,
+            slug,
             titre: (0, text_util_1.capitalize)(dto.titre),
             duree: (0, text_util_1.capitalize)(dto.duree),
             description: (0, text_util_1.capitalize)(dto.description),
@@ -73,14 +90,15 @@ let FormationsService = class FormationsService {
             domaine: (0, text_util_1.capitalizeArray)(dto.domaine),
             objectifs: (0, text_util_1.capitalizeArray)(dto.objectifs),
             debouches: (0, text_util_1.capitalizeArray)(dto.debouches),
-            conditions: (0, text_util_1.capitalizeArray)(dto.conditions ?? []),
-            competences: (0, text_util_1.capitalizeArray)(dto.competences ?? []),
+            conditions: (0, text_util_1.capitalizeArray)(dto.conditions),
+            competences: (0, text_util_1.capitalizeArray)(dto.competences),
             programme: (0, text_util_1.capitalizeArray)(dto.programme),
+            image: dto.image || '/images/hero-campus.jpg',
         });
-        return this.repo.save(item);
+        return this.saveOrConflict(item);
     }
     async update(id, dto) {
-        await this.findOne(id);
+        const current = await this.findOne(id);
         const updateData = { ...dto };
         if (dto.titre)
             updateData.titre = (0, text_util_1.capitalize)(dto.titre);
@@ -102,12 +120,40 @@ let FormationsService = class FormationsService {
             updateData.competences = (0, text_util_1.capitalizeArray)(dto.competences);
         if (dto.programme)
             updateData.programme = (0, text_util_1.capitalizeArray)(dto.programme);
-        await this.repo.update(id, updateData);
+        if (dto.slug?.trim()) {
+            updateData.slug = (0, text_util_1.slugify)(dto.slug);
+        }
+        else if (dto.titre && !current.slug) {
+            updateData.slug = (0, text_util_1.slugify)(dto.titre);
+        }
+        try {
+            await this.repo.update(id, updateData);
+        }
+        catch (error) {
+            this.rethrowUnique(error);
+        }
         return this.findOne(id);
     }
     async remove(id) {
         await this.findOne(id);
         await this.repo.delete(id);
+    }
+    async saveOrConflict(item) {
+        try {
+            return await this.repo.save(item);
+        }
+        catch (error) {
+            this.rethrowUnique(error);
+            throw error;
+        }
+    }
+    rethrowUnique(error) {
+        if (error instanceof typeorm_2.QueryFailedError) {
+            const code = error.driverError?.code;
+            if (code === '23505') {
+                throw new common_1.ConflictException('Une formation avec ce slug existe déjà.');
+            }
+        }
     }
 };
 exports.FormationsService = FormationsService;

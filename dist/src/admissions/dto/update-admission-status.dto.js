@@ -15,6 +15,11 @@ const admission_entity_1 = require("../entities/admission.entity");
 class UpdateAdmissionStatusDto {
     statut;
     commentaire;
+    reponseDate;
+    reponseHeure;
+    reponseLieu;
+    reponseInstructions;
+    reponseMessage;
 }
 exports.UpdateAdmissionStatusDto = UpdateAdmissionStatusDto;
 __decorate([
@@ -27,4 +32,34 @@ __decorate([
     (0, class_validator_1.MaxLength)(5000),
     __metadata("design:type", String)
 ], UpdateAdmissionStatusDto.prototype, "commentaire", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{4}-\d{2}-\d{2}$/, { message: 'La date doit être au format AAAA-MM-JJ' }),
+    __metadata("design:type", String)
+], UpdateAdmissionStatusDto.prototype, "reponseDate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{2}:\d{2}$/, { message: "L'heure doit être au format HH:MM" }),
+    __metadata("design:type", String)
+], UpdateAdmissionStatusDto.prototype, "reponseHeure", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(255),
+    __metadata("design:type", String)
+], UpdateAdmissionStatusDto.prototype, "reponseLieu", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(4000),
+    __metadata("design:type", String)
+], UpdateAdmissionStatusDto.prototype, "reponseInstructions", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(5000),
+    __metadata("design:type", String)
+], UpdateAdmissionStatusDto.prototype, "reponseMessage", void 0);
 //# sourceMappingURL=update-admission-status.dto.js.map

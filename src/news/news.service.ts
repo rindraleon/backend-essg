@@ -6,16 +6,7 @@ import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { buildPaginatedData } from '../common/utils/pagination.util';
 import { CreateActualiteDto, UpdateActualiteDto } from './dto/create-news.dto';
 import { Actualite } from './entities/news-item.entity';
-import { capitalize } from '../common/utils/text.util';
-
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
+import { capitalize, slugify } from '../common/utils/text.util';
 
 @Injectable()
 export class NewsService {
@@ -67,7 +58,7 @@ export class NewsService {
   async create(dto: CreateActualiteDto): Promise<Actualite> {
     const item = this.repo.create({
       ...dto,
-      slug: dto.slug || generateSlug(dto.titre),
+      slug: dto.slug || slugify(dto.titre),
       titre: capitalize(dto.titre),
       categorie: capitalize(dto.categorie),
       auteur: capitalize(dto.auteur),
@@ -85,12 +76,13 @@ export class NewsService {
     const updateData: Partial<Actualite> = { ...dto };
     if (dto.titre) {
       updateData.titre = capitalize(dto.titre);
-      updateData.slug = generateSlug(dto.titre);
+      updateData.slug = slugify(dto.titre);
     }
     if (dto.categorie) updateData.categorie = capitalize(dto.categorie);
     if (dto.auteur) updateData.auteur = capitalize(dto.auteur);
     if (dto.resume) updateData.resume = capitalize(dto.resume);
     if (dto.contenu) updateData.contenu = capitalize(dto.contenu);
+    if (dto.galerie) updateData.galerie = dto.galerie;
     await this.repo.update(id, updateData);
     return this.findOne(id);
   }

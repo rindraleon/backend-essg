@@ -42,6 +42,18 @@ class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
+  PERF_LOG: string = 'false';
+
+  @IsString()
+  @IsOptional()
+  PERF_SQL: string = 'false';
+
+  @IsString()
+  @IsOptional()
+  PERF_SLOW_MS: string = '400';
+
+  @IsString()
+  @IsOptional()
   JWT_SECRET: string = 'essg-default-secret-key-change-in-production';
 
   @IsString()
@@ -101,6 +113,10 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   MINIO_PUBLIC_URL: string = '';
+
+  @IsString()
+  @IsOptional()
+  CORS_ORIGINS: string = '';
 }
 
 export function validate(config: Record<string, unknown>): EnvironmentVariables {

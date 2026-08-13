@@ -34,16 +34,16 @@ export class ProjectsController {
     return this.service.search(query, paginationDto);
   }
 
-  @Get(':id')
-  @ApiMessage('Projet récupéré')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.service.findOne(id);
-  }
-
   @Get('slug/:slug')
   @ApiMessage('Projet récupéré')
   findBySlug(@Param('slug') slug: string) {
     return this.service.findBySlug(slug);
+  }
+
+  @Get(':id')
+  @ApiMessage('Projet récupéré')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.service.findOne(id);
   }
 
   @UseGuards(JwtAuthGuard)

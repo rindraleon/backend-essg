@@ -9,15 +9,22 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
+  Res,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { ApiMessage } from '../common/decorators/api-message.decorator';
+import { SkipTransform } from '../common/decorators/skip-transform.decorator';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { documentUploadOptions } from '../common/storage/multer.config';
 import { StorageService } from '../common/storage/storage.service';
 import { AdmissionsService } from './admissions.service';
 import { CreateAdmissionDto } from './dto/create-admission.dto';
+import { QueryAdmissionDto } from './dto/query-admission.dto';
 import { UpdateAdmissionStatusDto } from './dto/update-admission-status.dto';
 
 interface AdmissionFiles {
@@ -52,33 +59,65 @@ export class AdmissionsController {
     const lettre = files?.lettreMotivation?.[0];
 
     if (cv) {
-      const result = await this.storageService.upload(cv.buffer, cv.originalname, {
+      const result = await this.storageService.uploadPrivate(cv.buffer, cv.originalname, {
         mimetype: cv.mimetype,
+        prefix: 'admissions/cv',
+        metadata: { 'x-amz-meta-kind': 'cv' },
       });
-      createAdmissionDto.cvPath = result.url;
+      createAdmissionDto.cvPath = result.objectName;
     }
     if (lettre) {
-      const result = await this.storageService.upload(lettre.buffer, lettre.originalname, {
+      const result = await this.storageService.uploadPrivate(lettre.buffer, lettre.originalname, {
         mimetype: lettre.mimetype,
+        prefix: 'admissions/lettres',
+        metadata: { 'x-amz-meta-kind': 'lettre' },
       });
-      createAdmissionDto.lettreMotivationPath = result.url;
+      createAdmissionDto.lettreMotivationPath = result.objectName;
     }
 
     return this.admissionsService.create(createAdmissionDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiMessage('Candidatures récupérées')
-  findAll() {
-    return this.admissionsService.findAll();
+  findAll(@Query() query: QueryAdmissionDto) {
+    return this.admissionsService.findAll(query);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('search')
+  @ApiMessage('Recherche effectuée')
+  search(@Query() query: QueryAdmissionDto) {
+    return this.admissionsService.findAll(query);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/documents/:kind')
+  @SkipTransform()
+  async getDocument(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('kind') kind: string,
+    @Query('download') download: string | undefined,
+    @Res() res: Response,
+  ): Promise<void> {
+    const file = await this.admissionsService.getDocument(id, kind);
+    const disposition = download === '1' || download === 'true' ? 'attachment' : 'inline';
+    res.setHeader('Content-Type', file.mimetype);
+    res.setHeader('Content-Disposition', `${disposition}; filename="${file.filename}"`);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.send(file.buffer);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   @ApiMessage('Candidature récupérée')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.admissionsService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id/status')
   @ApiMessage('Statut de la candidature mis à jour')
   updateStatus(
@@ -88,6 +127,7 @@ export class AdmissionsController {
     return this.admissionsService.updateStatus(id, updateAdmissionStatusDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   @ApiMessage('Candidature supprimée')
   remove(@Param('id', ParseIntPipe) id: number) {

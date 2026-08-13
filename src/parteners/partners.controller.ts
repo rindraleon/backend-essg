@@ -19,6 +19,7 @@ import { ApiMessage } from '../common/decorators/api-message.decorator';
 import { PaginationQueryDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { imageUploadOptions } from '../common/storage/multer.config';
+import { STORAGE_PREFIXES } from '../common/storage/storage.constants';
 import { StorageService } from '../common/storage/storage.service';
 import { CreatePartenaireDto, UpdatePartenaireDto } from './dto/create-partner.dto';
 import { PartnersService } from './partners.service';
@@ -42,12 +43,6 @@ export class PartnersController {
     return this.service.search(query, paginationDto);
   }
 
-  @Get(':id')
-  @ApiMessage('Partenaire récupéré')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.service.findOne(id);
-  }
-
   @Get('slug/:slug')
   @ApiMessage('Partenaire récupéré')
   findBySlug(@Param('slug') slug: string) {
@@ -60,6 +55,12 @@ export class PartnersController {
     return this.service.findByName(nom);
   }
 
+  @Get(':id')
+  @ApiMessage('Partenaire récupéré')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.service.findOne(id);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -69,6 +70,7 @@ export class PartnersController {
     if (file) {
       const result = await this.storageService.upload(file.buffer, file.originalname, {
         mimetype: file.mimetype,
+        prefix: STORAGE_PREFIXES.partners,
       });
       dto.logo = result.url;
     }
@@ -85,10 +87,13 @@ export class PartnersController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     if (file) {
+      const current = await this.service.findOne(id);
       const result = await this.storageService.upload(file.buffer, file.originalname, {
         mimetype: file.mimetype,
+        prefix: STORAGE_PREFIXES.partners,
       });
       dto.logo = result.url;
+      await this.storageService.deleteStoredRef(current.logo);
     }
     return this.service.update(id, dto);
   }
@@ -96,7 +101,9 @@ export class PartnersController {
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   @ApiMessage('Partenaire supprimé')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.service.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    const current = await this.service.findOne(id);
+    await this.service.remove(id);
+    await this.storageService.deleteStoredRef(current.logo);
   }
 }

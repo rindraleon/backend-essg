@@ -1,4 +1,4 @@
-import { IsString, IsBoolean, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsBoolean, IsOptional, IsArray, MaxLength } from 'class-validator';
 
 export class CreateActualiteDto {
   @IsString()
@@ -39,6 +39,12 @@ export class CreateActualiteDto {
   @IsOptional()
   @MaxLength(255)
   image?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(255, { each: true })
+  galerie?: string[];
 
   @IsBoolean()
   @IsOptional()

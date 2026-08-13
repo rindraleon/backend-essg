@@ -37,6 +37,9 @@ export class Projet {
   @Column({ default: '/images/hero-campus.jpg' })
   image!: string;
 
+  @Column({ type: 'simple-json', default: '[]' })
+  galerie!: string[];
+
   @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   latitude?: number;
 

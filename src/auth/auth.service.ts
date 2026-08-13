@@ -73,7 +73,7 @@ export class AuthService implements OnModuleInit {
 
   async login(email: string, password: string): Promise<AuthPayload> {
     const user = await this.validateUser(email, password);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) throw new UnauthorizedException('Identifiants invalides');
     const payload: JwtPayload = { email: user.email, sub: user.id };
     return {
       accessToken: this.jwtService.sign(payload),

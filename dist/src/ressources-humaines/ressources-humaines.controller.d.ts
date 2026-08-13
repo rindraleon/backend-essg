@@ -6,8 +6,8 @@ export declare class RessourcesHumainesController {
     constructor(service: RessourcesHumainesService);
     findAll(paginationDto: PaginationQueryDto): Promise<import("../common/interfaces/api-response.interface").PaginatedData<import("./entities/ressource-humaine.entity").RessourceHumaine>>;
     search(query: string, paginationDto: PaginationQueryDto): Promise<import("../common/interfaces/api-response.interface").PaginatedData<import("./entities/ressource-humaine.entity").RessourceHumaine>>;
-    findOne(id: number): Promise<import("./entities/ressource-humaine.entity").RessourceHumaine>;
     findBySlug(slug: string): Promise<import("./entities/ressource-humaine.entity").RessourceHumaine>;
+    findOne(id: number): Promise<import("./entities/ressource-humaine.entity").RessourceHumaine>;
     create(dto: CreateRessourceHumaineDto): Promise<import("./entities/ressource-humaine.entity").RessourceHumaine>;
     update(id: number, dto: UpdateRessourceHumaineDto): Promise<import("./entities/ressource-humaine.entity").RessourceHumaine>;
     remove(id: number): Promise<void>;

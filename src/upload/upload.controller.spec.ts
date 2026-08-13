@@ -9,7 +9,15 @@ describe('UploadController', () => {
 
   beforeEach(async () => {
     service = {
-      uploadImage: jest.fn().mockResolvedValue({ url: '/uploads/x.png', filename: 'x.png' }),
+      uploadImage: jest.fn().mockResolvedValue({
+        url: '/media/images/x.png',
+        filename: 'images/x.png',
+        objectKey: 'images/x.png',
+        bucket: 'essg',
+        fileName: 'a.png',
+        mimeType: 'image/png',
+        size: 1,
+      }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -35,7 +43,7 @@ describe('UploadController', () => {
       mimetype: 'image/png',
     } as Express.Multer.File;
     const result = await controller.uploadImage(file);
-    expect(service.uploadImage).toHaveBeenCalledWith(file);
-    expect(result.url).toContain('/uploads/');
+    expect(service.uploadImage).toHaveBeenCalledWith(file, undefined);
+    expect(result.url).toContain('/media/');
   });
 });

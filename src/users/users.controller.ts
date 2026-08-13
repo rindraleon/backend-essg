@@ -23,6 +23,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { imageUploadOptions } from '../common/storage/multer.config';
+import { STORAGE_PREFIXES } from '../common/storage/storage.constants';
 import { StorageService } from '../common/storage/storage.service';
 import { CreateUtilisateurDto } from './dto/create-user.dto';
 import { UpdateUtilisateurDto } from './dto/update-user.dto';
@@ -92,7 +93,7 @@ export class UsersController {
       throw new ForbiddenException('Vous ne pouvez modifier que votre propre avatar');
     }
     if (!file) {
-      throw new ForbiddenException('Aucun fichier fourni');
+      throw new ForbiddenException('Aucun fichier fourni. Envoyez une image (JPG, PNG, GIF ou WebP).');
     }
     const result = await this.storageService.upload(file.buffer, file.originalname, {
       mimetype: file.mimetype,
@@ -103,7 +104,9 @@ export class UsersController {
   @Roles('admin')
   @Delete(':id')
   @ApiMessage('Utilisateur supprimé')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.service.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    const current = await this.service.findOne(id);
+    await this.service.remove(id);
+    await this.storageService.deleteStoredRef(current.avatar);
   }
 }

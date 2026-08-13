@@ -9,6 +9,7 @@ export declare class Actualite {
     auteur?: string;
     statut: boolean;
     image?: string;
+    galerie: string[];
     enVedette: boolean;
     creeLe: Date;
     misAJourLe: Date;

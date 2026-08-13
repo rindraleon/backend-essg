@@ -22,6 +22,7 @@ let Actualite = class Actualite {
     auteur;
     statut;
     image;
+    galerie;
     enVedette;
     creeLe;
     misAJourLe;
@@ -67,6 +68,10 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Actualite.prototype, "image", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'simple-json', default: '[]' }),
+    __metadata("design:type", Array)
+], Actualite.prototype, "galerie", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'boolean', default: false }),
     __metadata("design:type", Boolean)

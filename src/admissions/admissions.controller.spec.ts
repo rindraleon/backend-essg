@@ -11,9 +11,10 @@ describe('AdmissionsController', () => {
     findAll: jest.Mock;
     findOne: jest.Mock;
     updateStatus: jest.Mock;
+    getDocument: jest.Mock;
     remove: jest.Mock;
   };
-  let storage: { upload: jest.Mock };
+  let storage: { upload: jest.Mock; uploadPrivate: jest.Mock };
 
   const item = { id: 1, nom: 'Doe', prenom: 'John', statut: AdmissionStatus.EN_ATTENTE };
 
@@ -23,12 +24,18 @@ describe('AdmissionsController', () => {
       findAll: jest.fn().mockResolvedValue([item]),
       findOne: jest.fn().mockResolvedValue(item),
       updateStatus: jest.fn().mockResolvedValue({ ...item, statut: AdmissionStatus.ACCEPTE }),
+      getDocument: jest.fn(),
       remove: jest.fn().mockResolvedValue(undefined),
     };
     storage = {
       upload: jest
         .fn()
         .mockResolvedValue({ url: '/uploads/x.pdf', objectName: 'x.pdf', bucket: 'essg' }),
+      uploadPrivate: jest.fn().mockResolvedValue({
+        url: 'admissions/cv/x.pdf',
+        objectName: 'admissions/cv/x.pdf',
+        bucket: 'essg',
+      }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -47,7 +54,7 @@ describe('AdmissionsController', () => {
   });
 
   it('findAll delegates to service', async () => {
-    expect(await controller.findAll()).toEqual([item]);
+    expect(await controller.findAll({})).toEqual([item]);
   });
 
   it('findOne returns item', async () => {
@@ -68,8 +75,14 @@ describe('AdmissionsController', () => {
       ] as Express.Multer.File[],
     };
     await controller.create(dto, files);
-    expect(storage.upload).toHaveBeenCalled();
-    expect(service.create).toHaveBeenCalled();
+    expect(storage.uploadPrivate).toHaveBeenCalledWith(
+      expect.any(Buffer),
+      'a.pdf',
+      expect.objectContaining({ prefix: 'admissions/cv' }),
+    );
+    expect(service.create).toHaveBeenCalledWith(
+      expect.objectContaining({ cvPath: 'admissions/cv/x.pdf' }),
+    );
   });
 
   it('remove delegates to service', async () => {

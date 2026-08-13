@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { Readable } from 'node:stream';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { StorageService } from './storage.service';
 
 const clientMock = {
@@ -11,6 +11,8 @@ const clientMock = {
   getObject: jest.fn(),
   statObject: jest.fn(),
   removeObject: jest.fn(),
+  presignedPutObject: jest.fn(),
+  presignedGetObject: jest.fn(),
 };
 
 jest.mock('minio', () => ({
@@ -36,7 +38,8 @@ describe('StorageService', () => {
                 MINIO_ACCESS_KEY: 'key',
                 MINIO_SECRET_KEY: 'secret',
                 MINIO_BUCKET: 'essg',
-                MINIO_PUBLIC_URL: '',
+                MINIO_PUBLIC_URL: 'http://localhost:9000',
+                APP_URL: 'http://localhost:3000',
               };
               return values[key] ?? fallback;
             }),
@@ -48,6 +51,7 @@ describe('StorageService', () => {
     service = module.get<StorageService>(StorageService);
     client = (service as unknown as { client: typeof clientMock }).client;
     jest.clearAllMocks();
+    client.bucketExists.mockResolvedValue(true);
   });
 
   it('should be defined', () => {
@@ -61,14 +65,19 @@ describe('StorageService', () => {
     expect(client.makeBucket).toHaveBeenCalledWith('essg', '');
   });
 
-  it('upload stores an object and returns a URL', async () => {
+  it('upload stores an object in MinIO and returns media metadata', async () => {
     client.putObject.mockResolvedValue({});
     const result = await service.upload(Buffer.from('data'), 'photo.png', {
       mimetype: 'image/png',
+      prefix: 'images',
     });
-    expect(result.url).toContain('/uploads/');
-    expect(result.url).toMatch(/\.png$/);
-    expect(result.objectName).toMatch(/\.png$/);
+    expect(result.url).toMatch(/^\/media\/images\/.+\.png$/);
+    expect(result.objectKey).toMatch(/^images\/.+\.png$/);
+    expect(result.objectName).toBe(result.objectKey);
+    expect(result.fileName).toBe('photo.png');
+    expect(result.mimeType).toBe('image/png');
+    expect(result.size).toBe(4);
+    expect(client.putObject).toHaveBeenCalled();
   });
 
   it('upload rejects empty buffers', async () => {
@@ -98,6 +107,63 @@ describe('StorageService', () => {
 
   it('delete removes an object', async () => {
     client.removeObject.mockResolvedValue(undefined);
-    await expect(service.delete('x.png')).resolves.toBeUndefined();
+    await expect(service.delete('images/x.png')).resolves.toBeUndefined();
+    expect(client.removeObject).toHaveBeenCalledWith('essg', 'images/x.png');
+  });
+
+  it('extractObjectName reads the file name from a stored URL', () => {
+    expect(service.extractObjectName('/uploads/abc-123.pdf')).toBe('abc-123.pdf');
+    expect(service.extractObjectName('/media/images/abc-123.png')).toBe('images/abc-123.png');
+    expect(service.extractObjectName('http://localhost:9000/essg/abc-123.pdf')).toBe('abc-123.pdf');
+    expect(service.extractObjectName('admissions/cv/abc-123.pdf')).toBe('admissions/cv/abc-123.pdf');
+    expect(service.extractObjectName('http://localhost:9000/essg/admissions/cv/abc-123.pdf')).toBe(
+      'admissions/cv/abc-123.pdf',
+    );
+  });
+
+  it('uploadPrivate stores the document in MinIO under admissions/', async () => {
+    client.putObject.mockResolvedValue({});
+    const result = await service.uploadPrivate(Buffer.from('%PDF'), 'cv.pdf', {
+      mimetype: 'application/pdf',
+    });
+    expect(result.objectName).toMatch(/^admissions\/.+\.pdf$/);
+    expect(result.url).toBe(result.objectName);
+    expect(client.putObject).toHaveBeenCalled();
+  });
+
+  it('createPresignedUpload returns a rewritten URL', async () => {
+    client.presignedPutObject.mockResolvedValue('http://localhost:9000/essg/images/x.png?X-Amz-Signature=abc');
+    const result = await service.createPresignedUpload('photo.png', {
+      mimetype: 'image/png',
+      prefix: 'images',
+    });
+    expect(result.uploadUrl).toContain('localhost:9000');
+    expect(result.objectKey).toMatch(/^images\/.+\.png$/);
+    expect(result.publicUrl).toMatch(/^\/media\/images\//);
+    expect(result.expiresIn).toBe(600);
+  });
+});
+
+describe('StorageService without MinIO', () => {
+  it('upload throws when MinIO is not configured', async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        StorageService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string, fallback?: unknown) => {
+              if (key === 'MINIO_ACCESS_KEY' || key === 'MINIO_SECRET_KEY') return '';
+              return fallback;
+            }),
+          },
+        },
+      ],
+    }).compile();
+
+    const service = module.get<StorageService>(StorageService);
+    await expect(service.upload(Buffer.from('x'), 'a.png')).rejects.toThrow(
+      ServiceUnavailableException,
+    );
   });
 });

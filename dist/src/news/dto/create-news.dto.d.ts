@@ -8,6 +8,7 @@ export declare class CreateActualiteDto {
     auteur: string;
     statut?: boolean;
     image?: string;
+    galerie?: string[];
     enVedette?: boolean;
 }
 export declare class UpdateActualiteDto extends CreateActualiteDto {

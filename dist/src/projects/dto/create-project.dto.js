@@ -19,6 +19,7 @@ class CreateProjetDto {
     description;
     partenaires;
     image;
+    galerie;
     latitude;
     longitude;
     ville;
@@ -63,6 +64,13 @@ __decorate([
     (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
 ], CreateProjetDto.prototype, "image", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.MaxLength)(255, { each: true }),
+    __metadata("design:type", Array)
+], CreateProjetDto.prototype, "galerie", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)

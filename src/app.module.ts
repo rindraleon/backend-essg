@@ -1,15 +1,19 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AdmissionsModule } from './admissions/admissions.module';
 import { AuthModule } from './auth/auth.module';
+import { PerformanceInterceptor } from './common/interceptors/performance.interceptor';
 import { StorageModule } from './common/storage/storage.module';
 import { validate } from './config/env.validation';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { DatabaseModule } from './database/database.module';
 import { FormationsModule } from './formations/formations.module';
+import { HealthModule } from './health/health.module';
 import { MailModule } from './mail/mail.module';
+import { MediaModule } from './media/media.module';
 import { MessagesModule } from './messages/messages.module';
 import { ActivityLogsModule } from './activity-logs/activity-log.module';
 import { NewsModule } from './news/news.module';
@@ -37,12 +41,17 @@ import { UsersModule } from './users/users.module';
     NewsModule,
     RessourcesHumainesModule,
     UploadModule,
+    MediaModule,
+    HealthModule,
     DashboardModule,
     MailModule,
     AdmissionsModule,
     ActivityLogsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_INTERCEPTOR, useClass: PerformanceInterceptor },
+  ],
 })
 export class AppModule {}

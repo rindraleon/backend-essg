@@ -29,11 +29,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     avatar?: string;
   }> {
     const isValid = await this.authService.validateToken(payload);
-    if (!isValid) throw new UnauthorizedException();
+    if (!isValid) throw new UnauthorizedException('Session invalide ou expirée');
 
     const user = await this.authService.getUserForAuth(payload.sub, payload.email);
 
-    if (!user) throw new UnauthorizedException();
+    if (!user) throw new UnauthorizedException('Utilisateur introuvable ou inactif');
 
     return {
       userId: user.id,

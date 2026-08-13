@@ -16,30 +16,48 @@ exports.UploadController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const api_message_decorator_1 = require("../common/decorators/api-message.decorator");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const multer_config_1 = require("../common/storage/multer.config");
+const presign_upload_dto_1 = require("./dto/presign-upload.dto");
 const upload_service_1 = require("./upload.service");
 let UploadController = class UploadController {
     uploadService;
     constructor(uploadService) {
         this.uploadService = uploadService;
     }
-    async uploadImage(file) {
-        if (!file)
-            throw new common_1.BadRequestException('Aucun fichier fourni');
-        return this.uploadService.uploadImage(file);
+    async uploadImage(file, folder) {
+        if (!file) {
+            throw new common_1.BadRequestException('Aucun fichier fourni. Envoyez un champ « file » (JPG, PNG, GIF ou WebP, 5 Mo max).');
+        }
+        return this.uploadService.uploadImage(file, folder);
+    }
+    async presign(dto) {
+        return this.uploadService.presign(dto);
     }
 };
 exports.UploadController = UploadController;
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)('image'),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     (0, api_message_decorator_1.ApiMessage)('Image téléversée avec succès'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', multer_config_1.imageUploadOptions)),
     __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Query)('folder')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], UploadController.prototype, "uploadImage", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('presign'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
+    (0, api_message_decorator_1.ApiMessage)('URL présignée générée'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [presign_upload_dto_1.PresignUploadDto]),
+    __metadata("design:returntype", Promise)
+], UploadController.prototype, "presign", null);
 exports.UploadController = UploadController = __decorate([
     (0, common_1.Controller)('upload'),
     __metadata("design:paramtypes", [upload_service_1.UploadService])

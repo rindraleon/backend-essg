@@ -18,6 +18,11 @@ export declare class Admission {
     lettreMotivationPath: string;
     statut: AdmissionStatus;
     commentaire: string;
+    reponseDate: string | null;
+    reponseHeure: string | null;
+    reponseLieu: string | null;
+    reponseInstructions: string | null;
+    reponseMessage: string | null;
     creeLe: Date;
     misAJourLe: Date;
 }

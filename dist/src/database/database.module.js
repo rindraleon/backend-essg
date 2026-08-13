@@ -10,6 +10,7 @@ exports.DatabaseModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_perf_logger_1 = require("../common/logger/typeorm-perf.logger");
 let DatabaseModule = class DatabaseModule {
 };
 exports.DatabaseModule = DatabaseModule;
@@ -21,6 +22,7 @@ exports.DatabaseModule = DatabaseModule = __decorate([
                 inject: [config_1.ConfigService],
                 useFactory: (configService) => {
                     const isProduction = configService.get('NODE_ENV') === 'production';
+                    const verboseSql = configService.get('PERF_SQL', 'false') === 'true';
                     return {
                         type: 'postgres',
                         host: configService.get('POSTGRES_HOST', 'localhost'),
@@ -30,8 +32,9 @@ exports.DatabaseModule = DatabaseModule = __decorate([
                         database: configService.get('POSTGRES_DB', 'essg'),
                         entities: [__dirname + '/../**/*.entity.{js,ts}'],
                         synchronize: !isProduction,
-                        logger: 'advanced-console',
-                        logging: isProduction ? ['error'] : ['query', 'error'],
+                        logger: new typeorm_perf_logger_1.TypeormPerfLogger(verboseSql && !isProduction),
+                        logging: isProduction ? ['error'] : ['error', 'warn', 'schema'],
+                        maxQueryExecutionTime: 200,
                     };
                 },
             }),

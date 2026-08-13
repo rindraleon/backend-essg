@@ -19,6 +19,7 @@ const api_message_decorator_1 = require("../common/decorators/api-message.decora
 const pagination_dto_1 = require("../common/dto/pagination.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const multer_config_1 = require("../common/storage/multer.config");
+const storage_constants_1 = require("../common/storage/storage.constants");
 const storage_service_1 = require("../common/storage/storage.service");
 const create_partner_dto_1 = require("./dto/create-partner.dto");
 const partners_service_1 = require("./partners.service");
@@ -35,19 +36,20 @@ let PartnersController = class PartnersController {
     search(query, paginationDto) {
         return this.service.search(query, paginationDto);
     }
-    findOne(id) {
-        return this.service.findOne(id);
-    }
     findBySlug(slug) {
         return this.service.findBySlug(slug);
     }
     findByName(nom) {
         return this.service.findByName(nom);
     }
+    findOne(id) {
+        return this.service.findOne(id);
+    }
     async create(dto, file) {
         if (file) {
             const result = await this.storageService.upload(file.buffer, file.originalname, {
                 mimetype: file.mimetype,
+                prefix: storage_constants_1.STORAGE_PREFIXES.partners,
             });
             dto.logo = result.url;
         }
@@ -55,15 +57,20 @@ let PartnersController = class PartnersController {
     }
     async update(id, dto, file) {
         if (file) {
+            const current = await this.service.findOne(id);
             const result = await this.storageService.upload(file.buffer, file.originalname, {
                 mimetype: file.mimetype,
+                prefix: storage_constants_1.STORAGE_PREFIXES.partners,
             });
             dto.logo = result.url;
+            await this.storageService.deleteStoredRef(current.logo);
         }
         return this.service.update(id, dto);
     }
-    remove(id) {
-        return this.service.remove(id);
+    async remove(id) {
+        const current = await this.service.findOne(id);
+        await this.service.remove(id);
+        await this.storageService.deleteStoredRef(current.logo);
     }
 };
 exports.PartnersController = PartnersController;
@@ -85,14 +92,6 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PartnersController.prototype, "search", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    (0, api_message_decorator_1.ApiMessage)('Partenaire récupéré'),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
-], PartnersController.prototype, "findOne", null);
-__decorate([
     (0, common_1.Get)('slug/:slug'),
     (0, api_message_decorator_1.ApiMessage)('Partenaire récupéré'),
     __param(0, (0, common_1.Param)('slug')),
@@ -108,6 +107,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], PartnersController.prototype, "findByName", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, api_message_decorator_1.ApiMessage)('Partenaire récupéré'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], PartnersController.prototype, "findOne", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)(),
@@ -139,7 +146,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], PartnersController.prototype, "remove", null);
 exports.PartnersController = PartnersController = __decorate([
     (0, common_1.Controller)('partners'),

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
 
 export enum AdmissionStatus {
   EN_ATTENTE = 'en_attente',
@@ -18,6 +18,7 @@ export class Admission {
   @Column()
   prenom: string;
 
+  @Index()
   @Column()
   email: string;
 
@@ -42,6 +43,7 @@ export class Admission {
   @Column({ nullable: true })
   lettreMotivationPath: string;
 
+  @Index()
   @Column({
     type: 'enum',
     enum: AdmissionStatus,
@@ -52,6 +54,22 @@ export class Admission {
   @Column({ type: 'text', nullable: true })
   commentaire: string;
 
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  reponseDate: string | null;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  reponseHeure: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  reponseLieu: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  reponseInstructions: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  reponseMessage: string | null;
+
+  @Index()
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   creeLe: Date;
 

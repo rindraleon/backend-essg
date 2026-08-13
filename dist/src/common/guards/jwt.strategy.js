@@ -30,10 +30,10 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
     async validate(payload) {
         const isValid = await this.authService.validateToken(payload);
         if (!isValid)
-            throw new common_1.UnauthorizedException();
+            throw new common_1.UnauthorizedException('Session invalide ou expirée');
         const user = await this.authService.getUserForAuth(payload.sub, payload.email);
         if (!user)
-            throw new common_1.UnauthorizedException();
+            throw new common_1.UnauthorizedException('Utilisateur introuvable ou inactif');
         return {
             userId: user.id,
             email: user.email,

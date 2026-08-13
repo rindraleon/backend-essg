@@ -1,13 +1,18 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, ILike, Repository } from 'typeorm';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import { Repository } from 'typeorm';
 import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { buildPaginatedData } from '../common/utils/pagination.util';
+import { buildIlikeTerm, sanitizeSortField } from '../common/utils/search.util';
 import { MailService } from '../mail/mail.service';
+import type { AuthUser } from '../common/decorators/current-user.decorator';
 import { CreateMessageDto, UpdateMessageDto } from './dto/create-message.dto';
+import { QueryMessageDto } from './dto/query-message.dto';
+import { ReplyMessageDto } from './dto/reply-message.dto';
 import { Message } from './entities/message.entity';
 import { capitalize, toUpperCase } from '../common/utils/text.util';
+
+const MESSAGE_SORT_FIELDS = ['id', 'nom', 'prenom', 'email', 'sujet', 'lu', 'creeLe', 'misAJourLe'] as const;
 
 @Injectable()
 export class MessagesService {
@@ -19,36 +24,63 @@ export class MessagesService {
     private readonly mailService: MailService,
   ) {}
 
-  private async findPaginated(
-    where: FindOptionsWhere<Message> | FindOptionsWhere<Message>[],
-    paginationDto: PaginationDto,
-  ): Promise<PaginatedData<Message>> {
-    const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
-    const skip = (page - 1) * limit;
+  private async findFiltered(queryDto: QueryMessageDto = {}): Promise<PaginatedData<Message>> {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy,
+      sortOrder = 'DESC',
+      q,
+      sujet,
+      lu,
+      dateDebut,
+      dateFin,
+    } = queryDto;
+    const qb = this.repo.createQueryBuilder('message');
 
-    const [data, total] = await this.repo.findAndCount({
-      where,
-      order: sortBy ? { [sortBy]: sortOrder } : { creeLe: 'DESC' },
-      skip,
-      take: limit,
-    });
+    if (q?.trim()) {
+      const term = buildIlikeTerm(q);
+      qb.andWhere(
+        `(message.nom ILIKE :term ESCAPE '\\\\'
+          OR message.prenom ILIKE :term ESCAPE '\\\\'
+          OR message.email ILIKE :term ESCAPE '\\\\'
+          OR message.telephone ILIKE :term ESCAPE '\\\\'
+          OR message.sujet ILIKE :term ESCAPE '\\\\'
+          OR message.message ILIKE :term ESCAPE '\\\\')`,
+        { term },
+      );
+    }
 
-    return buildPaginatedData(data, total, page, limit);
+    if (sujet && sujet !== 'all') {
+      qb.andWhere('LOWER(message.sujet) = LOWER(:sujet)', { sujet });
+    }
+
+    if (typeof lu === 'boolean') {
+      qb.andWhere('message.lu = :lu', { lu });
+    }
+
+    if (dateDebut) {
+      qb.andWhere('message.creeLe >= :dateDebut', { dateDebut });
+    }
+
+    if (dateFin) {
+      qb.andWhere('message.creeLe <= :dateFin', { dateFin: `${dateFin}T23:59:59.999Z` });
+    }
+
+    const orderField = sanitizeSortField(sortBy, MESSAGE_SORT_FIELDS) ?? 'creeLe';
+    qb.orderBy(`message.${orderField}`, sortOrder === 'ASC' ? 'ASC' : 'DESC');
+    qb.skip((page - 1) * limit).take(limit);
+
+    const [items, total] = await qb.getManyAndCount();
+    return buildPaginatedData(items, total, page, limit);
   }
 
-  async findAll(paginationDto: PaginationDto): Promise<PaginatedData<Message>> {
-    return this.findPaginated({}, paginationDto);
+  async findAll(queryDto: QueryMessageDto = {}): Promise<PaginatedData<Message>> {
+    return this.findFiltered(queryDto);
   }
 
-  async search(query: string, paginationDto: PaginationDto): Promise<PaginatedData<Message>> {
-    const where: FindOptionsWhere<Message>[] = query
-      ? [
-          { nom: ILike(`%${query}%`) },
-          { email: ILike(`%${query}%`) },
-          { message: ILike(`%${query}%`) },
-        ]
-      : [{}];
-    return this.findPaginated(where, paginationDto);
+  async search(query: string, queryDto: QueryMessageDto = {}): Promise<PaginatedData<Message>> {
+    return this.findFiltered({ ...queryDto, q: query || queryDto.q });
   }
 
   async findOne(id: number): Promise<Message> {
@@ -81,10 +113,38 @@ export class MessagesService {
     return saved;
   }
 
-  async update(id: number, dto: UpdateMessageDto): Promise<Message> {
-    await this.findOne(id);
-    await this.repo.update(id, dto);
-    return this.findOne(id);
+  async update(id: number, dto: UpdateMessageDto, reader?: AuthUser): Promise<Message> {
+    const item = await this.findOne(id);
+    if (dto.lu && !item.lu) {
+      item.lu = true;
+      item.luLe = new Date();
+      item.luPar = reader?.email ?? item.luPar;
+    } else if (dto.lu === false) {
+      item.lu = false;
+    }
+    return this.repo.save(item);
+  }
+
+  async reply(id: number, dto: ReplyMessageDto, author: AuthUser): Promise<Message> {
+    const item = await this.findOne(id);
+    const sujet = dto.sujet?.trim() || `Re : ${item.sujet}`;
+
+    await this.mailService.sendMessageReplyEmail({
+      to: item.email,
+      prenom: item.prenom,
+      nom: item.nom,
+      sujet,
+      message: dto.message,
+    });
+
+    item.lu = true;
+    item.luLe = item.luLe ?? new Date();
+    item.luPar = item.luPar ?? author.email;
+    item.reponse = dto.message;
+    item.reponseSujet = sujet;
+    item.reponduLe = new Date();
+    item.reponduPar = author.email;
+    return this.repo.save(item);
   }
 
   async remove(id: number): Promise<void> {

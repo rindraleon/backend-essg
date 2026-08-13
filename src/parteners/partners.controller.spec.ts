@@ -15,7 +15,7 @@ describe('PartnersController', () => {
     update: jest.Mock;
     remove: jest.Mock;
   };
-  let storage: { upload: jest.Mock };
+  let storage: { upload: jest.Mock; deleteStoredRef: jest.Mock };
 
   const item = { id: 1, nom: 'Acme', slug: 'acme' };
 
@@ -31,9 +31,12 @@ describe('PartnersController', () => {
       remove: jest.fn().mockResolvedValue(undefined),
     };
     storage = {
-      upload: jest
-        .fn()
-        .mockResolvedValue({ url: '/uploads/x.png', objectName: 'x.png', bucket: 'essg' }),
+      upload: jest.fn().mockResolvedValue({
+        url: '/media/partners/x.png',
+        objectName: 'partners/x.png',
+        bucket: 'essg',
+      }),
+      deleteStoredRef: jest.fn().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({

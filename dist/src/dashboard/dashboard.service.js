@@ -63,11 +63,13 @@ let DashboardService = class DashboardService {
     async getRecentActivities() {
         const recentUsers = await this.userRepository
             .createQueryBuilder('user')
+            .select(['user.id', 'user.nom', 'user.prenom', 'user.creeLe'])
             .orderBy('user.creeLe', 'DESC')
             .limit(5)
             .getMany();
         const recentNews = await this.newsRepository
             .createQueryBuilder('news')
+            .select(['news.id', 'news.titre', 'news.creeLe'])
             .orderBy('news.creeLe', 'DESC')
             .limit(5)
             .getMany();

@@ -28,9 +28,34 @@ export class ActivityLogService {
     private readonly repo: Repository<ActivityLog>,
   ) {}
 
+  private static readonly MAX_LOGS = 10_000;
+  private static readonly KEEP_LOGS = 8_000;
+
   async create(data: CreateActivityLogData): Promise<ActivityLog> {
     const log = this.repo.create(data);
-    return this.repo.save(log);
+    const saved = await this.repo.save(log);
+    void this.pruneIfNeeded();
+    return saved;
+  }
+
+  private async pruneIfNeeded(): Promise<void> {
+    try {
+      const count = await this.repo.count();
+      if (count < ActivityLogService.MAX_LOGS) return;
+
+      const excess = count - ActivityLogService.KEEP_LOGS;
+      const oldest = await this.repo.find({
+        select: ['id'],
+        order: { id: 'ASC' },
+        take: excess,
+      });
+      const ids = oldest.map((item) => item.id);
+      if (ids.length > 0) {
+        await this.repo.delete(ids);
+      }
+    } catch {
+      /* the write path must never fail because of rotation */
+    }
   }
 
   async findAll(query: QueryActivityLogDto): Promise<PaginatedData<ActivityLog>> {

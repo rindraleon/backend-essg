@@ -32,6 +32,11 @@ let Admission = class Admission {
     lettreMotivationPath;
     statut;
     commentaire;
+    reponseDate;
+    reponseHeure;
+    reponseLieu;
+    reponseInstructions;
+    reponseMessage;
     creeLe;
     misAJourLe;
 };
@@ -49,6 +54,7 @@ __decorate([
     __metadata("design:type", String)
 ], Admission.prototype, "prenom", void 0);
 __decorate([
+    (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Admission.prototype, "email", void 0);
@@ -81,6 +87,7 @@ __decorate([
     __metadata("design:type", String)
 ], Admission.prototype, "lettreMotivationPath", void 0);
 __decorate([
+    (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({
         type: 'enum',
         enum: AdmissionStatus,
@@ -93,6 +100,27 @@ __decorate([
     __metadata("design:type", String)
 ], Admission.prototype, "commentaire", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 20, nullable: true }),
+    __metadata("design:type", Object)
+], Admission.prototype, "reponseDate", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 10, nullable: true }),
+    __metadata("design:type", Object)
+], Admission.prototype, "reponseHeure", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 255, nullable: true }),
+    __metadata("design:type", Object)
+], Admission.prototype, "reponseLieu", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", Object)
+], Admission.prototype, "reponseInstructions", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", Object)
+], Admission.prototype, "reponseMessage", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' }),
     __metadata("design:type", Date)
 ], Admission.prototype, "creeLe", void 0);

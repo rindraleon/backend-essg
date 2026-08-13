@@ -46,6 +46,7 @@ __decorate([
 class PaginationQueryDto extends PaginationDto {
     page = 1;
     limit = 10;
+    q;
 }
 exports.PaginationQueryDto = PaginationQueryDto;
 __decorate([
@@ -58,4 +59,10 @@ __decorate([
     (0, class_transformer_1.Type)(() => Number),
     __metadata("design:type", Number)
 ], PaginationQueryDto.prototype, "limit", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(200),
+    __metadata("design:type", String)
+], PaginationQueryDto.prototype, "q", void 0);
 //# sourceMappingURL=pagination.dto.js.map

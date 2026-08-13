@@ -28,6 +28,7 @@ let Projet = class Projet {
     description;
     partenaires;
     image;
+    galerie;
     latitude;
     longitude;
     ville;
@@ -76,6 +77,10 @@ __decorate([
     (0, typeorm_1.Column)({ default: '/images/hero-campus.jpg' }),
     __metadata("design:type", String)
 ], Projet.prototype, "image", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'simple-json', default: '[]' }),
+    __metadata("design:type", Array)
+], Projet.prototype, "galerie", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'decimal', precision: 10, scale: 7, nullable: true }),
     __metadata("design:type", Number)

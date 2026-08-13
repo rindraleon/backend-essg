@@ -8,6 +8,9 @@ declare class EnvironmentVariables {
     APP_PORT: number;
     APP_URL: string;
     UPLOAD_PATH: string;
+    PERF_LOG: string;
+    PERF_SQL: string;
+    PERF_SLOW_MS: string;
     JWT_SECRET: string;
     JWT_EXPIRATION: string;
     SMTP_HOST: string;
@@ -23,6 +26,7 @@ declare class EnvironmentVariables {
     MINIO_SECRET_KEY: string;
     MINIO_BUCKET: string;
     MINIO_PUBLIC_URL: string;
+    CORS_ORIGINS: string;
 }
 export declare function validate(config: Record<string, unknown>): EnvironmentVariables;
 export {};

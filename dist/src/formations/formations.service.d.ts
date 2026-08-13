@@ -13,4 +13,6 @@ export declare class FormationsService {
     create(dto: CreateFormationDto): Promise<Formation>;
     update(id: number, dto: UpdateFormationDto): Promise<Formation>;
     remove(id: number): Promise<void>;
+    private saveOrConflict;
+    private rethrowUnique;
 }

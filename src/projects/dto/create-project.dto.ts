@@ -32,6 +32,12 @@ export class CreateProjetDto {
   image?: string;
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(255, { each: true })
+  galerie?: string[];
+
+  @IsOptional()
   latitude?: number;
 
   @IsOptional()

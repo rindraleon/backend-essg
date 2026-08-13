@@ -19,14 +19,6 @@ const typeorm_2 = require("typeorm");
 const pagination_util_1 = require("../common/utils/pagination.util");
 const news_item_entity_1 = require("./entities/news-item.entity");
 const text_util_1 = require("../common/utils/text.util");
-function generateSlug(title) {
-    return title
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/[\s_]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-}
 let NewsService = class NewsService {
     repo;
     constructor(repo) {
@@ -67,7 +59,7 @@ let NewsService = class NewsService {
     async create(dto) {
         const item = this.repo.create({
             ...dto,
-            slug: dto.slug || generateSlug(dto.titre),
+            slug: dto.slug || (0, text_util_1.slugify)(dto.titre),
             titre: (0, text_util_1.capitalize)(dto.titre),
             categorie: (0, text_util_1.capitalize)(dto.categorie),
             auteur: (0, text_util_1.capitalize)(dto.auteur),
@@ -84,7 +76,7 @@ let NewsService = class NewsService {
         const updateData = { ...dto };
         if (dto.titre) {
             updateData.titre = (0, text_util_1.capitalize)(dto.titre);
-            updateData.slug = generateSlug(dto.titre);
+            updateData.slug = (0, text_util_1.slugify)(dto.titre);
         }
         if (dto.categorie)
             updateData.categorie = (0, text_util_1.capitalize)(dto.categorie);
@@ -94,6 +86,8 @@ let NewsService = class NewsService {
             updateData.resume = (0, text_util_1.capitalize)(dto.resume);
         if (dto.contenu)
             updateData.contenu = (0, text_util_1.capitalize)(dto.contenu);
+        if (dto.galerie)
+            updateData.galerie = dto.galerie;
         await this.repo.update(id, updateData);
         return this.findOne(id);
     }
