@@ -37,13 +37,17 @@ let MailService = MailService_1 = class MailService {
         this.configService = configService;
         const host = this.readString('SMTP_HOST', 'smtp.gmail.com');
         const port = this.readNumber('SMTP_PORT', 587);
-        const secure = this.readBoolean('SMTP_SECURE', port === 465);
+        const secure = port === 465;
         const user = this.readString('SMTP_USER', '');
         const pass = this.readString('SMTP_PASS', '');
         this.from = this.readString('SMTP_FROM', user || 'no-reply@essg.mg');
         this.replyTo = this.readString('SMTP_REPLY_TO', this.from);
         this.appUrl = this.readString('APP_URL', 'http://localhost:3000');
         this.configured = Boolean(host && user && pass && !user.startsWith('your-'));
+        const explicitSecure = this.readBoolean('SMTP_SECURE', false);
+        if (explicitSecure !== secure) {
+            this.logger.warn(`SMTP_SECURE=${explicitSecure} ignoré : incohérent avec le port ${port} — ${secure ? 'TLS direct (465)' : 'STARTTLS (587/25)'} utilisé`);
+        }
         this.transporter = nodemailer_1.default.createTransport({
             host,
             port,
