@@ -3,59 +3,63 @@ import { Type } from 'class-transformer';
 import { IsString, IsArray, IsBoolean, IsOptional, IsIn, IsInt, MaxLength } from 'class-validator';
 
 export class CreateFormationDto {
-  @IsOptional()
+  
   @IsString()
   @MaxLength(150)
-  slug?: string;
+  mention!: string;
 
+  
   @IsArray()
   @IsString({ each: true })
   @MaxLength(100, { each: true })
-  domaine: string[];
+  @IsOptional()
+  domaine?: string[];
 
   @IsString()
   @MaxLength(150)
-  titre: string;
+  titre!: string;
 
   @IsIn(['Licence', 'Master', 'Doctorat'])
-  niveau: 'Licence' | 'Master' | 'Doctorat';
+  niveau!: 'Licence' | 'Master' | 'Doctorat';
 
   @IsString()
   @MaxLength(60)
-  duree: string;
+  duree!: string;
 
   @IsString()
-  @MaxLength(10000)
-  description: string;
+  @MaxLength(1000)
+  description!: string;
 
   @IsArray()
   @IsString({ each: true })
-  @MaxLength(1000, { each: true })
-  objectifs: string[];
+  @MaxLength(500, { each: true })
+  objectifs!: string[];
 
   @IsArray()
   @IsString({ each: true })
-  @MaxLength(1000, { each: true })
-  debouches: string[];
+  @MaxLength(500, { each: true })
+  debouches!: string[];
 
   @IsString()
-  @MaxLength(10000)
-  conditionsAcces: string;
+  @IsOptional()
+  @MaxLength(500)
+  conditionsAcces?: string;
 
   @IsArray()
   @IsString({ each: true })
-  @MaxLength(1000, { each: true })
-  programme: string[];
+  @MaxLength(500, { each: true })
+  @IsOptional()
+  programme?: string[];
 
   @IsArray()
   @IsString({ each: true })
-  @MaxLength(1000, { each: true })
+  @MaxLength(500, { each: true })
   @IsOptional()
   conditions?: string[];
 
   @IsArray()
   @IsString({ each: true })
-  @MaxLength(1000, { each: true })
+  @MaxLength(500, { each: true })
   @IsOptional()
   competences?: string[];
 
@@ -68,9 +72,14 @@ export class CreateFormationDto {
   @MaxLength(100)
   responsable?: string;
 
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  responsableId?: number;
+
   @IsString()
   @IsOptional()
-  @MaxLength(120)
+  @MaxLength(50)
   email?: string;
 
   @IsString()
@@ -84,7 +93,7 @@ export class CreateFormationDto {
 
   @Type(() => Number)
   @IsInt()
-  credits: number;
+  credits!: number;
 }
 
 export class UpdateFormationDto extends PartialType(CreateFormationDto) {}

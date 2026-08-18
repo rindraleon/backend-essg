@@ -17,6 +17,7 @@ import { PaginationQueryDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CreateFormationDto, UpdateFormationDto } from './dto/create-formation.dto';
 import { FormationsService } from './formations.service';
+import { FORMATION_MENTIONS } from './formation-mentions.constant';
 
 @Controller('formations')
 export class FormationsController {
@@ -26,6 +27,12 @@ export class FormationsController {
   @ApiMessage('Formations récupérées')
   findAll(@Query() paginationDto: PaginationQueryDto) {
     return this.service.findAll(paginationDto);
+  }
+
+  @Get('mentions')
+  @ApiMessage('Mentions récupérées')
+  findMentions() {
+    return FORMATION_MENTIONS;
   }
 
   @Get('search')

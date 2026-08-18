@@ -12,9 +12,7 @@ export interface StorageUploadOptions {
   bucket?: string;
   mimetype?: string;
   metadata?: Record<string, string>;
-  /** Préfixe d'objet MinIO, ex. admissions/cv */
   prefix?: string;
-  /** Si vrai, aucun accès public : l'URL renvoyée est la clé d'objet. */
   privateObject?: boolean;
   originalName?: string;
 }

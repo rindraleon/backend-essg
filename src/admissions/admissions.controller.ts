@@ -32,6 +32,14 @@ interface AdmissionFiles {
   lettreMotivation?: Express.Multer.File[];
 }
 
+function sanitizeFilename(filename: string): string {
+  return filename
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w.\-]+/g, '_')
+    .slice(0, 120);
+}
+
 @Controller('admissions')
 export class AdmissionsController {
   constructor(
@@ -102,9 +110,17 @@ export class AdmissionsController {
     @Res() res: Response,
   ): Promise<void> {
     const file = await this.admissionsService.getDocument(id, kind);
-    const disposition = download === '1' || download === 'true' ? 'attachment' : 'inline';
+    const wantsDownload = download === '1' || download === 'true';
+    const disposition = wantsDownload || !file.inlineViewable ? 'attachment' : 'inline';
+
     res.setHeader('Content-Type', file.mimetype);
-    res.setHeader('Content-Disposition', `${disposition}; filename="${file.filename}"`);
+    res.setHeader(
+      'Content-Disposition',
+      `${disposition}; filename="${sanitizeFilename(file.filename)}"; filename*=UTF-8''${encodeURIComponent(file.filename)}`,
+    );
+    res.setHeader('Content-Length', String(file.buffer.length));
+    res.setHeader('X-Document-Inline-Viewable', String(file.inlineViewable));
+    res.setHeader('Access-Control-Expose-Headers', 'X-Document-Inline-Viewable, Content-Disposition');
     res.setHeader('Cache-Control', 'private, no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.send(file.buffer);

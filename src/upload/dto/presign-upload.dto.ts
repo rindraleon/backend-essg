@@ -14,15 +14,15 @@ export const PRESIGN_FOLDERS = [
 export class PresignUploadDto {
   @IsString()
   @MaxLength(180)
-  fileName: string;
+  fileName!: string;
 
   @IsString()
-  mimeType: string;
+  mimeType!: string;
 
   @IsInt()
   @Min(1)
   @Max(20 * 1024 * 1024)
-  size: number;
+  size!: number;
 
   @IsOptional()
   @IsIn(PRESIGN_FOLDERS)

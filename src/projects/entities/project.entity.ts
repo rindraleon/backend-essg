@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, BeforeUpdate } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('projects')
 export class Projet {
@@ -11,25 +11,20 @@ export class Projet {
   @Column({ nullable: true })
   slug!: string;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  generateSlug() {
-    if (this.titre && !this.slug) {
-      this.slug = this.titre
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-    }
-  }
-
   @Column({ type: 'text', default: 'Recherche' })
   type!: 'International' | 'Service public' | 'Recherche' | 'Partenariat';
+
+  @Column({ type: 'text', default: 'En cours' })
+  statut!: 'En cours' | 'Terminé';
 
   @Column()
   date!: string;
 
   @Column({ type: 'text' })
   description!: string;
+
+  @Column({ type: 'simple-json', default: '[]' })
+  partenaireIds!: number[];
 
   @Column({ type: 'simple-json', default: '[]' })
   partenaires!: string[];

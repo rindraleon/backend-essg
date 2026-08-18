@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -10,6 +10,8 @@ import { UpdateUtilisateurDto } from './dto/update-user.dto';
 import { Utilisateur } from './entities/user.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { capitalize, toUpperCase } from '../common/utils/text.util';
+import { assertEmailIsAvailable } from '../common/utils/duplicate.util';
+import { EmailDomainService } from '../common/validators/email-domain.service';
 
 type SanitizedUtilisateur = Omit<Utilisateur, 'motDePasse'>;
 
@@ -21,11 +23,19 @@ export class UsersService {
     @InjectRepository(Utilisateur)
     private readonly repo: Repository<Utilisateur>,
     private readonly mailService: MailService,
+    private readonly emailDomainService: EmailDomainService,
   ) {}
 
+  private async assertEmailDomainExists(email?: string): Promise<void> {
+    if (!email) return;
+    const result = await this.emailDomainService.check(email);
+    if (result.reason) {
+      throw new BadRequestException(result.reason);
+    }
+  }
+
   private sanitizeUser(user: Utilisateur): SanitizedUtilisateur {
-    const { motDePasse, ...rest } = user;
-    void motDePasse;
+    const { motDePasse: _motDePasse, ...rest } = user;
     return rest;
   }
 
@@ -80,8 +90,8 @@ export class UsersService {
   }
 
   async create(dto: CreateUtilisateurDto): Promise<SanitizedUtilisateur> {
-    const existing = await this.findByEmail(dto.email);
-    if (existing) throw new ConflictException('Cet email existe déjà');
+    await this.assertEmailDomainExists(dto.email);
+    await assertEmailIsAvailable(this.repo, dto.email, 'un autre utilisateur');
 
     const hashedPassword = await bcrypt.hash(dto.motDePasse, 10);
     const user = this.repo.create({
@@ -104,6 +114,11 @@ export class UsersService {
 
   async update(id: number, dto: UpdateUtilisateurDto): Promise<SanitizedUtilisateur> {
     const user = await this.findOne(id);
+    await this.assertEmailDomainExists(dto.email);
+    await assertEmailIsAvailable(this.repo, dto.email, 'un autre utilisateur', {
+      excludeId: id,
+    });
+
     const data: Partial<Utilisateur> = { ...dto };
     if (dto.motDePasse) {
       data.motDePasse = await bcrypt.hash(dto.motDePasse, 10);

@@ -79,6 +79,10 @@ class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
+  EMAIL_TRUSTED_DOMAINS: string = '';
+
+  @IsString()
+  @IsOptional()
   SMTP_PASS: string = '';
 
   @IsString()

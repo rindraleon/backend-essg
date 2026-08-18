@@ -13,8 +13,8 @@ import { ActivityLogDescriptionService } from 'src/activity-logs/activity-log-de
 import { ActivityLogService } from 'src/activity-logs/activity-log.service';
 
 
-const LOGGED_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
-const EXCLUDED_MODULES = ['auth'];
+const LOGGED_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const EXCLUDED_MODULES = new Set(['auth']);
 
 interface AuthUser {
   userId: number;
@@ -41,12 +41,12 @@ export class ActivityLogInterceptor implements NestInterceptor {
     const response = http.getResponse<Response>();
     const method = request.method;
 
-    if (!LOGGED_METHODS.includes(method)) {
+    if (!LOGGED_METHODS.has(method)) {
       return next.handle();
     }
 
     const module = this.resolveModule(request.path);
-    if (EXCLUDED_MODULES.includes(module)) {
+    if (EXCLUDED_MODULES.has(module)) {
       return next.handle();
     }
 
@@ -62,6 +62,7 @@ export class ActivityLogInterceptor implements NestInterceptor {
         const statusCode = response.statusCode;
         void this.safePersist({
           userId: user?.userId ?? null,
+          userName: this.resolveUserName(user),
           action,
           method,
           endpoint,
@@ -76,6 +77,7 @@ export class ActivityLogInterceptor implements NestInterceptor {
         const statusCode = error instanceof HttpException ? error.getStatus() : 500;
         void this.safePersist({
           userId: user?.userId ?? null,
+          userName: this.resolveUserName(user),
           action,
           method,
           endpoint,
@@ -117,6 +119,16 @@ export class ActivityLogInterceptor implements NestInterceptor {
       metadata.status = body.statut;
     }
     return metadata;
+  }
+
+  /** Construit « Prénom Nom » pour l'affichage métier du journal. */
+  private resolveUserName(user: AuthUser | null): string | null {
+    if (!user) return null;
+    const parts = [user.prenom, user.nom].filter(
+      (part): part is string => typeof part === 'string' && part.trim().length > 0,
+    );
+    if (parts.length > 0) return parts.join(' ').trim();
+    return user.email ?? null;
   }
 
   private resolveIp(request: Request): string | null {

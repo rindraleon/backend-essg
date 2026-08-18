@@ -3,8 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { StorageService } from '../common/storage/storage.service';
-import { buildIlikeTerm, sanitizeSortField } from '../common/utils/search.util';
+import { ILIKE_ESCAPE, buildIlikeTerm, sanitizeSortField } from '../common/utils/search.util';
 import { buildPaginatedData } from '../common/utils/pagination.util';
+import { detectFileType, withDetectedExtension } from '../common/utils/file-type.util';
+import { EmailDomainService } from '../common/validators/email-domain.service';
 import { MailService } from '../mail/mail.service';
 import { capitalize, toUpperCase } from '../common/utils/text.util';
 import { CreateAdmissionDto } from './dto/create-admission.dto';
@@ -18,6 +20,7 @@ export interface AdmissionDocumentFile {
   buffer: Buffer;
   filename: string;
   mimetype: string;
+  inlineViewable: boolean;
 }
 
 const ADMISSION_SORT_FIELDS = [
@@ -42,13 +45,24 @@ export class AdmissionsService {
     private readonly admissionsRepository: Repository<Admission>,
     private readonly mailService: MailService,
     private readonly storageService: StorageService,
+    private readonly emailDomainService: EmailDomainService,
   ) {}
+
+  private async assertEmailDomainExists(email?: string): Promise<void> {
+    if (!email) return;
+    const result = await this.emailDomainService.check(email);
+    if (result.reason) {
+      throw new BadRequestException(result.reason);
+    }
+  }
 
   private buildReference(id: number): string {
     return `ESSG-${id}`;
   }
 
   async create(createAdmissionDto: CreateAdmissionDto): Promise<Admission> {
+    await this.assertEmailDomainExists(createAdmissionDto.email);
+
     const admission = this.admissionsRepository.create({
       ...createAdmissionDto,
       nom: toUpperCase(createAdmissionDto.nom),
@@ -94,11 +108,11 @@ export class AdmissionsService {
     if (q?.trim()) {
       const term = buildIlikeTerm(q);
       qb.andWhere(
-        `(admission.nom ILIKE :term ESCAPE '\\'
-          OR admission.prenom ILIKE :term ESCAPE '\\'
-          OR admission.email ILIKE :term ESCAPE '\\'
-          OR admission.telephone ILIKE :term ESCAPE '\\'
-          OR admission.formation ILIKE :term ESCAPE '\\')`,
+        `(admission.nom ILIKE :term ${ILIKE_ESCAPE}
+          OR admission.prenom ILIKE :term ${ILIKE_ESCAPE}
+          OR admission.email ILIKE :term ${ILIKE_ESCAPE}
+          OR admission.telephone ILIKE :term ${ILIKE_ESCAPE}
+          OR admission.formation ILIKE :term ${ILIKE_ESCAPE})`,
         { term },
       );
     }
@@ -108,13 +122,13 @@ export class AdmissionsService {
     }
 
     if (niveau && niveau !== 'all') {
-      qb.andWhere('admission.niveau ILIKE :niveau ESCAPE \'\\\'', {
+      qb.andWhere(`admission.niveau ILIKE :niveau ${ILIKE_ESCAPE}`, {
         niveau: buildIlikeTerm(niveau),
       });
     }
 
     if (formation && formation !== 'all') {
-      qb.andWhere('admission.formation ILIKE :formation ESCAPE \'\\\'', {
+      qb.andWhere(`admission.formation ILIKE :formation ${ILIKE_ESCAPE}`, {
         formation: buildIlikeTerm(formation),
       });
     }
@@ -180,15 +194,17 @@ export class AdmissionsService {
 
     const objectName = this.storageService.extractObjectName(storedUrl);
     const buffer = await this.storageService.download(objectName);
-    const filename =
+    const detected = detectFileType(buffer);
+    const base =
       kind === 'cv'
-        ? `CV-${admission.nom}-${admission.prenom}.pdf`
-        : `Lettre-${admission.nom}-${admission.prenom}.pdf`;
+        ? `CV-${admission.nom}-${admission.prenom}`
+        : `Lettre-${admission.nom}-${admission.prenom}`;
 
     return {
       buffer,
-      filename,
-      mimetype: 'application/pdf',
+      filename: withDetectedExtension(base, detected.extension),
+      mimetype: detected.mimetype,
+      inlineViewable: detected.inlineViewable,
     };
   }
 

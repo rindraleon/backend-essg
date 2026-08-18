@@ -7,15 +7,7 @@ import { buildPaginatedData } from '../common/utils/pagination.util';
 import { CreatePartenaireDto, UpdatePartenaireDto } from './dto/create-partner.dto';
 import { Partenaire } from './entities/partner.entity';
 import { capitalize, toUpperCase } from '../common/utils/text.util';
-
-const generateSlug = (text: string): string =>
-  text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
+import { buildUniqueSlug, shouldRegenerateSlug } from '../common/utils/slug.util';
 
 @Injectable()
 export class PartnersService {
@@ -71,11 +63,11 @@ export class PartnersService {
   }
 
   async create(dto: CreatePartenaireDto): Promise<Partenaire> {
-    const slug = dto.slug || generateSlug(dto.nom);
+    const slug = await buildUniqueSlug(this.repo, dto.nom);
     const item = this.repo.create({
       ...dto,
       nom: toUpperCase(dto.nom),
-      secteur: capitalize(dto.secteur),
+      secteur: dto.secteur ? capitalize(dto.secteur) : dto.secteur,
       description: capitalize(dto.description),
       slug,
       dateDebut: new Date(dto.dateDebut),
@@ -84,16 +76,25 @@ export class PartnersService {
   }
 
   async update(id: number, dto: UpdatePartenaireDto): Promise<Partenaire> {
-    await this.findOne(id);
-    const slug = dto.slug || generateSlug(dto.nom);
-    await this.repo.update(id, {
+    const current = await this.findOne(id);
+
+    const updateData: Partial<Partenaire> = {
       ...dto,
-      nom: toUpperCase(dto.nom),
-      secteur: capitalize(dto.secteur),
-      description: capitalize(dto.description),
-      slug,
-      dateDebut: new Date(dto.dateDebut),
-    });
+      nom: dto.nom ? toUpperCase(dto.nom) : current.nom,
+      secteur: dto.secteur !== undefined ? capitalize(dto.secteur) : current.secteur,
+      description: dto.description ? capitalize(dto.description) : current.description,
+      dateDebut: dto.dateDebut ? new Date(dto.dateDebut) : current.dateDebut,
+    };
+    delete (updateData as { slug?: string }).slug;
+
+    // Régénération du slug uniquement lorsque le nom change réellement.
+    if (shouldRegenerateSlug(current.nom, dto.nom, current.slug)) {
+      updateData.slug = await buildUniqueSlug(this.repo, dto.nom ?? current.nom, {
+        excludeId: id,
+      });
+    }
+
+    await this.repo.update(id, updateData);
     return this.findOne(id);
   }
 

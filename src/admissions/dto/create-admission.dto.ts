@@ -1,12 +1,15 @@
 import {
   IsString,
-  IsEmail,
   IsOptional,
   IsEnum,
   IsDateString,
   MaxLength,
   IsNotEmpty,
 } from 'class-validator';
+import {
+  IsValidEmail,
+  IsValidPhoneOptional,
+} from '../../common/validators/contact.validators';
 import { AdmissionStatus } from '../entities/admission.entity';
 
 export class CreateAdmissionDto {
@@ -20,13 +23,10 @@ export class CreateAdmissionDto {
   @MaxLength(100)
   prenom: string;
 
-  @IsEmail()
-  @MaxLength(120)
+  @IsValidEmail()
   email: string;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(30)
+  @IsValidPhoneOptional()
   telephone?: string;
 
   @IsDateString()

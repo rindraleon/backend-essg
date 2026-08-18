@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { IsString, IsOptional, IsIn, IsDateString, MaxLength } from 'class-validator';
 
 export class CreatePartenaireDto {
@@ -5,39 +6,35 @@ export class CreatePartenaireDto {
   @MaxLength(100)
   nom: string = '';
 
-  @IsString()
-  @IsOptional()
-  @MaxLength(150)
-  slug?: string;
-
   @IsIn(['Entreprise', 'Institution', 'Organisation', 'Autre'])
   type: 'Entreprise' | 'Institution' | 'Organisation' | 'Autre' = 'Entreprise';
 
   @IsString()
+  @IsOptional()
   @MaxLength(100)
-  secteur: string = '';
+  secteur?: string;
 
   @IsString()
-  @MaxLength(10000)
+  @MaxLength(1000)
   description: string = '';
 
   @IsString()
   @IsOptional()
-  @MaxLength(200)
+  @MaxLength(50)
   siteWeb?: string;
 
   @IsString()
   @IsOptional()
   @MaxLength(255)
-  logo?: string = '🤝';
+  logo?: string;
 
   @IsString()
   @IsOptional()
-  @MaxLength(100)
+  @MaxLength(15)
   contact?: string;
 
   @IsDateString()
   dateDebut: string = new Date().toISOString().split('T')[0];
 }
 
-export class UpdatePartenaireDto extends CreatePartenaireDto {}
+export class UpdatePartenaireDto extends PartialType(CreatePartenaireDto) {}

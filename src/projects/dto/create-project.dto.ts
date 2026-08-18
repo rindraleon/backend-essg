@@ -1,30 +1,39 @@
-import { IsString, IsArray, IsOptional, IsIn, MaxLength } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
+import { Type } from 'class-transformer';
+import { IsString, IsArray, IsOptional, IsIn, IsInt, MaxLength } from 'class-validator';
 
 export class CreateProjetDto {
   @IsString()
   @MaxLength(150)
-  titre: string;
-
-  @IsString()
-  @IsOptional()
-  @MaxLength(150)
-  slug?: string;
+  titre!: string;
 
   @IsIn(['International', 'Service public', 'Recherche', 'Partenariat'])
-  type: 'International' | 'Service public' | 'Recherche' | 'Partenariat';
+  type!: 'International' | 'Service public' | 'Recherche' | 'Partenariat';
+
+  @IsOptional()
+  @IsIn(['En cours', 'Terminé'])
+  statut?: 'En cours' | 'Terminé';
 
   @IsString()
   @MaxLength(20)
-  date: string;
+  date!: string;
 
   @IsString()
   @MaxLength(10000)
-  description: string;
+  description!: string;
+
+  /** Identifiants des partenaires sélectionnés dans le Select du back-office. */
+  @IsArray()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt({ each: true })
+  partenaireIds?: number[];
 
   @IsArray()
   @IsString({ each: true })
   @MaxLength(100, { each: true })
-  partenaires: string[];
+  @IsOptional()
+  partenaires?: string[];
 
   @IsString()
   @IsOptional()
@@ -45,18 +54,19 @@ export class CreateProjetDto {
 
   @IsString()
   @IsOptional()
-  @MaxLength(100)
+  @MaxLength(30)
   ville?: string;
 
   @IsString()
   @IsOptional()
-  @MaxLength(100)
+  @MaxLength(30)
   pays?: string;
 
   @IsString()
   @IsOptional()
-  @MaxLength(300)
+  @MaxLength(30)
   adresse?: string;
 }
 
-export class UpdateProjetDto extends CreateProjetDto {}
+
+export class UpdateProjetDto extends PartialType(CreateProjetDto) {}

@@ -3,11 +3,11 @@ import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 export class ReplyMessageDto {
   @IsOptional()
   @IsString()
-  @MaxLength(200)
+  @MaxLength(100)
   sujet?: string;
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(10000)
-  message: string;
+  @MaxLength(1000)
+  message!: string;
 }

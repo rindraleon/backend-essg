@@ -1,5 +1,7 @@
+export const ILIKE_ESCAPE = String.raw`ESCAPE '\'`;
+
 export function escapeIlike(value: string): string {
-  return value.replaceAll(/[\\%_]/g, '\\$&');
+  return value.replaceAll(/[\\%_]/g, String.raw`\$&`);
 }
 
 export function buildIlikeTerm(value: string): string {

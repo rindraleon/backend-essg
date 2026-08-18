@@ -1,16 +1,15 @@
 import {
   IsString,
-  IsEmail,
   IsOptional,
   IsIn,
   IsBoolean,
   MinLength,
   MaxLength,
 } from 'class-validator';
+import { IsValidEmail } from '../../common/validators/contact.validators';
 
 export class CreateUtilisateurDto {
-  @IsEmail()
-  @MaxLength(120)
+  @IsValidEmail()
   email: string;
 
   @IsString()

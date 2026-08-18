@@ -3,27 +3,55 @@ import {
   IsOptional,
   IsBoolean,
   IsInt,
-  IsEmail,
+  IsArray,
+  ValidateNested,
+  ArrayMaxSize,
   MinLength,
   MaxLength,
   Min,
   Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import {
+  IsValidEmailOptional,
+  IsValidPhoneOptional,
+} from '../../common/validators/contact.validators';
+
+
+export class ExperienceProfessionnelleDto {
+  @IsString()
+  @MinLength(5, { message: 'Le poste doit contenir au moins 5 caractères' })
+  @MaxLength(150, { message: 'Le poste ne peut pas dépasser 150 caractères' })
+  poste!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(150, { message: "L'organisation ne peut pas dépasser 150 caractères" })
+  organisation?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60, { message: 'La période ne peut pas dépasser 60 caractères' })
+  periode?: string;
+}
+
+/** Bornes communes aux listes issues du CV, pour éviter tout abus. */
+const LISTE_MAX = 40;
+const ITEM_MAX = 100;
 
 export class CreateRessourceHumaineDto {
   @IsString()
-  @MinLength(2, { message: 'Le nom doit contenir au moins 2 caractères' })
+  @MinLength(5, { message: 'Le nom doit contenir au moins 5 caractères' })
   @MaxLength(100, { message: 'Le nom ne peut pas dépasser 100 caractères' })
   nom!: string;
 
   @IsString()
-  @MinLength(2, { message: 'Le prénom doit contenir au moins 2 caractères' })
+  @MinLength(5, { message: 'Le prénom doit contenir au moins 5 caractères' })
   @MaxLength(100, { message: 'Le prénom ne peut pas dépasser 100 caractères' })
   prenom!: string;
 
   @IsString()
-  @MinLength(2, { message: 'Le poste doit contenir au moins 2 caractères' })
+  @MinLength(5, { message: 'Le poste doit contenir au moins 5 caractères' })
   @MaxLength(150, { message: 'Le poste ne peut pas dépasser 150 caractères' })
   poste!: string;
 
@@ -32,15 +60,53 @@ export class CreateRessourceHumaineDto {
   @MaxLength(1000, { message: 'La description ne peut pas dépasser 1000 caractères' })
   description?: string;
 
-  @IsOptional()
-  @IsEmail({}, { message: 'Email invalide' })
-  @MaxLength(120, { message: "L'email ne peut pas dépasser 120 caractères" })
+  @IsValidEmailOptional()
   email?: string;
+
+  @IsValidPhoneOptional()
+  telephone?: string;
+
 
   @IsOptional()
   @IsString()
-  @MaxLength(20, { message: 'Le téléphone ne peut pas dépasser 20 caractères' })
-  telephone?: string;
+  @MaxLength(300, { message: "L'adresse ne peut pas dépasser 300 caractères" })
+  adresse?: string;
+
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(LISTE_MAX)
+  @ValidateNested({ each: true })
+  @Type(() => ExperienceProfessionnelleDto)
+  experiences?: ExperienceProfessionnelleDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(LISTE_MAX)
+  @IsString({ each: true })
+  @MaxLength(ITEM_MAX, { each: true })
+  formations?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(LISTE_MAX)
+  @IsString({ each: true })
+  @MaxLength(ITEM_MAX, { each: true })
+  diplomes?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(LISTE_MAX)
+  @IsString({ each: true })
+  @MaxLength(ITEM_MAX, { each: true })
+  competences?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(LISTE_MAX)
+  @IsString({ each: true })
+  @MaxLength(60, { each: true })
+  langues?: string[];
 
   @IsOptional()
   @IsString()
@@ -61,19 +127,19 @@ export class CreateRessourceHumaineDto {
 export class UpdateRessourceHumaineDto {
   @IsOptional()
   @IsString()
-  @MinLength(2, { message: 'Le nom doit contenir au moins 2 caractères' })
+  @MinLength(5, { message: 'Le nom doit contenir au moins 5 caractères' })
   @MaxLength(100, { message: 'Le nom ne peut pas dépasser 100 caractères' })
   nom?: string;
 
   @IsOptional()
   @IsString()
-  @MinLength(2, { message: 'Le prénom doit contenir au moins 2 caractères' })
+  @MinLength(5, { message: 'Le prénom doit contenir au moins 5 caractères' })
   @MaxLength(100, { message: 'Le prénom ne peut pas dépasser 100 caractères' })
   prenom?: string;
 
   @IsOptional()
   @IsString()
-  @MinLength(2, { message: 'Le poste doit contenir au moins 2 caractères' })
+  @MinLength(5, { message: 'Le poste doit contenir au moins 5 caractères' })
   @MaxLength(150, { message: 'Le poste ne peut pas dépasser 150 caractères' })
   poste?: string;
 
@@ -82,15 +148,52 @@ export class UpdateRessourceHumaineDto {
   @MaxLength(1000, { message: 'La description ne peut pas dépasser 1000 caractères' })
   description?: string;
 
-  @IsOptional()
-  @IsEmail({}, { message: 'Email invalide' })
-  @MaxLength(120, { message: "L'email ne peut pas dépasser 120 caractères" })
+  @IsValidEmailOptional()
   email?: string;
+
+  @IsValidPhoneOptional()
+  telephone?: string;
+
 
   @IsOptional()
   @IsString()
-  @MaxLength(20, { message: 'Le téléphone ne peut pas dépasser 20 caractères' })
-  telephone?: string;
+  @MaxLength(30, { message: "L'adresse ne peut pas dépasser 30 caractères" })
+  adresse?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(LISTE_MAX)
+  @ValidateNested({ each: true })
+  @Type(() => ExperienceProfessionnelleDto)
+  experiences?: ExperienceProfessionnelleDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(LISTE_MAX)
+  @IsString({ each: true })
+  @MaxLength(ITEM_MAX, { each: true })
+  formations?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(LISTE_MAX)
+  @IsString({ each: true })
+  @MaxLength(ITEM_MAX, { each: true })
+  diplomes?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(LISTE_MAX)
+  @IsString({ each: true })
+  @MaxLength(ITEM_MAX, { each: true })
+  competences?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(LISTE_MAX)
+  @IsString({ each: true })
+  @MaxLength(60, { each: true })
+  langues?: string[];
 
   @IsOptional()
   @IsString()

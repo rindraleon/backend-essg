@@ -5,11 +5,13 @@ import { Brackets, Repository } from 'typeorm';
 import { QueryActivityLogDto } from './dto/query-activity-log.dto';
 import { PaginatedData } from 'src/common/interfaces/api-response.interface';
 import { buildPaginatedData } from 'src/common/utils/pagination.util';
+import { ILIKE_ESCAPE, buildIlikeTerm } from 'src/common/utils/search.util';
 import { ActivityLog } from './entities/activity-log.entity';
 
 
 export interface CreateActivityLogData {
   userId: number | null;
+  userName: string | null;
   action: string;
   description: string;
   method: string;
@@ -103,18 +105,28 @@ export class ActivityLogService {
       qb.andWhere('log.createdAt <= :endDate', { endDate });
     }
     if (search) {
-      const term = `%${search}%`;
+      const term = buildIlikeTerm(search);
       qb.andWhere(
         new Brackets((sub) => {
           sub
-            .where('log.description ILIKE :term', { term })
-            .orWhere('log.endpoint ILIKE :term', { term })
-            .orWhere('log.module ILIKE :term', { term });
+            .where(`log.description ILIKE :term ${ILIKE_ESCAPE}`, { term })
+            .orWhere(`log.userName ILIKE :term ${ILIKE_ESCAPE}`, { term })
+            .orWhere(`log.endpoint ILIKE :term ${ILIKE_ESCAPE}`, { term })
+            .orWhere(`log.module ILIKE :term ${ILIKE_ESCAPE}`, { term });
         }),
       );
     }
 
-    const allowedSort = ['id', 'createdAt', 'userId', 'module', 'method', 'statusCode', 'success'];
+    const allowedSort = [
+      'id',
+      'createdAt',
+      'userId',
+      'userName',
+      'module',
+      'method',
+      'statusCode',
+      'success',
+    ];
     const orderBy = allowedSort.includes(sortBy ?? '') ? sortBy : 'createdAt';
     qb.orderBy(`log.${orderBy}`, sortOrder);
 

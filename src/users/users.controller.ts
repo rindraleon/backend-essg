@@ -23,7 +23,6 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { imageUploadOptions } from '../common/storage/multer.config';
-import { STORAGE_PREFIXES } from '../common/storage/storage.constants';
 import { StorageService } from '../common/storage/storage.service';
 import { CreateUtilisateurDto } from './dto/create-user.dto';
 import { UpdateUtilisateurDto } from './dto/update-user.dto';
@@ -42,12 +41,14 @@ export class UsersController {
     private readonly storageService: StorageService,
   ) {}
 
+  @Roles('admin')
   @Get()
   @ApiMessage('Utilisateurs récupérés')
   findAll(@Query() paginationDto: PaginationQueryDto) {
     return this.service.findAll(paginationDto);
   }
 
+  @Roles('admin')
   @Get('search')
   @ApiMessage('Recherche effectuée')
   search(@Query('q') query: string, @Query() paginationDto: PaginationQueryDto) {
@@ -56,7 +57,10 @@ export class UsersController {
 
   @Get(':id')
   @ApiMessage('Utilisateur récupéré')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseIntPipe) id: number, @Request() req: { user: AuthUser }) {
+    if (req.user.role !== 'admin' && req.user.userId !== id) {
+      throw new ForbiddenException('Vous ne pouvez consulter que votre propre profil');
+    }
     return this.service.findOne(id);
   }
 

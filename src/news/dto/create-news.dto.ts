@@ -3,33 +3,33 @@ import { IsString, IsBoolean, IsOptional, IsArray, MaxLength } from 'class-valid
 export class CreateActualiteDto {
   @IsString()
   @IsOptional()
-  @MaxLength(150)
+  @MaxLength(100)
   slug?: string;
 
   @IsString()
-  @MaxLength(150)
-  titre: string;
-
-  @IsString()
-  @MaxLength(60)
-  categorie: string;
+  @MaxLength(100)
+  titre!: string;
 
   @IsString()
   @MaxLength(20)
-  date: string;
+  categorie!: string;
+
+  @IsString()
+  @MaxLength(10)
+  date!: string;
 
   @IsString()
   @IsOptional()
-  @MaxLength(5000)
+  @MaxLength(500)
   resume?: string;
 
   @IsString()
-  @MaxLength(30000)
-  contenu: string;
+  @MaxLength(3000)
+  contenu!: string;
 
   @IsString()
-  @MaxLength(100)
-  auteur: string;
+  @MaxLength(50)
+  auteur!: string;
 
   @IsBoolean()
   @IsOptional()

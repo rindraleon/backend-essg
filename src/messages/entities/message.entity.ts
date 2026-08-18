@@ -3,56 +3,56 @@ import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
 @Entity('messages')
 export class Message {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  prenom: string;
+  prenom!: string;
 
   @Column()
-  nom: string;
+  nom!: string;
 
   @Column()
-  email: string;
+  email!: string;
 
   @Column({ nullable: true })
-  telephone: string;
+  telephone!: string;
 
   @Index()
   @Column()
-  sujet: string;
+  sujet!: string;
 
   @Column({ type: 'text' })
-  message: string;
+  message!: string;
 
   @Column({ type: 'boolean', default: false })
-  lu: boolean;
+  lu!: boolean;
 
   @Column({ type: 'timestamptz', nullable: true })
-  luLe: Date | null;
+  luLe!: Date | null;
 
   @Column({ type: 'varchar', length: 120, nullable: true })
-  luPar: string | null;
+  luPar!: string | null;
 
   @Column({ type: 'text', nullable: true })
-  reponse: string | null;
+  reponse!: string | null;
 
   @Column({ type: 'varchar', length: 200, nullable: true })
-  reponseSujet: string | null;
+  reponseSujet!: string | null;
 
   @Column({ type: 'timestamptz', nullable: true })
-  reponduLe: Date | null;
+  reponduLe!: Date | null;
 
   @Column({ type: 'varchar', length: 120, nullable: true })
-  reponduPar: string | null;
+  reponduPar!: string | null;
 
   @Index()
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
-  creeLe: Date;
+  creeLe!: Date;
 
   @Column({
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  misAJourLe: Date;
+  misAJourLe!: Date;
 }

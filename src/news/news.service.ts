@@ -6,7 +6,8 @@ import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { buildPaginatedData } from '../common/utils/pagination.util';
 import { CreateActualiteDto, UpdateActualiteDto } from './dto/create-news.dto';
 import { Actualite } from './entities/news-item.entity';
-import { capitalize, slugify } from '../common/utils/text.util';
+import { capitalize } from '../common/utils/text.util';
+import { buildUniqueSlug, shouldRegenerateSlug } from '../common/utils/slug.util';
 
 @Injectable()
 export class NewsService {
@@ -56,9 +57,11 @@ export class NewsService {
   }
 
   async create(dto: CreateActualiteDto): Promise<Actualite> {
+    // Slug toujours dérivé du titre, jamais de la saisie utilisateur.
+    const slug = await buildUniqueSlug(this.repo, dto.titre);
     const item = this.repo.create({
       ...dto,
-      slug: dto.slug || slugify(dto.titre),
+      slug,
       titre: capitalize(dto.titre),
       categorie: capitalize(dto.categorie),
       auteur: capitalize(dto.auteur),
@@ -72,11 +75,16 @@ export class NewsService {
   }
 
   async update(id: number, dto: UpdateActualiteDto): Promise<Actualite> {
-    await this.findOne(id);
+    const current = await this.findOne(id);
     const updateData: Partial<Actualite> = { ...dto };
+    delete (updateData as { slug?: string }).slug;
+    if (shouldRegenerateSlug(current.titre, dto.titre, current.slug)) {
+      updateData.slug = await buildUniqueSlug(this.repo, dto.titre ?? current.titre, {
+        excludeId: id,
+      });
+    }
     if (dto.titre) {
       updateData.titre = capitalize(dto.titre);
-      updateData.slug = slugify(dto.titre);
     }
     if (dto.categorie) updateData.categorie = capitalize(dto.categorie);
     if (dto.auteur) updateData.auteur = capitalize(dto.auteur);

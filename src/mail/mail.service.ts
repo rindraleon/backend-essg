@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit , BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import nodemailer, { type Transporter } from 'nodemailer';
 import { AdmissionStatus } from '../admissions/entities/admission.entity';
@@ -17,7 +17,6 @@ import {
 import { renderMessageReplyTemplate } from './templates/message-reply.template';
 import { renderWelcomeTemplate } from './templates/welcome.template';
 import { htmlToText, isValidEmail, MAIL_ERROR, toMailHttpException } from './mail.errors';
-import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 
 export interface SendEmailOptions {
   to: string;

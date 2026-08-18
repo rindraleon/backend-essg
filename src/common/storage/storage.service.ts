@@ -42,7 +42,7 @@ export class StorageService implements OnModuleInit {
 
     this.client = new Client({
       endPoint: this.configService.get<string>('MINIO_ENDPOINT', 'localhost'),
-      port: parseInt(this.configService.get<string>('MINIO_PORT', '9000'), 10),
+      port: Number.parseInt(this.configService.get<string>('MINIO_PORT', '9000'), 10),
       useSSL: this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true',
       accessKey: this.configService.get<string>('MINIO_ACCESS_KEY', ''),
       secretKey: this.configService.get<string>('MINIO_SECRET_KEY', ''),
@@ -285,22 +285,22 @@ export class StorageService implements OnModuleInit {
       const parsed = /^https?:\/\//i.test(cleaned) ? new URL(cleaned) : null;
       const pathname = parsed ? parsed.pathname : cleaned;
       const segments = pathname.split('/').filter(Boolean);
-      const bucketIndex = segments.findIndex((segment) => segment === this.defaultBucket);
+      const bucketIndex = segments.indexOf(this.defaultBucket);
       if (bucketIndex >= 0 && segments[bucketIndex + 1]) {
         return decodeURIComponent(segments.slice(bucketIndex + 1).join('/'));
       }
-      const mediaIndex = segments.findIndex((segment) => segment === MEDIA_ROUTE_PREFIX);
+      const mediaIndex = segments.indexOf(MEDIA_ROUTE_PREFIX);
       if (mediaIndex >= 0 && segments[mediaIndex + 1]) {
         return decodeURIComponent(segments.slice(mediaIndex + 1).join('/'));
       }
-      const uploadsIndex = segments.findIndex((segment) => segment === 'uploads');
+      const uploadsIndex = segments.indexOf('uploads');
       if (uploadsIndex >= 0 && segments[uploadsIndex + 1]) {
         return decodeURIComponent(segments.slice(uploadsIndex + 1).join('/'));
       }
-      return decodeURIComponent(segments[segments.length - 1] ?? '');
+      return decodeURIComponent(segments.at(-1) ?? '');
     } catch {
       const parts = cleaned.split('/').filter(Boolean);
-      return decodeURIComponent(parts[parts.length - 1] ?? '');
+      return decodeURIComponent(parts.at(-1) ?? '');
     }
   }
 

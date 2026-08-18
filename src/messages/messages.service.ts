@@ -1,9 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { buildPaginatedData } from '../common/utils/pagination.util';
-import { buildIlikeTerm, sanitizeSortField } from '../common/utils/search.util';
+import { ILIKE_ESCAPE, buildIlikeTerm, sanitizeSortField } from '../common/utils/search.util';
 import { MailService } from '../mail/mail.service';
 import type { AuthUser } from '../common/decorators/current-user.decorator';
 import { CreateMessageDto, UpdateMessageDto } from './dto/create-message.dto';
@@ -11,6 +11,7 @@ import { QueryMessageDto } from './dto/query-message.dto';
 import { ReplyMessageDto } from './dto/reply-message.dto';
 import { Message } from './entities/message.entity';
 import { capitalize, toUpperCase } from '../common/utils/text.util';
+import { EmailDomainService } from '../common/validators/email-domain.service';
 
 const MESSAGE_SORT_FIELDS = ['id', 'nom', 'prenom', 'email', 'sujet', 'lu', 'creeLe', 'misAJourLe'] as const;
 
@@ -22,7 +23,17 @@ export class MessagesService {
     @InjectRepository(Message)
     private readonly repo: Repository<Message>,
     private readonly mailService: MailService,
+    private readonly emailDomainService: EmailDomainService,
   ) {}
+
+  private async assertEmailDomainExists(email?: string): Promise<void> {
+    if (!email) return;
+    const result = await this.emailDomainService.check(email);
+    if (result.reason) {
+      throw new BadRequestException(result.reason);
+    }
+  }
+
 
   private async findFiltered(queryDto: QueryMessageDto = {}): Promise<PaginatedData<Message>> {
     const {
@@ -41,12 +52,12 @@ export class MessagesService {
     if (q?.trim()) {
       const term = buildIlikeTerm(q);
       qb.andWhere(
-        `(message.nom ILIKE :term ESCAPE '\\\\'
-          OR message.prenom ILIKE :term ESCAPE '\\\\'
-          OR message.email ILIKE :term ESCAPE '\\\\'
-          OR message.telephone ILIKE :term ESCAPE '\\\\'
-          OR message.sujet ILIKE :term ESCAPE '\\\\'
-          OR message.message ILIKE :term ESCAPE '\\\\')`,
+        `(message.nom ILIKE :term ${ILIKE_ESCAPE}
+          OR message.prenom ILIKE :term ${ILIKE_ESCAPE}
+          OR message.email ILIKE :term ${ILIKE_ESCAPE}
+          OR message.telephone ILIKE :term ${ILIKE_ESCAPE}
+          OR message.sujet ILIKE :term ${ILIKE_ESCAPE}
+          OR message.message ILIKE :term ${ILIKE_ESCAPE})`,
         { term },
       );
     }
@@ -90,6 +101,8 @@ export class MessagesService {
   }
 
   async create(dto: CreateMessageDto): Promise<Message> {
+    await this.assertEmailDomainExists(dto.email);
+
     const item = this.repo.create({
       ...dto,
       nom: toUpperCase(dto.nom),

@@ -7,6 +7,7 @@ import { AdmissionsModule } from './admissions/admissions.module';
 import { AuthModule } from './auth/auth.module';
 import { PerformanceInterceptor } from './common/interceptors/performance.interceptor';
 import { StorageModule } from './common/storage/storage.module';
+import { EmailDomainModule } from './common/validators/email-domain.module';
 import { validate } from './config/env.validation';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { DatabaseModule } from './database/database.module';
@@ -32,6 +33,7 @@ import { UsersModule } from './users/users.module';
     }),
     DatabaseModule,
     StorageModule,
+    EmailDomainModule,
     UsersModule,
     AuthModule,
     FormationsModule,

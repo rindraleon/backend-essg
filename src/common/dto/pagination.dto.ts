@@ -20,7 +20,7 @@ export class PaginationDto {
 
   @IsOptional()
   @IsIn(['ASC', 'DESC'])
-  sortOrder?: 'ASC' | 'DESC' = 'ASC';
+  sortOrder?: 'ASC' | 'DESC' = 'DESC';
 }
 
 export class PaginationQueryDto extends PaginationDto {

@@ -1,34 +1,35 @@
-import { IsString, IsOptional, IsBoolean, IsEmail, MaxLength, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, MaxLength, IsNotEmpty } from 'class-validator';
+import {
+  IsValidEmail,
+  IsValidPhoneOptional,
+} from '../../common/validators/contact.validators';
 
 export class CreateMessageDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  prenom: string;
+  prenom!: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  nom: string;
+  nom!: string;
 
-  @IsEmail()
-  @MaxLength(120)
-  email: string;
+  @IsValidEmail()
+  email!: string;
 
-  @IsString()
-  @IsOptional()
-  @MaxLength(30)
+  @IsValidPhoneOptional()
   telephone?: string;
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(150)
-  sujet: string;
+  @MaxLength(100)
+  sujet!: string;
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(10000)
-  message: string;
+  @MaxLength(1000)
+  message!: string;
 
   @IsBoolean()
   @IsOptional()
@@ -37,5 +38,5 @@ export class CreateMessageDto {
 
 export class UpdateMessageDto {
   @IsBoolean()
-  lu: boolean;
+  lu!: boolean;
 }
