@@ -19,13 +19,7 @@ const typeorm_2 = require("typeorm");
 const pagination_util_1 = require("../common/utils/pagination.util");
 const partner_entity_1 = require("./entities/partner.entity");
 const text_util_1 = require("../common/utils/text.util");
-const generateSlug = (text) => text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
+const slug_util_1 = require("../common/utils/slug.util");
 let PartnersService = class PartnersService {
     repo;
     constructor(repo) {
@@ -70,11 +64,11 @@ let PartnersService = class PartnersService {
         return item;
     }
     async create(dto) {
-        const slug = dto.slug || generateSlug(dto.nom);
+        const slug = await (0, slug_util_1.buildUniqueSlug)(this.repo, dto.nom);
         const item = this.repo.create({
             ...dto,
             nom: (0, text_util_1.toUpperCase)(dto.nom),
-            secteur: (0, text_util_1.capitalize)(dto.secteur),
+            secteur: dto.secteur ? (0, text_util_1.capitalize)(dto.secteur) : dto.secteur,
             description: (0, text_util_1.capitalize)(dto.description),
             slug,
             dateDebut: new Date(dto.dateDebut),
@@ -82,16 +76,21 @@ let PartnersService = class PartnersService {
         return this.repo.save(item);
     }
     async update(id, dto) {
-        await this.findOne(id);
-        const slug = dto.slug || generateSlug(dto.nom);
-        await this.repo.update(id, {
+        const current = await this.findOne(id);
+        const updateData = {
             ...dto,
-            nom: (0, text_util_1.toUpperCase)(dto.nom),
-            secteur: (0, text_util_1.capitalize)(dto.secteur),
-            description: (0, text_util_1.capitalize)(dto.description),
-            slug,
-            dateDebut: new Date(dto.dateDebut),
-        });
+            nom: dto.nom ? (0, text_util_1.toUpperCase)(dto.nom) : current.nom,
+            secteur: dto.secteur !== undefined ? (0, text_util_1.capitalize)(dto.secteur) : current.secteur,
+            description: dto.description ? (0, text_util_1.capitalize)(dto.description) : current.description,
+            dateDebut: dto.dateDebut ? new Date(dto.dateDebut) : current.dateDebut,
+        };
+        delete updateData.slug;
+        if ((0, slug_util_1.shouldRegenerateSlug)(current.nom, dto.nom, current.slug)) {
+            updateData.slug = await (0, slug_util_1.buildUniqueSlug)(this.repo, dto.nom ?? current.nom, {
+                excludeId: id,
+            });
+        }
+        await this.repo.update(id, updateData);
         return this.findOne(id);
     }
     async remove(id) {

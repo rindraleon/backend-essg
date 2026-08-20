@@ -1,18 +1,19 @@
 export declare class CreateFormationDto {
-    slug?: string;
-    domaine: string[];
+    mention: string;
+    domaine?: string[];
     titre: string;
     niveau: 'Licence' | 'Master' | 'Doctorat';
     duree: string;
     description: string;
     objectifs: string[];
     debouches: string[];
-    conditionsAcces: string;
-    programme: string[];
+    conditionsAcces?: string;
+    programme?: string[];
     conditions?: string[];
     competences?: string[];
     modules?: unknown[];
     responsable?: string;
+    responsableId?: number;
     email?: string;
     image?: string;
     enVedette?: boolean;

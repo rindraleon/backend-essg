@@ -5,12 +5,15 @@ import { CreateUtilisateurDto } from './dto/create-user.dto';
 import { UpdateUtilisateurDto } from './dto/update-user.dto';
 import { Utilisateur } from './entities/user.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { EmailDomainService } from '../common/validators/email-domain.service';
 type SanitizedUtilisateur = Omit<Utilisateur, 'motDePasse'>;
 export declare class UsersService {
     private readonly repo;
     private readonly mailService;
+    private readonly emailDomainService;
     private readonly logger;
-    constructor(repo: Repository<Utilisateur>, mailService: MailService);
+    constructor(repo: Repository<Utilisateur>, mailService: MailService, emailDomainService: EmailDomainService);
+    private assertEmailDomainExists;
     private sanitizeUser;
     private findPaginated;
     findAll(paginationDto: PaginationDto): Promise<PaginatedData<SanitizedUtilisateur>>;

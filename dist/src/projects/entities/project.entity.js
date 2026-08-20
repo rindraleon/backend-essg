@@ -15,17 +15,11 @@ let Projet = class Projet {
     id;
     titre;
     slug;
-    generateSlug() {
-        if (this.titre && !this.slug) {
-            this.slug = this.titre
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-+|-+$/g, '');
-        }
-    }
     type;
+    statut;
     date;
     description;
+    partenaireIds;
     partenaires;
     image;
     galerie;
@@ -51,16 +45,13 @@ __decorate([
     __metadata("design:type", String)
 ], Projet.prototype, "slug", void 0);
 __decorate([
-    (0, typeorm_1.BeforeInsert)(),
-    (0, typeorm_1.BeforeUpdate)(),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], Projet.prototype, "generateSlug", null);
-__decorate([
     (0, typeorm_1.Column)({ type: 'text', default: 'Recherche' }),
     __metadata("design:type", String)
 ], Projet.prototype, "type", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', default: 'En cours' }),
+    __metadata("design:type", String)
+], Projet.prototype, "statut", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
@@ -69,6 +60,10 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'text' }),
     __metadata("design:type", String)
 ], Projet.prototype, "description", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'simple-json', default: '[]' }),
+    __metadata("design:type", Array)
+], Projet.prototype, "partenaireIds", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'simple-json', default: '[]' }),
     __metadata("design:type", Array)

@@ -24,7 +24,6 @@ const message_receipt_template_1 = require("./templates/message-receipt.template
 const message_reply_template_1 = require("./templates/message-reply.template");
 const welcome_template_1 = require("./templates/welcome.template");
 const mail_errors_1 = require("./mail.errors");
-const common_2 = require("@nestjs/common");
 let MailService = MailService_1 = class MailService {
     configService;
     logger = new common_1.Logger(MailService_1.name);
@@ -77,11 +76,11 @@ let MailService = MailService_1 = class MailService {
         const to = options.to.trim();
         if (!(0, mail_errors_1.isValidEmail)(to)) {
             this.logger.warn(`Envoi refusé : adresse invalide (${to || 'vide'})`);
-            throw new common_2.BadRequestException(mail_errors_1.MAIL_ERROR.INVALID_ADDRESS);
+            throw new common_1.BadRequestException(mail_errors_1.MAIL_ERROR.INVALID_ADDRESS);
         }
         if (!this.configured) {
             this.logger.error(`Envoi impossible vers ${to} : SMTP non configuré`);
-            throw new common_2.ServiceUnavailableException(mail_errors_1.MAIL_ERROR.SMTP_CONNECTION);
+            throw new common_1.ServiceUnavailableException(mail_errors_1.MAIL_ERROR.SMTP_CONNECTION);
         }
         try {
             const info = await this.transporter.sendMail({
@@ -95,12 +94,12 @@ let MailService = MailService_1 = class MailService {
             const accepted = Array.isArray(info.accepted) ? info.accepted.length : 0;
             if (accepted === 0) {
                 this.logger.error(`SMTP n’a accepté aucun destinataire pour ${to} (rejected=${JSON.stringify(info.rejected)} response=${info.response})`);
-                throw new common_2.ServiceUnavailableException(mail_errors_1.MAIL_ERROR.SEND_FAILED);
+                throw new common_1.ServiceUnavailableException(mail_errors_1.MAIL_ERROR.SEND_FAILED);
             }
             this.logger.log(`Email transmis à ${to} (messageId=${info.messageId ?? 'n/a'})`);
         }
         catch (error) {
-            if (error instanceof common_2.BadRequestException || error instanceof common_2.ServiceUnavailableException) {
+            if (error instanceof common_1.BadRequestException || error instanceof common_1.ServiceUnavailableException) {
                 throw error;
             }
             this.logger.error(`Échec d’envoi SMTP vers ${to} : ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : error);

@@ -3,9 +3,12 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { CreateRessourceHumaineDto, UpdateRessourceHumaineDto } from './dto/create-ressource-humaine.dto';
 import { RessourceHumaine } from './entities/ressource-humaine.entity';
+import { EmailDomainService } from '../common/validators/email-domain.service';
 export declare class RessourcesHumainesService {
     private readonly repo;
-    constructor(repo: Repository<RessourceHumaine>);
+    private readonly emailDomainService;
+    constructor(repo: Repository<RessourceHumaine>, emailDomainService: EmailDomainService);
+    private assertEmailDomainExists;
     private findPaginated;
     findAll(paginationDto: PaginationDto): Promise<PaginatedData<RessourceHumaine>>;
     findAllIncludingInactive(paginationDto: PaginationDto): Promise<PaginatedData<RessourceHumaine>>;

@@ -5,6 +5,7 @@ export declare class FormationsController {
     private readonly service;
     constructor(service: FormationsService);
     findAll(paginationDto: PaginationQueryDto): Promise<import("../common/interfaces/api-response.interface").PaginatedData<import("./entities/formation.entity").Formation>>;
+    findMentions(): readonly import("./formation-mentions.constant").FormationMention[];
     search(query: string, paginationDto: PaginationQueryDto): Promise<import("../common/interfaces/api-response.interface").PaginatedData<import("./entities/formation.entity").Formation>>;
     findBySlug(slug: string): Promise<import("./entities/formation.entity").Formation>;
     findOne(id: number): Promise<import("./entities/formation.entity").Formation>;

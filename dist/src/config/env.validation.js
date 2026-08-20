@@ -31,6 +31,7 @@ class EnvironmentVariables {
     SMTP_PORT = 587;
     SMTP_SECURE = false;
     SMTP_USER = '';
+    EMAIL_TRUSTED_DOMAINS = '';
     SMTP_PASS = '';
     SMTP_FROM = '';
     MINIO_ENDPOINT = 'localhost';
@@ -135,6 +136,11 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], EnvironmentVariables.prototype, "SMTP_USER", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "EMAIL_TRUSTED_DOMAINS", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),

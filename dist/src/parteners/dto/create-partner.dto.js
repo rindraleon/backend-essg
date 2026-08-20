@@ -10,15 +10,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdatePartenaireDto = exports.CreatePartenaireDto = void 0;
+const mapped_types_1 = require("@nestjs/mapped-types");
 const class_validator_1 = require("class-validator");
 class CreatePartenaireDto {
     nom = '';
-    slug;
     type = 'Entreprise';
-    secteur = '';
+    secteur;
     description = '';
     siteWeb;
-    logo = '🤝';
+    logo;
     contact;
     dateDebut = new Date().toISOString().split('T')[0];
 }
@@ -29,29 +29,24 @@ __decorate([
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "nom", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.MaxLength)(150),
-    __metadata("design:type", String)
-], CreatePartenaireDto.prototype, "slug", void 0);
-__decorate([
     (0, class_validator_1.IsIn)(['Entreprise', 'Institution', 'Organisation', 'Autre']),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "type", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "secteur", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MaxLength)(10000),
+    (0, class_validator_1.MaxLength)(1000),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.MaxLength)(200),
+    (0, class_validator_1.MaxLength)(50),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "siteWeb", void 0);
 __decorate([
@@ -63,14 +58,14 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.MaxLength)(100),
+    (0, class_validator_1.MaxLength)(15),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "contact", void 0);
 __decorate([
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], CreatePartenaireDto.prototype, "dateDebut", void 0);
-class UpdatePartenaireDto extends CreatePartenaireDto {
+class UpdatePartenaireDto extends (0, mapped_types_1.PartialType)(CreatePartenaireDto) {
 }
 exports.UpdatePartenaireDto = UpdatePartenaireDto;
 //# sourceMappingURL=create-partner.dto.js.map

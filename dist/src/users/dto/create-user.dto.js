@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateUtilisateurDto = void 0;
 const class_validator_1 = require("class-validator");
+const contact_validators_1 = require("../../common/validators/contact.validators");
 class CreateUtilisateurDto {
     email;
     motDePasse;
@@ -22,8 +23,7 @@ class CreateUtilisateurDto {
 }
 exports.CreateUtilisateurDto = CreateUtilisateurDto;
 __decorate([
-    (0, class_validator_1.IsEmail)(),
-    (0, class_validator_1.MaxLength)(120),
+    (0, contact_validators_1.IsValidEmail)(),
     __metadata("design:type", String)
 ], CreateUtilisateurDto.prototype, "email", void 0);
 __decorate([

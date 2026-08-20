@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateMessageDto = exports.CreateMessageDto = void 0;
 const class_validator_1 = require("class-validator");
+const contact_validators_1 = require("../../common/validators/contact.validators");
 class CreateMessageDto {
     prenom;
     nom;
@@ -34,26 +35,23 @@ __decorate([
     __metadata("design:type", String)
 ], CreateMessageDto.prototype, "nom", void 0);
 __decorate([
-    (0, class_validator_1.IsEmail)(),
-    (0, class_validator_1.MaxLength)(120),
+    (0, contact_validators_1.IsValidEmail)(),
     __metadata("design:type", String)
 ], CreateMessageDto.prototype, "email", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.MaxLength)(30),
+    (0, contact_validators_1.IsValidPhoneOptional)(),
     __metadata("design:type", String)
 ], CreateMessageDto.prototype, "telephone", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.MaxLength)(150),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreateMessageDto.prototype, "sujet", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.MaxLength)(10000),
+    (0, class_validator_1.MaxLength)(1000),
     __metadata("design:type", String)
 ], CreateMessageDto.prototype, "message", void 0);
 __decorate([

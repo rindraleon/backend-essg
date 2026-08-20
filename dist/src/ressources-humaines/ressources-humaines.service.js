@@ -19,21 +19,57 @@ const typeorm_2 = require("typeorm");
 const pagination_util_1 = require("../common/utils/pagination.util");
 const ressource_humaine_entity_1 = require("./entities/ressource-humaine.entity");
 const text_util_1 = require("../common/utils/text.util");
-function generateSlug(nom, prenom) {
-    return `${nom}-${prenom}`
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/[\s_]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+const slug_util_1 = require("../common/utils/slug.util");
+const duplicate_util_1 = require("../common/utils/duplicate.util");
+const email_domain_service_1 = require("../common/validators/email-domain.service");
+const search_util_1 = require("../common/utils/search.util");
+function normalizeList(values) {
+    if (!values)
+        return undefined;
+    const seen = new Set();
+    return values
+        .map((value) => value.trim())
+        .filter((value) => {
+        if (!value)
+            return false;
+        const key = value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+        if (seen.has(key))
+            return false;
+        seen.add(key);
+        return true;
+    });
+}
+function normalizeExperiences(values) {
+    if (!values)
+        return undefined;
+    return values
+        .filter((item) => item?.poste?.trim())
+        .map((item) => ({
+        poste: (0, text_util_1.capitalize)(item.poste.trim()),
+        organisation: item.organisation?.trim() || undefined,
+        periode: item.periode?.trim() || undefined,
+    }));
 }
 let RessourcesHumainesService = class RessourcesHumainesService {
     repo;
-    constructor(repo) {
+    emailDomainService;
+    constructor(repo, emailDomainService) {
         this.repo = repo;
+        this.emailDomainService = emailDomainService;
     }
-    async findPaginated(where, paginationDto, defaultOrder = { ordre: 'ASC', id: 'ASC' }) {
-        const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
+    async assertEmailDomainExists(email) {
+        if (!email)
+            return;
+        const result = await this.emailDomainService.check(email);
+        if (result.reason) {
+            throw new common_1.BadRequestException(result.reason);
+        }
+    }
+    async findPaginated(where, paginationDto, defaultOrder = { ordre: 'DESC', id: 'DESC' }) {
+        const { page = 1, limit = 10, sortBy, sortOrder = 'DESC' } = paginationDto;
         const skip = (page - 1) * limit;
         const [data, total] = await this.repo.findAndCount({
             where,
@@ -58,7 +94,9 @@ let RessourcesHumainesService = class RessourcesHumainesService {
         const [data, total] = await this.repo
             .createQueryBuilder('ressource')
             .where('ressource.actif = :actif', { actif: true })
-            .andWhere('(ressource.nom ILIKE :search OR ressource.prenom ILIKE :search OR ressource.poste ILIKE :search)', { search: `%${query}%` })
+            .andWhere(`(ressource.nom ILIKE :search ${search_util_1.ILIKE_ESCAPE}
+          OR ressource.prenom ILIKE :search ${search_util_1.ILIKE_ESCAPE}
+          OR ressource.poste ILIKE :search ${search_util_1.ILIKE_ESCAPE})`, { search: (0, search_util_1.buildIlikeTerm)(query) })
             .orderBy(sortBy ? `ressource.${sortBy}` : 'ressource.ordre', sortOrder)
             .skip(skip)
             .take(limit)
@@ -78,21 +116,37 @@ let RessourcesHumainesService = class RessourcesHumainesService {
         return item;
     }
     async create(dto) {
+        await this.assertEmailDomainExists(dto.email);
+        await (0, duplicate_util_1.assertEmailIsAvailable)(this.repo, dto.email, 'une autre ressource humaine');
+        await (0, duplicate_util_1.assertPhoneIsAvailable)(this.repo, dto.telephone, 'une autre ressource humaine');
         const item = this.repo.create({
             ...dto,
             nom: (0, text_util_1.toUpperCase)(dto.nom),
             prenom: (0, text_util_1.capitalize)(dto.prenom),
             poste: (0, text_util_1.capitalize)(dto.poste),
             description: dto.description ? (0, text_util_1.capitalize)(dto.description) : dto.description,
-            slug: generateSlug(dto.nom, dto.prenom),
+            slug: await (0, slug_util_1.buildUniqueSlug)(this.repo, `${dto.nom} ${dto.prenom}`),
             actif: dto.actif ?? true,
             ordre: dto.ordre ?? 0,
             photo: dto.photo || '',
+            adresse: dto.adresse?.trim() || undefined,
+            experiences: normalizeExperiences(dto.experiences) ?? [],
+            formations: normalizeList(dto.formations) ?? [],
+            diplomes: normalizeList(dto.diplomes) ?? [],
+            competences: normalizeList(dto.competences) ?? [],
+            langues: normalizeList(dto.langues) ?? [],
         });
         return this.repo.save(item);
     }
     async update(id, dto) {
         const current = await this.findOne(id);
+        await this.assertEmailDomainExists(dto.email);
+        await (0, duplicate_util_1.assertEmailIsAvailable)(this.repo, dto.email, 'une autre ressource humaine', {
+            excludeId: id,
+        });
+        await (0, duplicate_util_1.assertPhoneIsAvailable)(this.repo, dto.telephone, 'une autre ressource humaine', {
+            excludeId: id,
+        });
         const updateData = { ...dto };
         if (dto.nom) {
             updateData.nom = (0, text_util_1.toUpperCase)(dto.nom);
@@ -106,8 +160,20 @@ let RessourcesHumainesService = class RessourcesHumainesService {
         if (dto.description) {
             updateData.description = (0, text_util_1.capitalize)(dto.description);
         }
-        if (dto.nom || dto.prenom) {
-            updateData.slug = generateSlug((0, text_util_1.toUpperCase)(dto.nom || current.nom), (0, text_util_1.capitalize)(dto.prenom || current.prenom));
+        if (dto.experiences)
+            updateData.experiences = normalizeExperiences(dto.experiences);
+        if (dto.formations)
+            updateData.formations = normalizeList(dto.formations);
+        if (dto.diplomes)
+            updateData.diplomes = normalizeList(dto.diplomes);
+        if (dto.competences)
+            updateData.competences = normalizeList(dto.competences);
+        if (dto.langues)
+            updateData.langues = normalizeList(dto.langues);
+        const nextFullName = `${dto.nom ?? current.nom} ${dto.prenom ?? current.prenom}`;
+        const currentFullName = `${current.nom} ${current.prenom}`;
+        if ((0, slug_util_1.shouldRegenerateSlug)(currentFullName, nextFullName, current.slug)) {
+            updateData.slug = await (0, slug_util_1.buildUniqueSlug)(this.repo, nextFullName, { excludeId: id });
         }
         await this.repo.update(id, updateData);
         return this.findOne(id);
@@ -121,6 +187,7 @@ exports.RessourcesHumainesService = RessourcesHumainesService;
 exports.RessourcesHumainesService = RessourcesHumainesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(ressource_humaine_entity_1.RessourceHumaine)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        email_domain_service_1.EmailDomainService])
 ], RessourcesHumainesService);
 //# sourceMappingURL=ressources-humaines.service.js.map

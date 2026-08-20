@@ -2,10 +2,11 @@ export declare class Projet {
     id: number;
     titre: string;
     slug: string;
-    generateSlug(): void;
     type: 'International' | 'Service public' | 'Recherche' | 'Partenariat';
+    statut: 'En cours' | 'Terminé';
     date: string;
     description: string;
+    partenaireIds: number[];
     partenaires: string[];
     image: string;
     galerie: string[];

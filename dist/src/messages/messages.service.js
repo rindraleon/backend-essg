@@ -22,26 +22,37 @@ const search_util_1 = require("../common/utils/search.util");
 const mail_service_1 = require("../mail/mail.service");
 const message_entity_1 = require("./entities/message.entity");
 const text_util_1 = require("../common/utils/text.util");
+const email_domain_service_1 = require("../common/validators/email-domain.service");
 const MESSAGE_SORT_FIELDS = ['id', 'nom', 'prenom', 'email', 'sujet', 'lu', 'creeLe', 'misAJourLe'];
 let MessagesService = MessagesService_1 = class MessagesService {
     repo;
     mailService;
+    emailDomainService;
     logger = new common_1.Logger(MessagesService_1.name);
-    constructor(repo, mailService) {
+    constructor(repo, mailService, emailDomainService) {
         this.repo = repo;
         this.mailService = mailService;
+        this.emailDomainService = emailDomainService;
+    }
+    async assertEmailDomainExists(email) {
+        if (!email)
+            return;
+        const result = await this.emailDomainService.check(email);
+        if (result.reason) {
+            throw new common_1.BadRequestException(result.reason);
+        }
     }
     async findFiltered(queryDto = {}) {
         const { page = 1, limit = 10, sortBy, sortOrder = 'DESC', q, sujet, lu, dateDebut, dateFin, } = queryDto;
         const qb = this.repo.createQueryBuilder('message');
         if (q?.trim()) {
             const term = (0, search_util_1.buildIlikeTerm)(q);
-            qb.andWhere(`(message.nom ILIKE :term ESCAPE '\\\\'
-          OR message.prenom ILIKE :term ESCAPE '\\\\'
-          OR message.email ILIKE :term ESCAPE '\\\\'
-          OR message.telephone ILIKE :term ESCAPE '\\\\'
-          OR message.sujet ILIKE :term ESCAPE '\\\\'
-          OR message.message ILIKE :term ESCAPE '\\\\')`, { term });
+            qb.andWhere(`(message.nom ILIKE :term ${search_util_1.ILIKE_ESCAPE}
+          OR message.prenom ILIKE :term ${search_util_1.ILIKE_ESCAPE}
+          OR message.email ILIKE :term ${search_util_1.ILIKE_ESCAPE}
+          OR message.telephone ILIKE :term ${search_util_1.ILIKE_ESCAPE}
+          OR message.sujet ILIKE :term ${search_util_1.ILIKE_ESCAPE}
+          OR message.message ILIKE :term ${search_util_1.ILIKE_ESCAPE})`, { term });
         }
         if (sujet && sujet !== 'all') {
             qb.andWhere('LOWER(message.sujet) = LOWER(:sujet)', { sujet });
@@ -74,6 +85,7 @@ let MessagesService = MessagesService_1 = class MessagesService {
         return item;
     }
     async create(dto) {
+        await this.assertEmailDomainExists(dto.email);
         const item = this.repo.create({
             ...dto,
             nom: (0, text_util_1.toUpperCase)(dto.nom),
@@ -136,6 +148,7 @@ exports.MessagesService = MessagesService = MessagesService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(message_entity_1.Message)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        mail_service_1.MailService])
+        mail_service_1.MailService,
+        email_domain_service_1.EmailDomainService])
 ], MessagesService);
 //# sourceMappingURL=messages.service.js.map

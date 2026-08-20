@@ -20,6 +20,8 @@ const typeorm_2 = require("typeorm");
 const storage_service_1 = require("../common/storage/storage.service");
 const search_util_1 = require("../common/utils/search.util");
 const pagination_util_1 = require("../common/utils/pagination.util");
+const file_type_util_1 = require("../common/utils/file-type.util");
+const email_domain_service_1 = require("../common/validators/email-domain.service");
 const mail_service_1 = require("../mail/mail.service");
 const text_util_1 = require("../common/utils/text.util");
 const admission_entity_1 = require("./entities/admission.entity");
@@ -39,16 +41,27 @@ let AdmissionsService = AdmissionsService_1 = class AdmissionsService {
     admissionsRepository;
     mailService;
     storageService;
+    emailDomainService;
     logger = new common_1.Logger(AdmissionsService_1.name);
-    constructor(admissionsRepository, mailService, storageService) {
+    constructor(admissionsRepository, mailService, storageService, emailDomainService) {
         this.admissionsRepository = admissionsRepository;
         this.mailService = mailService;
         this.storageService = storageService;
+        this.emailDomainService = emailDomainService;
+    }
+    async assertEmailDomainExists(email) {
+        if (!email)
+            return;
+        const result = await this.emailDomainService.check(email);
+        if (result.reason) {
+            throw new common_1.BadRequestException(result.reason);
+        }
     }
     buildReference(id) {
         return `ESSG-${id}`;
     }
     async create(createAdmissionDto) {
+        await this.assertEmailDomainExists(createAdmissionDto.email);
         const admission = this.admissionsRepository.create({
             ...createAdmissionDto,
             nom: (0, text_util_1.toUpperCase)(createAdmissionDto.nom),
@@ -73,22 +86,22 @@ let AdmissionsService = AdmissionsService_1 = class AdmissionsService {
         const qb = this.admissionsRepository.createQueryBuilder('admission');
         if (q?.trim()) {
             const term = (0, search_util_1.buildIlikeTerm)(q);
-            qb.andWhere(`(admission.nom ILIKE :term ESCAPE '\\'
-          OR admission.prenom ILIKE :term ESCAPE '\\'
-          OR admission.email ILIKE :term ESCAPE '\\'
-          OR admission.telephone ILIKE :term ESCAPE '\\'
-          OR admission.formation ILIKE :term ESCAPE '\\')`, { term });
+            qb.andWhere(`(admission.nom ILIKE :term ${search_util_1.ILIKE_ESCAPE}
+          OR admission.prenom ILIKE :term ${search_util_1.ILIKE_ESCAPE}
+          OR admission.email ILIKE :term ${search_util_1.ILIKE_ESCAPE}
+          OR admission.telephone ILIKE :term ${search_util_1.ILIKE_ESCAPE}
+          OR admission.formation ILIKE :term ${search_util_1.ILIKE_ESCAPE})`, { term });
         }
         if (statut) {
             qb.andWhere('admission.statut = :statut', { statut });
         }
         if (niveau && niveau !== 'all') {
-            qb.andWhere('admission.niveau ILIKE :niveau ESCAPE \'\\\'', {
+            qb.andWhere(`admission.niveau ILIKE :niveau ${search_util_1.ILIKE_ESCAPE}`, {
                 niveau: (0, search_util_1.buildIlikeTerm)(niveau),
             });
         }
         if (formation && formation !== 'all') {
-            qb.andWhere('admission.formation ILIKE :formation ESCAPE \'\\\'', {
+            qb.andWhere(`admission.formation ILIKE :formation ${search_util_1.ILIKE_ESCAPE}`, {
                 formation: (0, search_util_1.buildIlikeTerm)(formation),
             });
         }
@@ -144,13 +157,15 @@ let AdmissionsService = AdmissionsService_1 = class AdmissionsService {
         }
         const objectName = this.storageService.extractObjectName(storedUrl);
         const buffer = await this.storageService.download(objectName);
-        const filename = kind === 'cv'
-            ? `CV-${admission.nom}-${admission.prenom}.pdf`
-            : `Lettre-${admission.nom}-${admission.prenom}.pdf`;
+        const detected = (0, file_type_util_1.detectFileType)(buffer);
+        const base = kind === 'cv'
+            ? `CV-${admission.nom}-${admission.prenom}`
+            : `Lettre-${admission.nom}-${admission.prenom}`;
         return {
             buffer,
-            filename,
-            mimetype: 'application/pdf',
+            filename: (0, file_type_util_1.withDetectedExtension)(base, detected.extension),
+            mimetype: detected.mimetype,
+            inlineViewable: detected.inlineViewable,
         };
     }
     async notifyStatusChange(admission) {
@@ -185,6 +200,7 @@ exports.AdmissionsService = AdmissionsService = AdmissionsService_1 = __decorate
     __param(0, (0, typeorm_1.InjectRepository)(admission_entity_1.Admission)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         mail_service_1.MailService,
-        storage_service_1.StorageService])
+        storage_service_1.StorageService,
+        email_domain_service_1.EmailDomainService])
 ], AdmissionsService);
 //# sourceMappingURL=admissions.service.js.map

@@ -1,3 +1,8 @@
+export declare class ExperienceProfessionnelleDto {
+    poste: string;
+    organisation?: string;
+    periode?: string;
+}
 export declare class CreateRessourceHumaineDto {
     nom: string;
     prenom: string;
@@ -5,6 +10,12 @@ export declare class CreateRessourceHumaineDto {
     description?: string;
     email?: string;
     telephone?: string;
+    adresse?: string;
+    experiences?: ExperienceProfessionnelleDto[];
+    formations?: string[];
+    diplomes?: string[];
+    competences?: string[];
+    langues?: string[];
     photo?: string;
     actif?: boolean;
     ordre?: number;
@@ -16,6 +27,12 @@ export declare class UpdateRessourceHumaineDto {
     description?: string;
     email?: string;
     telephone?: string;
+    adresse?: string;
+    experiences?: ExperienceProfessionnelleDto[];
+    formations?: string[];
+    diplomes?: string[];
+    competences?: string[];
+    langues?: string[];
     photo?: string;
     actif?: boolean;
     ordre?: number;

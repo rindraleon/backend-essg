@@ -14,7 +14,7 @@ const mapped_types_1 = require("@nestjs/mapped-types");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 class CreateFormationDto {
-    slug;
+    mention;
     domaine;
     titre;
     niveau;
@@ -28,6 +28,7 @@ class CreateFormationDto {
     competences;
     modules;
     responsable;
+    responsableId;
     email;
     image;
     enVedette;
@@ -35,15 +36,15 @@ class CreateFormationDto {
 }
 exports.CreateFormationDto = CreateFormationDto;
 __decorate([
-    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MaxLength)(150),
     __metadata("design:type", String)
-], CreateFormationDto.prototype, "slug", void 0);
+], CreateFormationDto.prototype, "mention", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
     (0, class_validator_1.MaxLength)(100, { each: true }),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Array)
 ], CreateFormationDto.prototype, "domaine", void 0);
 __decorate([
@@ -62,43 +63,45 @@ __decorate([
 ], CreateFormationDto.prototype, "duree", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MaxLength)(10000),
+    (0, class_validator_1.MaxLength)(1000),
     __metadata("design:type", String)
 ], CreateFormationDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
-    (0, class_validator_1.MaxLength)(1000, { each: true }),
+    (0, class_validator_1.MaxLength)(500, { each: true }),
     __metadata("design:type", Array)
 ], CreateFormationDto.prototype, "objectifs", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
-    (0, class_validator_1.MaxLength)(1000, { each: true }),
+    (0, class_validator_1.MaxLength)(500, { each: true }),
     __metadata("design:type", Array)
 ], CreateFormationDto.prototype, "debouches", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MaxLength)(10000),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.MaxLength)(500),
     __metadata("design:type", String)
 ], CreateFormationDto.prototype, "conditionsAcces", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
-    (0, class_validator_1.MaxLength)(1000, { each: true }),
+    (0, class_validator_1.MaxLength)(500, { each: true }),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Array)
 ], CreateFormationDto.prototype, "programme", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
-    (0, class_validator_1.MaxLength)(1000, { each: true }),
+    (0, class_validator_1.MaxLength)(500, { each: true }),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Array)
 ], CreateFormationDto.prototype, "conditions", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
-    (0, class_validator_1.MaxLength)(1000, { each: true }),
+    (0, class_validator_1.MaxLength)(500, { each: true }),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Array)
 ], CreateFormationDto.prototype, "competences", void 0);
@@ -114,9 +117,15 @@ __decorate([
     __metadata("design:type", String)
 ], CreateFormationDto.prototype, "responsable", void 0);
 __decorate([
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], CreateFormationDto.prototype, "responsableId", void 0);
+__decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.MaxLength)(120),
+    (0, class_validator_1.MaxLength)(50),
     __metadata("design:type", String)
 ], CreateFormationDto.prototype, "email", void 0);
 __decorate([

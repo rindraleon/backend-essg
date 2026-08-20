@@ -1,10 +1,11 @@
 export declare class CreateProjetDto {
     titre: string;
-    slug?: string;
     type: 'International' | 'Service public' | 'Recherche' | 'Partenariat';
+    statut?: 'En cours' | 'Terminé';
     date: string;
     description: string;
-    partenaires: string[];
+    partenaireIds?: number[];
+    partenaires?: string[];
     image?: string;
     galerie?: string[];
     latitude?: number;
@@ -13,5 +14,7 @@ export declare class CreateProjetDto {
     pays?: string;
     adresse?: string;
 }
-export declare class UpdateProjetDto extends CreateProjetDto {
+declare const UpdateProjetDto_base: import("@nestjs/mapped-types").MappedType<Partial<CreateProjetDto>>;
+export declare class UpdateProjetDto extends UpdateProjetDto_base {
 }
+export {};

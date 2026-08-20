@@ -38,7 +38,10 @@ let UsersController = class UsersController {
     search(query, paginationDto) {
         return this.service.search(query, paginationDto);
     }
-    findOne(id) {
+    findOne(id, req) {
+        if (req.user.role !== 'admin' && req.user.userId !== id) {
+            throw new common_1.ForbiddenException('Vous ne pouvez consulter que votre propre profil');
+        }
         return this.service.findOne(id);
     }
     create(dto) {
@@ -70,6 +73,7 @@ let UsersController = class UsersController {
 };
 exports.UsersController = UsersController;
 __decorate([
+    (0, roles_decorator_1.Roles)('admin'),
     (0, common_1.Get)(),
     (0, api_message_decorator_1.ApiMessage)('Utilisateurs récupérés'),
     __param(0, (0, common_1.Query)()),
@@ -78,6 +82,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "findAll", null);
 __decorate([
+    (0, roles_decorator_1.Roles)('admin'),
     (0, common_1.Get)('search'),
     (0, api_message_decorator_1.ApiMessage)('Recherche effectuée'),
     __param(0, (0, common_1.Query)('q')),
@@ -90,8 +95,9 @@ __decorate([
     (0, common_1.Get)(':id'),
     (0, api_message_decorator_1.ApiMessage)('Utilisateur récupéré'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "findOne", null);
 __decorate([

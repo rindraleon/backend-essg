@@ -28,7 +28,7 @@ let RolesGuard = class RolesGuard {
         }
         const request = context.switchToHttp().getRequest();
         const user = request.user;
-        if (!user || !user.role) {
+        if (!user?.role) {
             throw new common_1.ForbiddenException('Accès refusé');
         }
         const hasRole = requiredRoles.includes(user.role);

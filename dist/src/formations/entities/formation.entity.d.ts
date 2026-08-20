@@ -1,7 +1,7 @@
 export declare class Formation {
     id: number;
     slug: string;
-    generateSlug(): void;
+    mention: string;
     domaine: string[];
     titre: string;
     niveau: 'Licence' | 'Master' | 'Doctorat';
@@ -15,6 +15,7 @@ export declare class Formation {
     modules: any[];
     credits: number;
     responsable: string;
+    responsableId: number | null;
     email: string;
     programme: string[];
     image: string;

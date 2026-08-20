@@ -6,11 +6,14 @@ import { CreateMessageDto, UpdateMessageDto } from './dto/create-message.dto';
 import { QueryMessageDto } from './dto/query-message.dto';
 import { ReplyMessageDto } from './dto/reply-message.dto';
 import { Message } from './entities/message.entity';
+import { EmailDomainService } from '../common/validators/email-domain.service';
 export declare class MessagesService {
     private readonly repo;
     private readonly mailService;
+    private readonly emailDomainService;
     private readonly logger;
-    constructor(repo: Repository<Message>, mailService: MailService);
+    constructor(repo: Repository<Message>, mailService: MailService, emailDomainService: EmailDomainService);
+    private assertEmailDomainExists;
     private findFiltered;
     findAll(queryDto?: QueryMessageDto): Promise<PaginatedData<Message>>;
     search(query: string, queryDto?: QueryMessageDto): Promise<PaginatedData<Message>>;

@@ -16,6 +16,7 @@ const admissions_module_1 = require("./admissions/admissions.module");
 const auth_module_1 = require("./auth/auth.module");
 const performance_interceptor_1 = require("./common/interceptors/performance.interceptor");
 const storage_module_1 = require("./common/storage/storage.module");
+const email_domain_module_1 = require("./common/validators/email-domain.module");
 const env_validation_1 = require("./config/env.validation");
 const dashboard_module_1 = require("./dashboard/dashboard.module");
 const database_module_1 = require("./database/database.module");
@@ -44,6 +45,7 @@ exports.AppModule = AppModule = __decorate([
             }),
             database_module_1.DatabaseModule,
             storage_module_1.StorageModule,
+            email_domain_module_1.EmailDomainModule,
             users_module_1.UsersModule,
             auth_module_1.AuthModule,
             formations_module_1.FormationsModule,

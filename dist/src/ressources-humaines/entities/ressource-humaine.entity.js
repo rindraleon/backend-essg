@@ -20,6 +20,12 @@ let RessourceHumaine = class RessourceHumaine {
     description;
     email;
     telephone;
+    adresse;
+    experiences;
+    formations;
+    diplomes;
+    competences;
+    langues;
     photo;
     actif;
     ordre;
@@ -59,6 +65,30 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], RessourceHumaine.prototype, "telephone", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", String)
+], RessourceHumaine.prototype, "adresse", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'jsonb', default: () => "'[]'::jsonb" }),
+    __metadata("design:type", Array)
+], RessourceHumaine.prototype, "experiences", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'jsonb', default: () => "'[]'::jsonb" }),
+    __metadata("design:type", Array)
+], RessourceHumaine.prototype, "formations", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'jsonb', default: () => "'[]'::jsonb" }),
+    __metadata("design:type", Array)
+], RessourceHumaine.prototype, "diplomes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'jsonb', default: () => "'[]'::jsonb" }),
+    __metadata("design:type", Array)
+], RessourceHumaine.prototype, "competences", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'jsonb', default: () => "'[]'::jsonb" }),
+    __metadata("design:type", Array)
+], RessourceHumaine.prototype, "langues", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)

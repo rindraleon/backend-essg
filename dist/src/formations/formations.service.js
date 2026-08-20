@@ -19,7 +19,10 @@ const typeorm_2 = require("typeorm");
 const pagination_util_1 = require("../common/utils/pagination.util");
 const search_util_1 = require("../common/utils/search.util");
 const text_util_1 = require("../common/utils/text.util");
+const slug_util_1 = require("../common/utils/slug.util");
+const formation_mentions_constant_1 = require("./formation-mentions.constant");
 const formation_entity_1 = require("./entities/formation.entity");
+const ressource_humaine_entity_1 = require("../ressources-humaines/entities/ressource-humaine.entity");
 const FORMATION_SORT_FIELDS = [
     'id',
     'titre',
@@ -33,8 +36,27 @@ const FORMATION_SORT_FIELDS = [
 ];
 let FormationsService = class FormationsService {
     repo;
-    constructor(repo) {
+    ressourceRepo;
+    constructor(repo, ressourceRepo) {
         this.repo = repo;
+        this.ressourceRepo = ressourceRepo;
+    }
+    async resolveResponsable(responsableId) {
+        if (responsableId === undefined)
+            return null;
+        if (responsableId === null)
+            return { responsableId: null, responsable: '' };
+        const ressource = await this.ressourceRepo.findOne({
+            where: { id: responsableId },
+            select: ['id', 'nom', 'prenom'],
+        });
+        if (!ressource) {
+            throw new common_1.BadRequestException("La ressource humaine sélectionnée est introuvable.");
+        }
+        return {
+            responsableId: ressource.id,
+            responsable: `${ressource.prenom} ${ressource.nom}`.trim(),
+        };
     }
     async findAll(paginationDto) {
         const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
@@ -54,12 +76,13 @@ let FormationsService = class FormationsService {
             return this.findAll(paginationDto);
         }
         const orderField = (0, search_util_1.sanitizeSortField)(sortBy, FORMATION_SORT_FIELDS) ?? 'id';
-        const term = `%${query.trim()}%`;
+        const term = (0, search_util_1.buildIlikeTerm)(query);
         const [data, total] = await this.repo
             .createQueryBuilder('formation')
-            .where('LOWER(formation.titre) LIKE LOWER(:query)', { query: term })
-            .orWhere('LOWER(formation.description) LIKE LOWER(:query)', { query: term })
-            .orWhere('formation.domaine::text LIKE LOWER(:query)', { query: term })
+            .where(`formation.titre ILIKE :query ${search_util_1.ILIKE_ESCAPE}`, { query: term })
+            .orWhere(`formation.description ILIKE :query ${search_util_1.ILIKE_ESCAPE}`, { query: term })
+            .orWhere(`formation.mention ILIKE :query ${search_util_1.ILIKE_ESCAPE}`, { query: term })
+            .orWhere(`formation.domaine::text ILIKE :query ${search_util_1.ILIKE_ESCAPE}`, { query: term })
             .orderBy(`formation.${orderField}`, sortOrder === 'DESC' ? 'DESC' : 'ASC')
             .skip(skip)
             .take(limit)
@@ -79,15 +102,20 @@ let FormationsService = class FormationsService {
         return item;
     }
     async create(dto) {
-        const slug = dto.slug?.trim() ? (0, text_util_1.slugify)(dto.slug) : (0, text_util_1.slugify)(dto.titre);
+        const { titre, mention } = this.resolveHierarchy(dto.titre, dto.mention);
+        const slug = await (0, slug_util_1.buildUniqueSlug)(this.repo, titre);
+        const responsableInfo = await this.resolveResponsable(dto.responsableId);
         const item = this.repo.create({
             ...dto,
             slug,
-            titre: (0, text_util_1.capitalize)(dto.titre),
+            mention,
+            titre,
             duree: (0, text_util_1.capitalize)(dto.duree),
             description: (0, text_util_1.capitalize)(dto.description),
-            responsable: dto.responsable ? (0, text_util_1.capitalize)(dto.responsable) : dto.responsable,
-            domaine: (0, text_util_1.capitalizeArray)(dto.domaine),
+            ...(responsableInfo ?? {
+                responsable: dto.responsable ? (0, text_util_1.capitalize)(dto.responsable) : dto.responsable,
+            }),
+            domaine: dto.domaine?.length ? (0, text_util_1.capitalizeArray)(dto.domaine) : [mention],
             objectifs: (0, text_util_1.capitalizeArray)(dto.objectifs),
             debouches: (0, text_util_1.capitalizeArray)(dto.debouches),
             conditions: (0, text_util_1.capitalizeArray)(dto.conditions),
@@ -100,14 +128,32 @@ let FormationsService = class FormationsService {
     async update(id, dto) {
         const current = await this.findOne(id);
         const updateData = { ...dto };
-        if (dto.titre)
-            updateData.titre = (0, text_util_1.capitalize)(dto.titre);
+        delete updateData.slug;
+        if (dto.titre !== undefined || dto.mention !== undefined) {
+            const { titre, mention } = this.resolveHierarchy(dto.titre ?? current.titre, dto.mention ?? current.mention);
+            updateData.titre = titre;
+            updateData.mention = mention;
+            if (!dto.domaine) {
+                updateData.domaine = [mention];
+            }
+        }
+        if ((0, slug_util_1.shouldRegenerateSlug)(current.titre, updateData.titre, current.slug)) {
+            updateData.slug = await (0, slug_util_1.buildUniqueSlug)(this.repo, updateData.titre ?? current.titre, {
+                excludeId: id,
+            });
+        }
         if (dto.duree)
             updateData.duree = (0, text_util_1.capitalize)(dto.duree);
         if (dto.description)
             updateData.description = (0, text_util_1.capitalize)(dto.description);
-        if (dto.responsable)
+        const responsableInfo = await this.resolveResponsable(dto.responsableId);
+        if (responsableInfo) {
+            updateData.responsableId = responsableInfo.responsableId;
+            updateData.responsable = responsableInfo.responsable;
+        }
+        else if (dto.responsable) {
             updateData.responsable = (0, text_util_1.capitalize)(dto.responsable);
+        }
         if (dto.domaine)
             updateData.domaine = (0, text_util_1.capitalizeArray)(dto.domaine);
         if (dto.objectifs)
@@ -120,12 +166,6 @@ let FormationsService = class FormationsService {
             updateData.competences = (0, text_util_1.capitalizeArray)(dto.competences);
         if (dto.programme)
             updateData.programme = (0, text_util_1.capitalizeArray)(dto.programme);
-        if (dto.slug?.trim()) {
-            updateData.slug = (0, text_util_1.slugify)(dto.slug);
-        }
-        else if (dto.titre && !current.slug) {
-            updateData.slug = (0, text_util_1.slugify)(dto.titre);
-        }
         try {
             await this.repo.update(id, updateData);
         }
@@ -137,6 +177,18 @@ let FormationsService = class FormationsService {
     async remove(id) {
         await this.findOne(id);
         await this.repo.delete(id);
+    }
+    resolveHierarchy(rawTitre, rawMention) {
+        const titre = (0, formation_mentions_constant_1.canonicalTitre)(rawTitre.trim());
+        const deduced = (0, formation_mentions_constant_1.findMentionByTitre)(titre);
+        if (!rawMention) {
+            return { titre, mention: deduced?.label ?? '' };
+        }
+        const mention = (0, formation_mentions_constant_1.canonicalMentionLabel)(rawMention.trim());
+        if (deduced && !(0, formation_mentions_constant_1.isTitreInMention)(mention, titre)) {
+            throw new common_1.BadRequestException(`Le titre « ${titre} » appartient à la mention « ${deduced.label} » et non à « ${mention} ».`);
+        }
+        return { titre, mention };
     }
     async saveOrConflict(item) {
         try {
@@ -160,6 +212,8 @@ exports.FormationsService = FormationsService;
 exports.FormationsService = FormationsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(formation_entity_1.Formation)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(ressource_humaine_entity_1.RessourceHumaine)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], FormationsService);
 //# sourceMappingURL=formations.service.js.map

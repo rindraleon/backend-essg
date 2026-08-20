@@ -17,6 +17,7 @@ declare class EnvironmentVariables {
     SMTP_PORT: number;
     SMTP_SECURE: boolean;
     SMTP_USER: string;
+    EMAIL_TRUSTED_DOMAINS: string;
     SMTP_PASS: string;
     SMTP_FROM: string;
     MINIO_ENDPOINT: string;

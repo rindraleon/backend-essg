@@ -19,10 +19,30 @@ const typeorm_2 = require("typeorm");
 const pagination_util_1 = require("../common/utils/pagination.util");
 const project_entity_1 = require("./entities/project.entity");
 const text_util_1 = require("../common/utils/text.util");
+const slug_util_1 = require("../common/utils/slug.util");
+const partner_entity_1 = require("../parteners/entities/partner.entity");
 let ProjectsService = class ProjectsService {
     repo;
-    constructor(repo) {
+    partnerRepo;
+    constructor(repo, partnerRepo) {
         this.repo = repo;
+        this.partnerRepo = partnerRepo;
+    }
+    async resolvePartenaires(ids) {
+        if (!ids)
+            return null;
+        if (ids.length === 0)
+            return { partenaireIds: [], partenaires: [] };
+        const found = await this.partnerRepo.find({
+            where: { id: (0, typeorm_2.In)(ids) },
+            select: ['id', 'nom'],
+        });
+        const byId = new Map(found.map((partner) => [partner.id, partner.nom]));
+        const partenaireIds = ids.filter((id) => byId.has(id));
+        return {
+            partenaireIds,
+            partenaires: partenaireIds.map((id) => byId.get(id)),
+        };
     }
     async findPaginated(where, paginationDto) {
         const { page = 1, limit = 10, sortBy, sortOrder = 'ASC' } = paginationDto;
@@ -57,22 +77,30 @@ let ProjectsService = class ProjectsService {
         return item;
     }
     async create(dto) {
+        const slug = await (0, slug_util_1.buildUniqueSlug)(this.repo, dto.titre);
+        const resolved = await this.resolvePartenaires(dto.partenaireIds);
         const item = this.repo.create({
             ...dto,
-            slug: dto.slug?.trim() ? (0, text_util_1.slugify)(dto.slug) : (0, text_util_1.slugify)(dto.titre),
+            slug,
             titre: (0, text_util_1.capitalize)(dto.titre),
             description: (0, text_util_1.capitalize)(dto.description),
             ville: dto.ville ? (0, text_util_1.capitalize)(dto.ville) : dto.ville,
             pays: dto.pays ? (0, text_util_1.capitalize)(dto.pays) : dto.pays,
             adresse: dto.adresse ? (0, text_util_1.capitalize)(dto.adresse) : dto.adresse,
-            partenaires: (0, text_util_1.capitalizeArray)(dto.partenaires),
+            ...(resolved ?? { partenaires: (0, text_util_1.capitalizeArray)(dto.partenaires) }),
             galerie: dto.galerie ?? [],
         });
         return this.repo.save(item);
     }
     async update(id, dto) {
-        await this.findOne(id);
+        const current = await this.findOne(id);
         const updateData = { ...dto };
+        delete updateData.slug;
+        if ((0, slug_util_1.shouldRegenerateSlug)(current.titre, dto.titre, current.slug)) {
+            updateData.slug = await (0, slug_util_1.buildUniqueSlug)(this.repo, dto.titre ?? current.titre, {
+                excludeId: id,
+            });
+        }
         if (dto.titre)
             updateData.titre = (0, text_util_1.capitalize)(dto.titre);
         if (dto.description)
@@ -83,8 +111,14 @@ let ProjectsService = class ProjectsService {
             updateData.pays = (0, text_util_1.capitalize)(dto.pays);
         if (dto.adresse)
             updateData.adresse = (0, text_util_1.capitalize)(dto.adresse);
-        if (dto.partenaires)
+        const resolved = await this.resolvePartenaires(dto.partenaireIds);
+        if (resolved) {
+            updateData.partenaireIds = resolved.partenaireIds;
+            updateData.partenaires = resolved.partenaires;
+        }
+        else if (dto.partenaires) {
             updateData.partenaires = (0, text_util_1.capitalizeArray)(dto.partenaires);
+        }
         if (dto.galerie)
             updateData.galerie = dto.galerie;
         await this.repo.update(id, updateData);
@@ -99,6 +133,8 @@ exports.ProjectsService = ProjectsService;
 exports.ProjectsService = ProjectsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(project_entity_1.Projet)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(partner_entity_1.Partenaire)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], ProjectsService);
 //# sourceMappingURL=projects.service.js.map

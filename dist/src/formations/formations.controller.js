@@ -19,6 +19,7 @@ const pagination_dto_1 = require("../common/dto/pagination.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const create_formation_dto_1 = require("./dto/create-formation.dto");
 const formations_service_1 = require("./formations.service");
+const formation_mentions_constant_1 = require("./formation-mentions.constant");
 let FormationsController = class FormationsController {
     service;
     constructor(service) {
@@ -26,6 +27,9 @@ let FormationsController = class FormationsController {
     }
     findAll(paginationDto) {
         return this.service.findAll(paginationDto);
+    }
+    findMentions() {
+        return formation_mentions_constant_1.FORMATION_MENTIONS;
     }
     search(query, paginationDto) {
         return this.service.search(query, paginationDto);
@@ -55,6 +59,13 @@ __decorate([
     __metadata("design:paramtypes", [pagination_dto_1.PaginationQueryDto]),
     __metadata("design:returntype", void 0)
 ], FormationsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('mentions'),
+    (0, api_message_decorator_1.ApiMessage)('Mentions récupérées'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], FormationsController.prototype, "findMentions", null);
 __decorate([
     (0, common_1.Get)('search'),
     (0, api_message_decorator_1.ApiMessage)('Recherche effectuée'),

@@ -55,17 +55,28 @@ const pagination_util_1 = require("../common/utils/pagination.util");
 const mail_service_1 = require("../mail/mail.service");
 const user_entity_1 = require("./entities/user.entity");
 const text_util_1 = require("../common/utils/text.util");
+const duplicate_util_1 = require("../common/utils/duplicate.util");
+const email_domain_service_1 = require("../common/validators/email-domain.service");
 let UsersService = UsersService_1 = class UsersService {
     repo;
     mailService;
+    emailDomainService;
     logger = new common_1.Logger(UsersService_1.name);
-    constructor(repo, mailService) {
+    constructor(repo, mailService, emailDomainService) {
         this.repo = repo;
         this.mailService = mailService;
+        this.emailDomainService = emailDomainService;
+    }
+    async assertEmailDomainExists(email) {
+        if (!email)
+            return;
+        const result = await this.emailDomainService.check(email);
+        if (result.reason) {
+            throw new common_1.BadRequestException(result.reason);
+        }
     }
     sanitizeUser(user) {
-        const { motDePasse, ...rest } = user;
-        void motDePasse;
+        const { motDePasse: _motDePasse, ...rest } = user;
         return rest;
     }
     async findPaginated(where, paginationDto) {
@@ -102,9 +113,8 @@ let UsersService = UsersService_1 = class UsersService {
         return this.repo.findOne({ where: { email } });
     }
     async create(dto) {
-        const existing = await this.findByEmail(dto.email);
-        if (existing)
-            throw new common_1.ConflictException('Cet email existe déjà');
+        await this.assertEmailDomainExists(dto.email);
+        await (0, duplicate_util_1.assertEmailIsAvailable)(this.repo, dto.email, 'un autre utilisateur');
         const hashedPassword = await bcrypt.hash(dto.motDePasse, 10);
         const user = this.repo.create({
             ...dto,
@@ -124,6 +134,10 @@ let UsersService = UsersService_1 = class UsersService {
     }
     async update(id, dto) {
         const user = await this.findOne(id);
+        await this.assertEmailDomainExists(dto.email);
+        await (0, duplicate_util_1.assertEmailIsAvailable)(this.repo, dto.email, 'un autre utilisateur', {
+            excludeId: id,
+        });
         const data = { ...dto };
         if (dto.motDePasse) {
             data.motDePasse = await bcrypt.hash(dto.motDePasse, 10);
@@ -151,6 +165,7 @@ exports.UsersService = UsersService = UsersService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.Utilisateur)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        mail_service_1.MailService])
+        mail_service_1.MailService,
+        email_domain_service_1.EmailDomainService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

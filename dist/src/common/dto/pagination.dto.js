@@ -16,7 +16,7 @@ class PaginationDto {
     page = 1;
     limit = 10;
     sortBy;
-    sortOrder = 'ASC';
+    sortOrder = 'DESC';
 }
 exports.PaginationDto = PaginationDto;
 __decorate([
