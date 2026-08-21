@@ -1,8 +1,5 @@
 import { IsString, IsOptional, IsBoolean, MaxLength, IsNotEmpty } from 'class-validator';
-import {
-  IsValidEmail,
-  IsValidPhoneOptional,
-} from '../../common/validators/contact.validators';
+import { IsValidEmail, IsValidPhoneOptional } from '../../common/validators/contact.validators';
 
 export class CreateMessageDto {
   @IsString()

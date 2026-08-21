@@ -1,11 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { buildPaginatedData } from '../common/utils/pagination.util';
-import { CreateProjetDto, UpdateProjetDto } from './dto/create-project.dto';
-import { Projet } from './entities/project.entity';
+import { CreateProjetDto, UpdateProjetDto, ProjectSourceDto } from './dto/create-project.dto';
+import { Projet, ProjectSource } from './entities/project.entity';
 import { capitalize, capitalizeArray } from '../common/utils/text.util';
 import { buildUniqueSlug, shouldRegenerateSlug } from '../common/utils/slug.util';
 import { Partenaire } from '../parteners/entities/partner.entity';
@@ -18,6 +18,31 @@ export class ProjectsService {
     @InjectRepository(Partenaire)
     private readonly partnerRepo: Repository<Partenaire>,
   ) {}
+
+  private normalizeSources(sources?: ProjectSourceDto[]): ProjectSource[] {
+    if (!sources) return [];
+    return sources.map((source) => {
+      if (!source || typeof source.title !== 'string' || typeof source.url !== 'string') {
+        throw new BadRequestException('Chaque source doit avoir un titre et une URL valide.');
+      }
+      const title = source.title.trim();
+      const rawUrl = source.url.trim();
+      if (!title || !rawUrl) {
+        throw new BadRequestException('Chaque source doit avoir un titre et une URL valide.');
+      }
+      const withProtocol = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+      let parsed: URL;
+      try {
+        parsed = new URL(withProtocol);
+      } catch {
+        throw new BadRequestException(`L'URL « ${rawUrl} » est invalide.`);
+      }
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        throw new BadRequestException(`L'URL « ${rawUrl} » doit utiliser http ou https.`);
+      }
+      return { title, url: parsed.toString() };
+    });
+  }
 
   private async resolvePartenaires(
     ids?: number[],
@@ -94,6 +119,7 @@ export class ProjectsService {
       adresse: dto.adresse ? capitalize(dto.adresse) : dto.adresse,
       ...(resolved ?? { partenaires: capitalizeArray(dto.partenaires) }),
       galerie: dto.galerie ?? [],
+      sources: this.normalizeSources(dto.sources),
     });
     return this.repo.save(item);
   }
@@ -120,6 +146,7 @@ export class ProjectsService {
       updateData.partenaires = capitalizeArray(dto.partenaires);
     }
     if (dto.galerie) updateData.galerie = dto.galerie;
+    if (dto.sources) updateData.sources = this.normalizeSources(dto.sources);
     await this.repo.update(id, updateData);
     return this.findOne(id);
   }

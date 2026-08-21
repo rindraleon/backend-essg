@@ -13,7 +13,16 @@ import { Message } from './entities/message.entity';
 import { capitalize, toUpperCase } from '../common/utils/text.util';
 import { EmailDomainService } from '../common/validators/email-domain.service';
 
-const MESSAGE_SORT_FIELDS = ['id', 'nom', 'prenom', 'email', 'sujet', 'lu', 'creeLe', 'misAJourLe'] as const;
+const MESSAGE_SORT_FIELDS = [
+  'id',
+  'nom',
+  'prenom',
+  'email',
+  'sujet',
+  'lu',
+  'creeLe',
+  'misAJourLe',
+] as const;
 
 @Injectable()
 export class MessagesService {
@@ -33,7 +42,6 @@ export class MessagesService {
       throw new BadRequestException(result.reason);
     }
   }
-
 
   private async findFiltered(queryDto: QueryMessageDto = {}): Promise<PaginatedData<Message>> {
     const {
@@ -121,6 +129,30 @@ export class MessagesService {
       this.logger.log(`Accusé de réception envoyé à ${saved.email}`);
     } catch (error) {
       this.logger.error(`Échec de l'envoi de l'accusé de réception à ${saved.email}`, error);
+    }
+
+    try {
+      await this.mailService.sendAdminsContactNotification({
+        nom: saved.nom,
+        prenom: saved.prenom,
+        email: saved.email,
+        telephone: saved.telephone ?? undefined,
+        sujet: saved.sujet,
+        message: saved.message,
+        date: new Date().toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      });
+      this.logger.log(`Notification administrateur envoyée pour le message ${saved.id}`);
+    } catch (error) {
+      this.logger.error(
+        `Échec de la notification administrateur pour le message ${saved.id}`,
+        error,
+      );
     }
 
     return saved;

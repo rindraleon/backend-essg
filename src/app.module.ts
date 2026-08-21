@@ -21,6 +21,7 @@ import { NewsModule } from './news/news.module';
 import { PartnersModule } from './parteners/partners.module';
 import { ProjectsModule } from './projects/projects.module';
 import { RessourcesHumainesModule } from './ressources-humaines/ressources-humaines.module';
+import { SettingsModule } from './settings/settings.module';
 import { UploadModule } from './upload/upload.module';
 import { UsersModule } from './users/users.module';
 
@@ -49,11 +50,9 @@ import { UsersModule } from './users/users.module';
     MailModule,
     AdmissionsModule,
     ActivityLogsModule,
+    SettingsModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    { provide: APP_INTERCEPTOR, useClass: PerformanceInterceptor },
-  ],
+  providers: [AppService, { provide: APP_INTERCEPTOR, useClass: PerformanceInterceptor }],
 })
 export class AppModule {}

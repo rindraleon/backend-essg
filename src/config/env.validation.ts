@@ -91,6 +91,14 @@ class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
+  ADMIN_NOTIFY_EMAILS: string = '';
+
+  @IsString()
+  @IsOptional()
+  BACK_OFFICE_URL: string = 'http://localhost:5000';
+
+  @IsString()
+  @IsOptional()
   MINIO_ENDPOINT: string = 'localhost';
 
   @Type(() => Number)

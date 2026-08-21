@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { Projet } from './entities/project.entity';
+import { Partenaire } from '../parteners/entities/partner.entity';
 
 describe('ProjectsService', () => {
   let service: ProjectsService;
@@ -48,8 +49,16 @@ describe('ProjectsService', () => {
       createQueryBuilder: jest.fn().mockReturnValue(qb),
     };
 
+    const partnerRepo = {
+      find: jest.fn().mockResolvedValue([]),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ProjectsService, { provide: getRepositoryToken(Projet), useValue: repo }],
+      providers: [
+        ProjectsService,
+        { provide: getRepositoryToken(Projet), useValue: repo },
+        { provide: getRepositoryToken(Partenaire), useValue: partnerRepo },
+      ],
     }).compile();
 
     service = module.get<ProjectsService>(ProjectsService);
@@ -88,6 +97,103 @@ describe('ProjectsService', () => {
         partenaires: [],
       } as never),
     ).resolves.toBe(item);
+  });
+
+  describe('sources', () => {
+    it('create with zero sources stores an empty array', async () => {
+      repo.create.mockReturnValue(item);
+      repo.save.mockResolvedValue(item);
+      await service.create({
+        titre: 'Projet A',
+        type: 'Recherche',
+        date: '2024',
+        description: 'x',
+        partenaires: [],
+      } as never);
+      expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ sources: [] }));
+    });
+
+    it('create with one source normalizes title and url', async () => {
+      repo.create.mockReturnValue(item);
+      repo.save.mockResolvedValue(item);
+      await service.create({
+        titre: 'Projet A',
+        type: 'Recherche',
+        date: '2024',
+        description: 'x',
+        partenaires: [],
+        sources: [{ title: '  Source 1 ', url: 'data.gov.mg/dataset' }],
+      } as never);
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sources: [{ title: 'Source 1', url: 'https://data.gov.mg/dataset' }],
+        }),
+      );
+    });
+
+    it('create with multiple sources keeps them all', async () => {
+      repo.create.mockReturnValue(item);
+      repo.save.mockResolvedValue(item);
+      await service.create({
+        titre: 'Projet A',
+        type: 'Recherche',
+        date: '2024',
+        description: 'x',
+        partenaires: [],
+        sources: [
+          { title: 'A', url: 'https://a.example.com' },
+          { title: 'B', url: 'https://b.example.com' },
+        ],
+      } as never);
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sources: [
+            { title: 'A', url: 'https://a.example.com/' },
+            { title: 'B', url: 'https://b.example.com/' },
+          ],
+        }),
+      );
+    });
+
+    it('create rejects an incomplete source (missing url)', async () => {
+      await expect(
+        service.create({
+          titre: 'Projet A',
+          type: 'Recherche',
+          date: '2024',
+          description: 'x',
+          partenaires: [],
+          sources: [{ title: 'A' }],
+        } as never),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('create rejects an invalid url', async () => {
+      await expect(
+        service.create({
+          titre: 'Projet A',
+          type: 'Recherche',
+          date: '2024',
+          description: 'x',
+          partenaires: [],
+          sources: [{ title: 'A', url: 'not a url !!!' }],
+        } as never),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('update replaces the sources', async () => {
+      repo.findOne.mockResolvedValue(item);
+      repo.update.mockResolvedValue(undefined);
+      await service.update(1, {
+        sources: [{ title: 'Nouvelle', url: 'https://new.example.com' }],
+      } as never);
+      expect(repo.update).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          sources: [{ title: 'Nouvelle', url: 'https://new.example.com/' }],
+        }),
+      );
+    });
   });
 
   it('remove throws for missing item', async () => {

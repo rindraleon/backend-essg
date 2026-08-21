@@ -4,6 +4,7 @@ import { NotFoundException } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { Message } from './entities/message.entity';
 import { MailService } from '../mail/mail.service';
+import { EmailDomainService } from '../common/validators/email-domain.service';
 
 describe('MessagesService', () => {
   let service: MessagesService;
@@ -70,7 +71,12 @@ describe('MessagesService', () => {
           useValue: {
             sendMessageReceiptEmail: jest.fn().mockResolvedValue(undefined),
             sendMessageReplyEmail: jest.fn().mockResolvedValue(undefined),
+            sendAdminsContactNotification: jest.fn().mockResolvedValue(undefined),
           },
+        },
+        {
+          provide: EmailDomainService,
+          useValue: { check: jest.fn().mockResolvedValue({ reason: null }) },
         },
       ],
     }).compile();
@@ -119,16 +125,45 @@ describe('MessagesService', () => {
     ).resolves.toBe(item);
   });
 
+  it('create notifies the admins', async () => {
+    repo.create.mockReturnValue(item);
+    repo.save.mockResolvedValue(item);
+    const mailService = service['mailService'] as unknown as {
+      sendAdminsContactNotification: jest.Mock;
+    };
+    await service.create({ prenom: 'A', nom: 'B', email: 'a@b.c', sujet: 'S', message: 'M' });
+    expect(mailService.sendAdminsContactNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'a@b.c', sujet: 'S', message: 'M' }),
+    );
+  });
+
+  it('create keeps the message saved when admin notification fails', async () => {
+    repo.create.mockReturnValue(item);
+    repo.save.mockResolvedValue(item);
+    const mailService = service['mailService'] as unknown as {
+      sendAdminsContactNotification: jest.Mock;
+    };
+    mailService.sendAdminsContactNotification.mockRejectedValue(new Error('SMTP down'));
+    await expect(
+      service.create({ prenom: 'A', nom: 'B', email: 'a@b.c', sujet: 'S', message: 'M' }),
+    ).resolves.toBe(item);
+    expect(repo.save).toHaveBeenCalled();
+  });
+
   it('update marks a message as read with the reader email', async () => {
     repo.findOne.mockResolvedValue({ ...item });
-    repo.save.mockImplementation(async (value: Message) => value);
-    const result = await service.update(1, { lu: true }, {
-      userId: 2,
-      email: 'admin@essg.mg',
-      role: 'admin',
-      prenom: 'Admin',
-      nom: 'ESSG',
-    });
+    repo.save.mockImplementation((value: Message) => Promise.resolve(value));
+    const result = await service.update(
+      1,
+      { lu: true },
+      {
+        userId: 2,
+        email: 'admin@essg.mg',
+        role: 'admin',
+        prenom: 'Admin',
+        nom: 'ESSG',
+      },
+    );
     expect(result.lu).toBe(true);
     expect(result.luPar).toBe('admin@essg.mg');
     expect(result.luLe).toBeInstanceOf(Date);
@@ -136,7 +171,7 @@ describe('MessagesService', () => {
 
   it('reply sends an email and stores the answer', async () => {
     repo.findOne.mockResolvedValue({ ...item });
-    repo.save.mockImplementation(async (value: Message) => value);
+    repo.save.mockImplementation((value: Message) => Promise.resolve(value));
     const result = await service.reply(
       1,
       { message: 'Merci pour votre message.', sujet: 'Re : S' },

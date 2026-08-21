@@ -12,10 +12,10 @@ export declare class UsersController {
     private readonly storageService;
     constructor(service: UsersService, storageService: StorageService);
     findAll(paginationDto: PaginationQueryDto): Promise<import("../common/interfaces/api-response.interface").PaginatedData<{
+        id: number;
         nom: string;
         prenom: string;
         email: string;
-        id: number;
         creeLe: Date;
         misAJourLe: Date;
         role: "admin" | "editeur" | "lecteur";
@@ -23,10 +23,10 @@ export declare class UsersController {
         avatar?: string | undefined;
     }>>;
     search(query: string, paginationDto: PaginationQueryDto): Promise<import("../common/interfaces/api-response.interface").PaginatedData<{
+        id: number;
         nom: string;
         prenom: string;
         email: string;
-        id: number;
         creeLe: Date;
         misAJourLe: Date;
         role: "admin" | "editeur" | "lecteur";
@@ -36,10 +36,10 @@ export declare class UsersController {
     findOne(id: number, req: {
         user: AuthUser;
     }): Promise<{
+        id: number;
         nom: string;
         prenom: string;
         email: string;
-        id: number;
         creeLe: Date;
         misAJourLe: Date;
         role: "admin" | "editeur" | "lecteur";
@@ -47,10 +47,10 @@ export declare class UsersController {
         avatar?: string | undefined;
     }>;
     create(dto: CreateUtilisateurDto): Promise<{
+        id: number;
         nom: string;
         prenom: string;
         email: string;
-        id: number;
         creeLe: Date;
         misAJourLe: Date;
         role: "admin" | "editeur" | "lecteur";
@@ -60,10 +60,10 @@ export declare class UsersController {
     update(id: number, dto: UpdateUtilisateurDto, req: {
         user: AuthUser;
     }): Promise<{
+        id: number;
         nom: string;
         prenom: string;
         email: string;
-        id: number;
         creeLe: Date;
         misAJourLe: Date;
         role: "admin" | "editeur" | "lecteur";
@@ -73,10 +73,10 @@ export declare class UsersController {
     uploadAvatar(id: number, file: Express.Multer.File, req: {
         user: AuthUser;
     }): Promise<{
+        id: number;
         nom: string;
         prenom: string;
         email: string;
-        id: number;
         creeLe: Date;
         misAJourLe: Date;
         role: "admin" | "editeur" | "lecteur";
