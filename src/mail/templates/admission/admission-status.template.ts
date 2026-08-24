@@ -61,7 +61,7 @@ export function renderAdmissionStatusTemplate(data: AdmissionNotificationData): 
 
   const infoItems = [
     infoRow('Référence du dossier', data.reference),
-    infoRow('Candidat(e)', ` ${data.prenom} ${data.nom}`),
+    infoRow('Candidat(e)', ` ${data.nom} ${data.prenom}`),
     infoRow('Formation concernée', data.formation),
     infoRow('Statut', meta.badge),
     infoRow('Date de décision', data.date),

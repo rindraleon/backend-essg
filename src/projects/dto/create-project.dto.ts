@@ -48,7 +48,6 @@ export class CreateProjetDto {
   @MaxLength(10000)
   description!: string;
 
-  /** Identifiants des partenaires sélectionnés dans le Select du back-office. */
   @IsArray()
   @IsOptional()
   @Type(() => Number)

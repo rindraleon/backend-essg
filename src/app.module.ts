@@ -10,6 +10,9 @@ import { StorageModule } from './common/storage/storage.module';
 import { EmailDomainModule } from './common/validators/email-domain.module';
 import { validate } from './config/env.validation';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { CacheModule } from './infrastructure/cache/cache.module';
+import { EmailNotificationModule } from './infrastructure/email/email-notification.module';
+import { RateLimitModule } from './infrastructure/rate-limit/rate-limit.module';
 import { DatabaseModule } from './database/database.module';
 import { FormationsModule } from './formations/formations.module';
 import { HealthModule } from './health/health.module';
@@ -33,6 +36,9 @@ import { UsersModule } from './users/users.module';
       validate,
     }),
     DatabaseModule,
+    CacheModule,
+    EmailNotificationModule,
+    RateLimitModule,
     StorageModule,
     EmailDomainModule,
     UsersModule,

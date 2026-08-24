@@ -11,7 +11,7 @@ export interface MessageReplyTemplateData {
 
 export function renderMessageReplyTemplate(data: MessageReplyTemplateData): string {
   const content = `
-    <p>Bonjour <strong>${escapeHtml(data.prenom)} ${escapeHtml(data.nom)}</strong>,</p>
+    <p>Bonjour <strong>${escapeHtml(data.nom)} ${escapeHtml(data.prenom)}</strong>,</p>
     <p>Nous revenons vers vous concernant votre message : <strong>${escapeHtml(data.sujet)}</strong>.</p>
     <div class="info-box">
       <div class="message-block">${escapeHtml(data.message)}</div>

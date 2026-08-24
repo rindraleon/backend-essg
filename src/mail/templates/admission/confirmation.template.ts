@@ -5,6 +5,10 @@ export interface AdmissionConfirmationData {
   prenom: string;
   formation: string;
   reference: string;
+  niveau?: string;
+  mention?: string;
+  parcours?: string;
+  bacCategorie?: string;
   date: string;
   siteUrl?: string;
 }
@@ -12,8 +16,11 @@ export interface AdmissionConfirmationData {
 export function renderAdmissionConfirmationTemplate(data: AdmissionConfirmationData): string {
   const infoItems = [
     ['Référence du dossier', data.reference],
-    ['Candidat(e)', ` ${data.nom} ${data.prenom}`],
-    ['Formation souhaitée', data.formation],
+    ['Candidat(e)', `${data.nom} ${data.prenom}`],
+    ['Niveau', data.niveau ?? '—'],
+    ['Mention', data.mention ?? '—'],
+    ['Parcours', data.formation || data.parcours || '—'],
+    ['Catégorie du Bac', data.bacCategorie?.toLocaleUpperCase('fr-FR') ?? '—'],
     ['Date de dépôt', data.date],
     ['Statut', 'En attente d’étude'],
   ]

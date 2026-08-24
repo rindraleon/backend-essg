@@ -129,6 +129,15 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   CORS_ORIGINS: string = '';
+
+  @IsString()
+  @IsOptional()
+  RATE_LIMIT_ENABLED: string = 'true';
+
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  HEALTH_MEMORY_LIMIT_MB: number = 512;
 }
 
 export function validate(config: Record<string, unknown>): EnvironmentVariables {

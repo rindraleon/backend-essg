@@ -8,14 +8,7 @@ export interface BaseTemplateData {
 }
 
 export function renderBaseTemplate(data: BaseTemplateData): string {
-  const {
-    title,
-    subtitle = '',
-    content,
-    preheader = '',
-    siteUrl = 'https://essg.mg',
-    logoUrl = '',
-  } = data;
+  const { title, subtitle = '', content, preheader = '', logoUrl = '' } = data;
 
   const brandHtml = logoUrl
     ? `<img src="${logoUrl}" alt="ESSG" class="logo" />`

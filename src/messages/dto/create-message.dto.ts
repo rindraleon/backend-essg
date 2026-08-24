@@ -5,12 +5,12 @@ export class CreateMessageDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  prenom!: string;
+  nom!: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  nom!: string;
+  prenom!: string;
 
   @IsValidEmail()
   email!: string;

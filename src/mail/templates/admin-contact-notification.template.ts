@@ -42,9 +42,9 @@ export function renderAdminContactNotificationTemplate(data: AdminContactNotific
 
   const templateData: BaseTemplateData = {
     title: 'Nouveau message de contact',
-    subtitle: `${data.prenom} ${data.nom} vous a écrit`,
+    subtitle: `${data.nom} ${data.prenom} vous a écrit`,
     content,
-    preheader: `Nouveau message de ${data.prenom} ${data.nom}`,
+    preheader: `Nouveau message de ${data.nom} ${data.prenom}`,
     siteUrl: data.backOfficeUrl,
   };
 

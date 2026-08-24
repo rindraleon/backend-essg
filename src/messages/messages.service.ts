@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { PaginatedData } from '../common/interfaces/api-response.interface';
 import { buildPaginatedData } from '../common/utils/pagination.util';
 import { ILIKE_ESCAPE, buildIlikeTerm, sanitizeSortField } from '../common/utils/search.util';
-import { MailService } from '../mail/mail.service';
+import { EmailNotificationService } from '../infrastructure/email/email-notification.service';
 import type { AuthUser } from '../common/decorators/current-user.decorator';
 import { CreateMessageDto, UpdateMessageDto } from './dto/create-message.dto';
 import { QueryMessageDto } from './dto/query-message.dto';
@@ -31,7 +31,7 @@ export class MessagesService {
   constructor(
     @InjectRepository(Message)
     private readonly repo: Repository<Message>,
-    private readonly mailService: MailService,
+    private readonly emailNotifications: EmailNotificationService,
     private readonly emailDomainService: EmailDomainService,
   ) {}
 
@@ -120,40 +120,28 @@ export class MessagesService {
     });
     const saved = await this.repo.save(item);
 
-    try {
-      await this.mailService.sendMessageReceiptEmail(saved.email, {
-        nom: saved.nom,
-        prenom: saved.prenom,
-        sujet: saved.sujet,
-      });
-      this.logger.log(`Accusé de réception envoyé à ${saved.email}`);
-    } catch (error) {
-      this.logger.error(`Échec de l'envoi de l'accusé de réception à ${saved.email}`, error);
-    }
+    await this.emailNotifications.sendContactReceipt({
+      email: saved.email,
+      nom: saved.nom,
+      prenom: saved.prenom,
+      sujet: saved.sujet,
+    });
 
-    try {
-      await this.mailService.sendAdminsContactNotification({
-        nom: saved.nom,
-        prenom: saved.prenom,
-        email: saved.email,
-        telephone: saved.telephone ?? undefined,
-        sujet: saved.sujet,
-        message: saved.message,
-        date: new Date().toLocaleDateString('fr-FR', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-      });
-      this.logger.log(`Notification administrateur envoyée pour le message ${saved.id}`);
-    } catch (error) {
-      this.logger.error(
-        `Échec de la notification administrateur pour le message ${saved.id}`,
-        error,
-      );
-    }
+    await this.emailNotifications.sendContactAdminNotification({
+      nom: saved.nom,
+      prenom: saved.prenom,
+      email: saved.email,
+      telephone: saved.telephone ?? undefined,
+      sujet: saved.sujet,
+      message: saved.message,
+      date: new Date().toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    });
 
     return saved;
   }
@@ -174,7 +162,7 @@ export class MessagesService {
     const item = await this.findOne(id);
     const sujet = dto.sujet?.trim() || `Re : ${item.sujet}`;
 
-    await this.mailService.sendMessageReplyEmail({
+    await this.emailNotifications.sendContactReply({
       to: item.email,
       prenom: item.prenom,
       nom: item.nom,

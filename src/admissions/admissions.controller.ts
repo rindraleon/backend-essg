@@ -28,6 +28,14 @@ import { AdmissionsService, type AdmissionUploadedFile } from './admissions.serv
 import { CreateAdmissionDto } from './dto/create-admission.dto';
 import { QueryAdmissionDto } from './dto/query-admission.dto';
 import { UpdateAdmissionStatusDto } from './dto/update-admission-status.dto';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { RateLimit, RATE_LIMITS } from '../infrastructure/rate-limit/rate-limit.decorator';
+import { RateLimitGuard } from '../infrastructure/rate-limit/rate-limit.guard';
+import {
+  ApiPaginatedResponse,
+  ApiStandardErrors,
+  ApiStandardResponse,
+} from '../common/swagger/api-response.decorator';
 
 interface AdmissionFiles {
   cv?: Express.Multer.File[];
@@ -36,6 +44,11 @@ interface AdmissionFiles {
   attestationBac?: Express.Multer.File[];
   releveL3?: Express.Multer.File[];
   bordereau?: Express.Multer.File[];
+  demandeInscription?: Express.Multer.File[];
+  photoIdentite?: Express.Multer.File[];
+  acteEtatCivil?: Express.Multer.File[];
+  diplomeBac?: Express.Multer.File[];
+  attestationEtablissement?: Express.Multer.File[];
 }
 
 const FILE_FIELDS: Array<{ name: keyof AdmissionFiles; maxCount: number }> = [
@@ -45,6 +58,11 @@ const FILE_FIELDS: Array<{ name: keyof AdmissionFiles; maxCount: number }> = [
   { name: 'attestationBac', maxCount: 1 },
   { name: 'releveL3', maxCount: 1 },
   { name: 'bordereau', maxCount: 1 },
+  { name: 'demandeInscription', maxCount: 1 },
+  { name: 'photoIdentite', maxCount: 1 },
+  { name: 'acteEtatCivil', maxCount: 1 },
+  { name: 'diplomeBac', maxCount: 1 },
+  { name: 'attestationEtablissement', maxCount: 1 },
 ];
 
 const FILE_PREFIXES: Record<keyof AdmissionFiles, string> = {
@@ -54,9 +72,24 @@ const FILE_PREFIXES: Record<keyof AdmissionFiles, string> = {
   attestationBac: 'admissions/attestations-bac',
   releveL3: 'admissions/releves-l3',
   bordereau: 'admissions/bordereaux',
+  demandeInscription: 'admissions/demandes-inscription',
+  photoIdentite: 'admissions/photos-identite',
+  acteEtatCivil: 'admissions/actes-etat-civil',
+  diplomeBac: 'admissions/diplomes-bac',
+  attestationEtablissement: 'admissions/attestations-etablissement',
 };
 
-const PROOF_FIELDS = new Set(['releveBac', 'attestationBac', 'releveL3', 'bordereau']);
+const PROOF_FIELDS = new Set([
+  'releveBac',
+  'attestationBac',
+  'releveL3',
+  'bordereau',
+  'demandeInscription',
+  'photoIdentite',
+  'acteEtatCivil',
+  'diplomeBac',
+  'attestationEtablissement',
+]);
 
 const FIELD_TO_FILE_TYPE: Record<keyof AdmissionFiles, AdmissionFileType> = {
   cv: AdmissionFileType.CV,
@@ -65,6 +98,11 @@ const FIELD_TO_FILE_TYPE: Record<keyof AdmissionFiles, AdmissionFileType> = {
   attestationBac: AdmissionFileType.ATTESTATION_BAC,
   releveL3: AdmissionFileType.RELEVE_L3,
   bordereau: AdmissionFileType.BORDEREAU,
+  demandeInscription: AdmissionFileType.DEMANDE_INSCRIPTION,
+  photoIdentite: AdmissionFileType.PHOTO_IDENTITE,
+  acteEtatCivil: AdmissionFileType.ACTE_ETAT_CIVIL,
+  diplomeBac: AdmissionFileType.DIPLOME_BAC,
+  attestationEtablissement: AdmissionFileType.ATTESTATION_ETABLISSEMENT,
 };
 
 const admissionUploadOptions = {
@@ -88,6 +126,7 @@ function sanitizeFilename(filename: string): string {
     .slice(0, 120);
 }
 
+@ApiTags('Admissions')
 @Controller('admissions')
 export class AdmissionsController {
   constructor(
@@ -96,21 +135,19 @@ export class AdmissionsController {
   ) {}
 
   @Post()
+  @UseGuards(RateLimitGuard)
+  @RateLimit(RATE_LIMITS.admission)
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Déposer une candidature (public)',
+    description:
+      'Formulaire public d’admission en `multipart/form-data`. Les pièces jointes (`cv`, `lettreMotivation`, `releveBac`, `attestationBac`, `releveL3`, `bordereau`) sont stockées dans l’espace **privé** du bucket et ne sont téléchargeables qu’avec un jeton valide.\n\nLes emails (accusé de réception candidat et notification administrateurs) sont envoyés directement par le service SMTP.\n\n⚠️ Limitation de débit : 3 dépôts par heure et par IP.',
+  })
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiStandardResponse(undefined, { status: 201, description: 'Candidature enregistrée' })
+  @ApiStandardErrors({ auth: false, conflict: true, payload: true })
   @ApiMessage('Candidature enregistrée avec succès')
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'cv', maxCount: 1 },
-        { name: 'lettreMotivation', maxCount: 1 },
-        { name: 'releveBac', maxCount: 1 },
-        { name: 'attestationBac', maxCount: 1 },
-        { name: 'releveL3', maxCount: 1 },
-        { name: 'bordereau', maxCount: 1 },
-      ],
-      admissionUploadOptions,
-    ),
-  )
+  @UseInterceptors(FileFieldsInterceptor(FILE_FIELDS, admissionUploadOptions))
   async create(
     @Body() createAdmissionDto: CreateAdmissionDto,
     @UploadedFiles() files?: AdmissionFiles,
@@ -137,6 +174,12 @@ export class AdmissionsController {
   }
 
   @Get('check-duplicate')
+  @ApiOperation({
+    summary: 'Vérifier un doublon de candidature',
+    description: 'Contrôle si une candidature existe déjà pour cet email ou ce téléphone.',
+  })
+  @ApiStandardResponse(undefined, { description: 'Opération effectuée avec succès' })
+  @ApiStandardErrors({ auth: false })
   @ApiMessage('Vérification des doublons effectuée')
   checkDuplicate(
     @Query('numeroBaccalaureat') numeroBaccalaureat?: string,
@@ -147,6 +190,13 @@ export class AdmissionsController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: 'Lister les candidatures',
+    description: 'Liste paginée et filtrable des candidatures reçues.',
+  })
+  @ApiPaginatedResponse(undefined, 'Liste paginée signée ITDCMADA')
+  @ApiStandardErrors({ auth: true })
   @ApiMessage('Candidatures récupérées')
   findAll(@Query() query: QueryAdmissionDto) {
     return this.admissionsService.findAll(query);
@@ -154,6 +204,13 @@ export class AdmissionsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('search')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: 'Rechercher une candidature',
+    description: "Recherche sur le nom, l'email et le téléphone.",
+  })
+  @ApiPaginatedResponse(undefined, 'Liste paginée signée ITDCMADA')
+  @ApiStandardErrors({ auth: true })
   @ApiMessage('Recherche effectuée')
   search(@Query() query: QueryAdmissionDto) {
     return this.admissionsService.findAll(query);
@@ -161,6 +218,14 @@ export class AdmissionsController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/documents/:kind')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: 'Télécharger un document de candidature',
+    description:
+      'Renvoie le binaire du document (`cv`, `lettreMotivation`, …). Ajouter `?download=1` pour forcer le téléchargement. Route hors enveloppe JSON : la signature reste dans l’en-tête `X-Api-Signature`.',
+  })
+  @ApiParam({ name: 'id', example: 12 })
+  @ApiParam({ name: 'kind', example: 'cv', description: 'Type de document demandé' })
   @SkipTransform()
   async getDocument(
     @Param('id', ParseIntPipe) id: number,
@@ -190,6 +255,13 @@ export class AdmissionsController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/files')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: "Lister les fichiers d'une candidature",
+    description: 'Métadonnées des pièces jointes (nom, type, taille).',
+  })
+  @ApiStandardResponse(undefined, { description: 'Opération effectuée avec succès' })
+  @ApiStandardErrors({ auth: true, notFound: true })
   @ApiMessage('Fichiers de la candidature récupérés')
   getFiles(@Param('id', ParseIntPipe) id: number) {
     return this.admissionsService.getFiles(id);
@@ -197,6 +269,14 @@ export class AdmissionsController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/files/:fileId')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: 'Télécharger une pièce jointe',
+    description:
+      'Renvoie le binaire de la pièce jointe identifiée par `fileId`. Route hors enveloppe JSON (signature dans l’en-tête `X-Api-Signature`).',
+  })
+  @ApiParam({ name: 'id', example: 12 })
+  @ApiParam({ name: 'fileId', example: 3 })
   @SkipTransform()
   async getFile(
     @Param('id', ParseIntPipe) id: number,
@@ -226,6 +306,13 @@ export class AdmissionsController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id/files/:fileId')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: 'Supprimer un fichier de candidature',
+    description: 'Supprime la pièce jointe du stockage privé et de la base.',
+  })
+  @ApiStandardResponse(undefined, { description: 'Opération effectuée avec succès' })
+  @ApiStandardErrors({ auth: true, notFound: true })
   @ApiMessage('Fichier supprimé')
   removeFile(@Param('id', ParseIntPipe) id: number, @Param('fileId', ParseIntPipe) fileId: number) {
     return this.admissionsService.removeFile(id, fileId);
@@ -233,6 +320,13 @@ export class AdmissionsController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: 'Consulter une candidature',
+    description: 'Dossier complet du candidat.',
+  })
+  @ApiStandardResponse(undefined, { description: 'Opération effectuée avec succès' })
+  @ApiStandardErrors({ auth: true, notFound: true })
   @ApiMessage('Candidature récupérée')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.admissionsService.findOne(id);
@@ -240,6 +334,14 @@ export class AdmissionsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id/status')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: "Mettre à jour le statut d'une candidature",
+    description:
+      'Accepte, refuse ou remet en attente une candidature (notification email éventuelle).',
+  })
+  @ApiStandardResponse(undefined, { description: 'Opération effectuée avec succès' })
+  @ApiStandardErrors({ auth: true, notFound: true, conflict: true })
   @ApiMessage('Statut de la candidature mis à jour')
   updateStatus(
     @Param('id', ParseIntPipe) id: number,
@@ -250,6 +352,13 @@ export class AdmissionsController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: 'Supprimer une candidature',
+    description: 'Suppression définitive du dossier et de ses pièces jointes.',
+  })
+  @ApiStandardResponse(undefined, { description: 'Opération effectuée avec succès' })
+  @ApiStandardErrors({ auth: true, notFound: true })
   @ApiMessage('Candidature supprimée')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.admissionsService.remove(id);

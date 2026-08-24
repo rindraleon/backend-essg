@@ -29,6 +29,15 @@ export class Admission {
   @Column()
   dateNaissance: string;
 
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  lieuNaissance: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  nationalite: string | null;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  sexe: string | null;
+
   @Column()
   niveau: string;
 
@@ -41,9 +50,36 @@ export class Admission {
   @Column({ type: 'text', nullable: true })
   adresse: string | null;
 
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  bacType: string | null;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  bacSerie: string | null;
+
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  bacCategorie: string | null;
+
   @Index({ unique: true })
   @Column({ type: 'varchar', length: 100, nullable: true })
   numeroBaccalaureat: string | null;
+
+  @Column({ type: 'varchar', length: 4, nullable: true })
+  bacAnneeObtention: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  bacCentreExamen: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  mention: string | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  parcours: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  ancienEtablissement: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  numeroMatricule: string | null;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   licenceEtablissement: string | null;

@@ -20,4 +20,8 @@ export class QueryAdmissionDto extends PaginationQueryDto {
   @IsOptional()
   @IsDateString()
   dateDebut?: string;
+
+  @IsOptional()
+  @IsDateString()
+  dateFin?: string;
 }

@@ -1,16 +1,18 @@
 import {
-  IsString,
-  IsOptional,
-  IsEnum,
   IsDateString,
-  MaxLength,
+  IsEnum,
+  IsIn,
   IsNotEmpty,
+  IsOptional,
+  IsString,
   Matches,
+  MaxLength,
 } from 'class-validator';
 import { IsValidEmail, IsValidPhoneOptional } from '../../common/validators/contact.validators';
+import { ADMISSION_LEVELS, BAC_CATEGORIES, BAC_TYPES } from '../admission-rules.constant';
 import { AdmissionStatus } from '../entities/admission.entity';
 
-export const ADMISSION_NIVEAUX = ['licence', 'master', 'doctorat'] as const;
+export const ADMISSION_NIVEAUX = ADMISSION_LEVELS;
 export type AdmissionNiveau = (typeof ADMISSION_NIVEAUX)[number];
 
 export class CreateAdmissionDto {
@@ -35,7 +37,25 @@ export class CreateAdmissionDto {
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(50)
+  @MaxLength(150)
+  lieuNaissance: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  nationalite: string;
+
+  @IsString()
+  @IsIn(['feminin', 'masculin', 'autre'])
+  sexe: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  adresse: string;
+
+  @IsString()
+  @IsIn(ADMISSION_LEVELS)
   niveau: string;
 
   @IsString()
@@ -48,18 +68,54 @@ export class CreateAdmissionDto {
   @MaxLength(150)
   diplomePrecedent: string;
 
-  @IsOptional()
   @IsString()
-  @MaxLength(500)
-  adresse?: string;
+  @IsIn(BAC_TYPES)
+  bacType: string;
 
-  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  bacSerie: string;
+
+  @IsString()
+  @IsIn(BAC_CATEGORIES)
+  bacCategorie: string;
+
   @IsString()
   @Matches(/^[A-Za-z0-9\-_/.\s]+$/, {
     message: "Le numéro d'inscription au baccalauréat contient des caractères invalides",
   })
   @MaxLength(100)
-  numeroBaccalaureat?: string;
+  numeroBaccalaureat: string;
+
+  @IsString()
+  @Matches(/^\d{4}$/, { message: "L'année d'obtention du baccalauréat doit être au format AAAA" })
+  bacAnneeObtention: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  bacCentreExamen: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  mention: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(150)
+  parcours: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  ancienEtablissement?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  numeroMatricule?: string;
 
   @IsOptional()
   @IsString()
@@ -73,9 +129,7 @@ export class CreateAdmissionDto {
 
   @IsOptional()
   @IsString()
-  @Matches(/^\d{4}$/, {
-    message: "L'année d'obtention de la Licence doit être au format AAAA",
-  })
+  @Matches(/^\d{4}$/, { message: "L'année d'obtention de la Licence doit être au format AAAA" })
   licenceAnneeObtention?: string;
 
   @IsOptional()
