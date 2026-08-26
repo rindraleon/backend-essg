@@ -16,6 +16,7 @@ import { detectFileType, withDetectedExtension } from '../common/utils/file-type
 import { EmailDomainService } from '../common/validators/email-domain.service';
 import { EmailNotificationService } from '../infrastructure/email/email-notification.service';
 import { SettingsService } from '../settings/settings.service';
+import { normalizeEmail, normalizePhoneNumber } from '../common/utils/contact.util';
 import { capitalize, capitalizeWords, toUpperCase } from '../common/utils/text.util';
 import { isAdmissionProgramEligible, resolveBacCategory } from './admission-rules.constant';
 import { CreateAdmissionDto } from './dto/create-admission.dto';
@@ -23,8 +24,6 @@ import { QueryAdmissionDto } from './dto/query-admission.dto';
 import { UpdateAdmissionStatusDto } from './dto/update-admission-status.dto';
 import { Admission, AdmissionStatus } from './entities/admission.entity';
 import { AdmissionFile, AdmissionFileType } from './entities/admission-file.entity';
-
-export type AdmissionDocumentKind = 'cv' | 'lettre';
 
 export interface AdmissionDocumentFile {
   buffer: Buffer;
@@ -65,6 +64,10 @@ export const ADMISSION_FILE_LABELS: Record<AdmissionFileType, string> = {
 
 export const ADMISSIONS_CLOSED_MESSAGE =
   'Les inscriptions sont actuellement fermées. Merci de consulter régulièrement notre site pour connaître la prochaine période d’admission.';
+
+export function getCurrentAdmissionYear(): number {
+  return new Date().getFullYear();
+}
 
 const ADMISSION_SORT_FIELDS = [
   'id',
@@ -118,22 +121,8 @@ export class AdmissionsService {
     return trimmed || null;
   }
 
-  private async assertNoDuplicate(
-    numeroBaccalaureat?: string,
-    numeroBordereau?: string,
-    excludeId?: number,
-  ): Promise<void> {
-    const bac = this.normalizeOptional(numeroBaccalaureat);
+  private async assertNoDuplicate(numeroBordereau?: string, excludeId?: number): Promise<void> {
     const bordereau = this.normalizeOptional(numeroBordereau);
-
-    if (bac) {
-      const found = await this.admissionsRepository.findOne({
-        where: { numeroBaccalaureat: bac },
-      });
-      if (found && found.id !== excludeId) {
-        throw new ConflictException('Ce numéro d’inscription au baccalauréat est déjà utilisé.');
-      }
-    }
 
     if (bordereau) {
       const found = await this.admissionsRepository.findOne({
@@ -145,22 +134,22 @@ export class AdmissionsService {
     }
   }
 
-  async checkDuplicate(dto: { numeroBaccalaureat?: string; numeroBordereau?: string }): Promise<{
-    numeroBaccalaureatDisponible?: boolean;
+  async checkDuplicate(dto: {
+    numeroBordereau?: string;
+    email?: string;
+    telephone?: string;
+  }): Promise<{
     numeroBordereauDisponible?: boolean;
+    emailDisponible?: boolean;
+    telephoneDisponible?: boolean;
+    annee?: number;
   }> {
     const result: {
-      numeroBaccalaureatDisponible?: boolean;
       numeroBordereauDisponible?: boolean;
+      emailDisponible?: boolean;
+      telephoneDisponible?: boolean;
+      annee?: number;
     } = {};
-
-    const bac = this.normalizeOptional(dto.numeroBaccalaureat);
-    if (bac) {
-      const found = await this.admissionsRepository.findOne({
-        where: { numeroBaccalaureat: bac },
-      });
-      result.numeroBaccalaureatDisponible = !found;
-    }
 
     const bordereau = this.normalizeOptional(dto.numeroBordereau);
     if (bordereau) {
@@ -170,7 +159,86 @@ export class AdmissionsService {
       result.numeroBordereauDisponible = !found;
     }
 
+    const email = normalizeEmail(dto.email);
+    const telephone = normalizePhoneNumber(dto.telephone);
+    if (email || telephone) {
+      const annee = getCurrentAdmissionYear();
+      result.annee = annee;
+      if (email) {
+        const found = await this.admissionsRepository.findOne({
+          where: { annee, email },
+        });
+        result.emailDisponible = !found;
+      }
+      if (telephone) {
+        const found = await this.admissionsRepository.findOne({
+          where: { annee, telephone },
+        });
+        result.telephoneDisponible = !found;
+      }
+    }
+
     return result;
+  }
+
+  /**
+   * Bloque une nouvelle candidature si l'email OU le téléphone a déjà été
+   * utilisé pour une demande d'admission au cours de la même année.
+   * Les deux vérifications sont indépendantes.
+   */
+  private async assertNoAnnualDuplicate(
+    email: string,
+    telephone?: string,
+    annee = getCurrentAdmissionYear(),
+    excludeId?: number,
+  ): Promise<void> {
+    const normalizedEmail = normalizeEmail(email);
+    if (normalizedEmail) {
+      const found = await this.admissionsRepository.findOne({
+        where: { annee, email: normalizedEmail },
+        select: ['id'],
+      });
+      if (found && found.id !== excludeId) {
+        throw new ConflictException(
+          `Une demande d'admission avec l'adresse email « ${normalizedEmail} » a déjà été déposée pour l'année ${annee}. Une seule candidature est autorisée par an.`,
+        );
+      }
+    }
+
+    const normalizedTelephone = normalizePhoneNumber(telephone);
+    if (normalizedTelephone) {
+      const found = await this.admissionsRepository.findOne({
+        where: { annee, telephone: normalizedTelephone },
+        select: ['id'],
+      });
+      if (found && found.id !== excludeId) {
+        throw new ConflictException(
+          `Une demande d'admission avec le numéro de téléphone « ${normalizedTelephone} » a déjà été déposée pour l'année ${annee}. Une seule candidature est autorisée par an.`,
+        );
+      }
+    }
+  }
+
+  /** Convertit une violation de contrainte d'unicité annuelle en erreur explicite. */
+  private mapAnnualUniqueViolation(error: unknown, annee: number): void {
+    const pgError = error as {
+      code?: string;
+      constraint?: string;
+      driverError?: { code?: string };
+    };
+    const code = pgError?.code ?? pgError?.driverError?.code;
+    if (code !== '23505') return;
+    const constraint = pgError?.constraint ?? '';
+    if (constraint === 'UQ_admissions_annee_email') {
+      throw new ConflictException(
+        `Une demande d'admission avec cette adresse email a déjà été déposée pour l'année ${annee}. Une seule candidature est autorisée par an.`,
+      );
+    }
+    if (constraint === 'UQ_admissions_annee_telephone') {
+      throw new ConflictException(
+        `Une demande d'admission avec ce numéro de téléphone a déjà été déposée pour l'année ${annee}. Une seule candidature est autorisée par an.`,
+      );
+    }
   }
 
   private validateFile(file: AdmissionUploadedFile | undefined, type: AdmissionFileType): void {
@@ -268,9 +336,14 @@ export class AdmissionsService {
     await this.assertAdmissionsOpen();
     await this.assertEmailDomainExists(createAdmissionDto.email);
     this.validateRequiredFields(createAdmissionDto.niveau, createAdmissionDto);
-    await this.assertNoDuplicate(
-      createAdmissionDto.numeroBaccalaureat,
-      createAdmissionDto.numeroBordereau,
+    await this.assertNoDuplicate(createAdmissionDto.numeroBordereau);
+
+    // Une seule candidature par candidat et par année (email et téléphone vérifiés indépendamment).
+    const annee = getCurrentAdmissionYear();
+    await this.assertNoAnnualDuplicate(
+      createAdmissionDto.email,
+      createAdmissionDto.telephone,
+      annee,
     );
 
     Object.entries(uploadedFiles).forEach(([key, file]) => {
@@ -282,6 +355,9 @@ export class AdmissionsService {
       ...createAdmissionDto,
       nom: toUpperCase(createAdmissionDto.nom),
       prenom: capitalizeWords(createAdmissionDto.prenom),
+      email: normalizeEmail(createAdmissionDto.email) ?? createAdmissionDto.email.trim(),
+      telephone: normalizePhoneNumber(createAdmissionDto.telephone),
+      annee,
       formation: capitalize(createAdmissionDto.formation),
       diplomePrecedent: capitalize(createAdmissionDto.diplomePrecedent),
       niveau: capitalize(createAdmissionDto.niveau),
@@ -305,7 +381,15 @@ export class AdmissionsService {
       numeroBordereau: this.normalizeOptional(createAdmissionDto.numeroBordereau),
       statut: AdmissionStatus.EN_ATTENTE,
     });
-    const saved = await this.admissionsRepository.save(admission);
+    let saved: Admission;
+    try {
+      saved = await this.admissionsRepository.save(admission);
+    } catch (error) {
+      // Filet de sécurité contre les soumissions simultanées (la contrainte
+      // d'unicité en base garantit l'intégrité même en cas de course).
+      this.mapAnnualUniqueViolation(error, annee);
+      throw error;
+    }
 
     const fileRows = Object.entries(uploadedFiles).map(([key, file]) => {
       return this.filesRepository.create({
@@ -360,6 +444,7 @@ export class AdmissionsService {
       statut,
       niveau,
       formation,
+      annee,
       dateDebut,
       dateFin,
     } = query;
@@ -392,6 +477,10 @@ export class AdmissionsService {
       qb.andWhere(`admission.formation ILIKE :formation ${ILIKE_ESCAPE}`, {
         formation: buildIlikeTerm(formation),
       });
+    }
+
+    if (annee) {
+      qb.andWhere('admission.annee = :annee', { annee });
     }
 
     if (dateDebut) {

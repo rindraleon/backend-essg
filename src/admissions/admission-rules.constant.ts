@@ -1,5 +1,5 @@
 export const ADMISSION_LEVELS = ['licence', 'master'] as const;
-export const BAC_TYPES = ['general', 'technologique', 'professionnel-technique'] as const;
+export const BAC_TYPES = ['general', 'technologique'] as const;
 export const BAC_CATEGORIES = ['scientifique', 'litteraire', 'technologique', 'ose'] as const;
 
 export type AdmissionLevel = (typeof ADMISSION_LEVELS)[number];
@@ -20,12 +20,6 @@ const BAC_SERIES: Record<BacType, Record<string, BacCategory>> = {
     tgc: 'technologique',
     tgi: 'technologique',
     tter: 'technologique',
-  },
-  'professionnel-technique': {
-    'genie-civil': 'technologique',
-    industriel: 'technologique',
-    tertiaire: 'technologique',
-    agricole: 'technologique',
   },
 };
 

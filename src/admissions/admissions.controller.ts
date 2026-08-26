@@ -38,8 +38,6 @@ import {
 } from '../common/swagger/api-response.decorator';
 
 interface AdmissionFiles {
-  cv?: Express.Multer.File[];
-  lettreMotivation?: Express.Multer.File[];
   releveBac?: Express.Multer.File[];
   attestationBac?: Express.Multer.File[];
   releveL3?: Express.Multer.File[];
@@ -52,8 +50,6 @@ interface AdmissionFiles {
 }
 
 const FILE_FIELDS: Array<{ name: keyof AdmissionFiles; maxCount: number }> = [
-  { name: 'cv', maxCount: 1 },
-  { name: 'lettreMotivation', maxCount: 1 },
   { name: 'releveBac', maxCount: 1 },
   { name: 'attestationBac', maxCount: 1 },
   { name: 'releveL3', maxCount: 1 },
@@ -66,8 +62,6 @@ const FILE_FIELDS: Array<{ name: keyof AdmissionFiles; maxCount: number }> = [
 ];
 
 const FILE_PREFIXES: Record<keyof AdmissionFiles, string> = {
-  cv: 'admissions/cv',
-  lettreMotivation: 'admissions/lettres',
   releveBac: 'admissions/releves-bac',
   attestationBac: 'admissions/attestations-bac',
   releveL3: 'admissions/releves-l3',
@@ -92,8 +86,6 @@ const PROOF_FIELDS = new Set([
 ]);
 
 const FIELD_TO_FILE_TYPE: Record<keyof AdmissionFiles, AdmissionFileType> = {
-  cv: AdmissionFileType.CV,
-  lettreMotivation: AdmissionFileType.LETTRE,
   releveBac: AdmissionFileType.RELEVE_BAC,
   attestationBac: AdmissionFileType.ATTESTATION_BAC,
   releveL3: AdmissionFileType.RELEVE_L3,
@@ -141,7 +133,7 @@ export class AdmissionsController {
   @ApiOperation({
     summary: 'Déposer une candidature (public)',
     description:
-      'Formulaire public d’admission en `multipart/form-data`. Les pièces jointes (`cv`, `lettreMotivation`, `releveBac`, `attestationBac`, `releveL3`, `bordereau`) sont stockées dans l’espace **privé** du bucket et ne sont téléchargeables qu’avec un jeton valide.\n\nLes emails (accusé de réception candidat et notification administrateurs) sont envoyés directement par le service SMTP.\n\n⚠️ Limitation de débit : 3 dépôts par heure et par IP.',
+      'Formulaire public d’admission en `multipart/form-data`. Les pièces jointes (`releveBac`, `attestationBac`, `releveL3`, `bordereau`, `demandeInscription`, `photoIdentite`, `acteEtatCivil`, `diplomeBac`, `attestationEtablissement`) sont stockées dans l’espace **privé** du bucket et ne sont téléchargeables qu’avec un jeton valide.\n\nLes emails (accusé de réception candidat et notification administrateurs) sont envoyés directement par le service SMTP.\n\n⚠️ Limitation de débit : 3 dépôts par heure et par IP.',
   })
   @ApiConsumes('multipart/form-data', 'application/json')
   @ApiStandardResponse(undefined, { status: 201, description: 'Candidature enregistrée' })
@@ -176,16 +168,22 @@ export class AdmissionsController {
   @Get('check-duplicate')
   @ApiOperation({
     summary: 'Vérifier un doublon de candidature',
-    description: 'Contrôle si une candidature existe déjà pour cet email ou ce téléphone.',
+    description:
+      'Contrôle si une candidature existe déjà pour ce numéro de bordereau, ou si l’email/le téléphone a déjà été utilisé pour l’année d’admission en cours (une seule candidature autorisée par an). Le numéro d’inscription au baccalauréat n’est plus un critère de détection des doublons.',
   })
   @ApiStandardResponse(undefined, { description: 'Opération effectuée avec succès' })
   @ApiStandardErrors({ auth: false })
   @ApiMessage('Vérification des doublons effectuée')
   checkDuplicate(
-    @Query('numeroBaccalaureat') numeroBaccalaureat?: string,
     @Query('numeroBordereau') numeroBordereau?: string,
+    @Query('email') email?: string,
+    @Query('telephone') telephone?: string,
   ) {
-    return this.admissionsService.checkDuplicate({ numeroBaccalaureat, numeroBordereau });
+    return this.admissionsService.checkDuplicate({
+      numeroBordereau,
+      email,
+      telephone,
+    });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -222,10 +220,10 @@ export class AdmissionsController {
   @ApiOperation({
     summary: 'Télécharger un document de candidature',
     description:
-      'Renvoie le binaire du document (`cv`, `lettreMotivation`, …). Ajouter `?download=1` pour forcer le téléchargement. Route hors enveloppe JSON : la signature reste dans l’en-tête `X-Api-Signature`.',
+      'Renvoie le binaire du document (`releveBac`, `bordereau`, `demandeInscription`, …). Ajouter `?download=1` pour forcer le téléchargement. Route hors enveloppe JSON : la signature reste dans l’en-tête `X-Api-Signature`.',
   })
   @ApiParam({ name: 'id', example: 12 })
-  @ApiParam({ name: 'kind', example: 'cv', description: 'Type de document demandé' })
+  @ApiParam({ name: 'kind', example: 'releveBac', description: 'Type de document demandé' })
   @SkipTransform()
   async getDocument(
     @Param('id', ParseIntPipe) id: number,

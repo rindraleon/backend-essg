@@ -9,75 +9,75 @@ import {
 @Entity('formations')
 export class Formation {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ unique: true })
-  slug: string;
+  slug!: string;
 
   @Column({ type: 'varchar', length: 150, nullable: true })
-  mention: string;
+  mention!: string;
 
   @Column({ type: 'simple-json', default: '[]' })
-  domaine: string[];
+  domaine!: string[];
 
   @Column()
-  titre: string;
+  titre!: string;
 
   @Column({ type: 'text', default: 'Licence' })
-  niveau: 'Licence' | 'Master' | 'Doctorat';
+  niveau!: 'Licence' | 'Master' | 'Doctorat';
 
   @Column()
-  duree: string;
+  duree!: string;
 
   @Column({ type: 'text' })
-  description: string;
+  description!: string;
 
   @Column({ type: 'simple-json', default: '[]' })
-  objectifs: string[];
+  objectifs!: string[];
 
   @Column({ type: 'simple-json', default: '[]' })
-  debouches: string[];
+  debouches!: string[];
 
   @Column({ type: 'text', nullable: true })
-  conditionsAcces: string;
+  conditionsAcces!: string;
 
   @Column({ type: 'simple-json', default: '[]' })
-  conditions: string[];
+  conditions!: string[];
 
   @Column({ type: 'simple-json', default: '[]' })
-  competences: string[];
+  competences!: string[];
 
   @Column({ type: 'simple-json', default: '[]' })
-  modules: any[];
+  modules!: any[];
 
   @Column({ type: 'int', default: 180 })
-  credits: number;
+  credits!: number;
 
   @Column({ nullable: true })
-  responsable: string;
+  responsable!: string;
 
   @Column({ type: 'int', nullable: true })
-  responsableId: number | null;
+  responsableId!: number | null;
 
   @Column({ nullable: true })
-  email: string;
+  email!: string;
 
   @Column({ type: 'simple-json', default: '[]' })
-  programme: string[];
+  programme!: string[];
 
   @Column({ default: '/images/hero-campus.jpg' })
-  image: string;
+  image!: string;
 
   @Column({ type: 'boolean', default: false })
-  enVedette: boolean;
+  enVedette!: boolean;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
-  creeLe: Date;
+  creeLe!: Date;
 
   @UpdateDateColumn({
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  misAJourLe: Date;
+  misAJourLe!: Date;
 }

@@ -12,7 +12,6 @@ import {
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { SWAGGER_DESCRIPTION, SWAGGER_TAGS } from './common/swagger/swagger.description';
 import { createValidationException } from './common/utils/validation-messages';
 
 async function bootstrap(): Promise<void> {
@@ -63,7 +62,6 @@ async function bootstrap(): Promise<void> {
 
   const swaggerBuilder = new DocumentBuilder()
     .setTitle(API_TITLE)
-    .setDescription(SWAGGER_DESCRIPTION)
     .setVersion(API_VERSION)
     .setContact(API_PROVIDER, 'https://itdcmada.mg', 'contact@itdcmada.mg')
     .setLicense('Licence propriétaire ITDCMADA', 'https://itdcmada.mg')
@@ -81,10 +79,6 @@ async function bootstrap(): Promise<void> {
       },
       'access-token',
     );
-
-  for (const tag of SWAGGER_TAGS) {
-    swaggerBuilder.addTag(tag.name, tag.description);
-  }
 
   const document = SwaggerModule.createDocument(app, swaggerBuilder.build(), {
     operationIdFactory: (controllerKey, methodKey) => `${controllerKey}_${methodKey}`,
@@ -129,7 +123,6 @@ async function bootstrap(): Promise<void> {
   logger.log(`Application démarrée sur http://localhost:${port}`);
   logger.log(`Documentation disponible sur http://localhost:${port}/docs`);
   logger.log(`État de santé disponible sur http://localhost:${port}/health`);
-  logger.log(`Réponses signées « ${API_SIGNATURE} » (en-tête X-Api-Signature)`);
 }
 
 void bootstrap();

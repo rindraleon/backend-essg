@@ -21,7 +21,8 @@
     "test:integration": "jest --testPathPatterns=integration",
     "typeorm": "typeorm-ts-node-commonjs -d src/database/data-source.ts",
     "migration:run": "npm run typeorm -- migration:run",
-    "migration:revert": "npm run typeorm -- migration:revert"
+    "migration:revert": "npm run typeorm -- migration:revert",
+    "migration:baseline": "node dist/database/baseline.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

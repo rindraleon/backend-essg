@@ -19,112 +19,112 @@ export class CreateAdmissionDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  nom: string;
+  nom!: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  prenom: string;
+  prenom!: string;
 
   @IsValidEmail()
-  email: string;
+  email!: string;
 
   @IsValidPhoneOptional()
   telephone?: string;
 
   @IsDateString()
-  dateNaissance: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(150)
-  lieuNaissance: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(100)
-  nationalite: string;
-
-  @IsString()
-  @IsIn(['feminin', 'masculin', 'autre'])
-  sexe: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(500)
-  adresse: string;
-
-  @IsString()
-  @IsIn(ADMISSION_LEVELS)
-  niveau: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(150)
-  formation: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(150)
-  diplomePrecedent: string;
-
-  @IsString()
-  @IsIn(BAC_TYPES)
-  bacType: string;
+  dateNaissance!: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
-  bacSerie: string;
+  lieuNaissance!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(15)
+  nationalite!: string;
+
+  @IsString()
+  @IsIn(['feminin', 'masculin', 'autre'])
+  sexe!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  adresse!: string;
+
+  @IsString()
+  @IsIn(ADMISSION_LEVELS)
+  niveau!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  formation!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  diplomePrecedent!: string;
+
+  @IsString()
+  @IsIn(BAC_TYPES)
+  bacType!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  bacSerie!: string;
 
   @IsString()
   @IsIn(BAC_CATEGORIES)
-  bacCategorie: string;
+  bacCategorie!: string;
 
   @IsString()
   @Matches(/^[A-Za-z0-9\-_/.\s]+$/, {
     message: "Le numéro d'inscription au baccalauréat contient des caractères invalides",
   })
   @MaxLength(100)
-  numeroBaccalaureat: string;
+  numeroBaccalaureat!: string;
 
   @IsString()
   @Matches(/^\d{4}$/, { message: "L'année d'obtention du baccalauréat doit être au format AAAA" })
-  bacAnneeObtention: string;
+  bacAnneeObtention!: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  bacCentreExamen: string;
+  bacCentreExamen!: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  mention: string;
+  mention!: string;
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(150)
-  parcours: string;
+  @MaxLength(50)
+  parcours!: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(255)
+  @MaxLength(55)
   ancienEtablissement?: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(100)
+  @MaxLength(10)
   numeroMatricule?: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(255)
+  @MaxLength(55)
   licenceEtablissement?: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(255)
+  @MaxLength(55)
   licenceMention?: string;
 
   @IsOptional()
@@ -137,7 +137,7 @@ export class CreateAdmissionDto {
   @Matches(/^[A-Za-z0-9\-_/.\s]+$/, {
     message: 'Le numéro de bordereau de versement contient des caractères invalides',
   })
-  @MaxLength(100)
+  @MaxLength(15)
   numeroBordereau?: string;
 
   @IsOptional()
@@ -156,6 +156,6 @@ export class CreateAdmissionDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(5000)
+  @MaxLength(500)
   commentaire?: string;
 }
