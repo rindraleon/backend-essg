@@ -9,7 +9,7 @@ import { CreateUtilisateurDto } from './dto/create-user.dto';
 import { UpdateUtilisateurDto } from './dto/update-user.dto';
 import { Utilisateur } from './entities/user.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
-import { capitalize, toUpperCase } from '../common/utils/text.util';
+import { capitalize, capitalizeWords, toUpperCase } from '../common/utils/text.util';
 import { assertEmailIsAvailable } from '../common/utils/duplicate.util';
 import { EmailDomainService } from '../common/validators/email-domain.service';
 
@@ -98,7 +98,7 @@ export class UsersService {
     const user = this.repo.create({
       ...dto,
       nom: toUpperCase(dto.nom),
-      prenom: capitalize(dto.prenom),
+      prenom: capitalizeWords(dto.prenom),
       motDePasse: hashedPassword,
     });
     const saved = await this.repo.save(user);
@@ -128,7 +128,7 @@ export class UsersService {
       data.nom = toUpperCase(dto.nom);
     }
     if (dto.prenom) {
-      data.prenom = capitalize(dto.prenom);
+      data.prenom = capitalizeWords(dto.prenom);
     }
     await this.repo.update(id, data);
     return this.findOne(user.id);

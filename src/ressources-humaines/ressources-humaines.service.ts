@@ -10,7 +10,7 @@ import {
 } from './dto/create-ressource-humaine.dto';
 import { QueryRessourceHumaineDto } from './dto/query-ressource-humaine.dto';
 import { ExperienceProfessionnelle, RessourceHumaine } from './entities/ressource-humaine.entity';
-import { capitalize, toUpperCase } from '../common/utils/text.util';
+import { capitalize, capitalizeWords, toUpperCase } from '../common/utils/text.util';
 import { buildUniqueSlug, shouldRegenerateSlug } from '../common/utils/slug.util';
 import { assertEmailIsAvailable, assertPhoneIsAvailable } from '../common/utils/duplicate.util';
 import { EmailDomainService } from '../common/validators/email-domain.service';
@@ -203,7 +203,7 @@ export class RessourcesHumainesService {
     const item = this.repo.create({
       ...dto,
       nom: toUpperCase(dto.nom),
-      prenom: capitalize(dto.prenom),
+      prenom: capitalizeWords(dto.prenom),
       poste: capitalize(dto.poste),
       description: dto.description ? capitalize(dto.description) : dto.description,
       slug: await buildUniqueSlug(this.repo, `${dto.nom} ${dto.prenom}`),
@@ -237,7 +237,7 @@ export class RessourcesHumainesService {
       updateData.nom = toUpperCase(dto.nom);
     }
     if (dto.prenom) {
-      updateData.prenom = capitalize(dto.prenom);
+      updateData.prenom = capitalizeWords(dto.prenom);
     }
     if (dto.poste) {
       updateData.poste = capitalize(dto.poste);
