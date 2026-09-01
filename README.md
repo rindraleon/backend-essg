@@ -26,7 +26,6 @@
 - [Structure du Projet](#-structure-du-projet)
 - [Commandes Disponibles](#-commandes-disponibles)
 - [Développement](#-développement)
-- [Tests](#-tests)
 - [Déploiement](#-déploiement)
 - [API Documentation](#-api-documentation)
 - [Architecture (PostgreSQL · MinIO · SMTP)](#-architecture-postgresql--minio--smtp)
@@ -44,8 +43,7 @@ Ce projet est un backend API REST développé avec NestJS et PostgreSQL. Il incl
 - ✅ Base de données PostgreSQL avec TypeORM
 - ✅ Validation des données avec class-validator
 - ✅ Configuration centralisée avec variables d'environnement
-- ✅ Sécurité (Helmet, CORS, Rate Limiting)
-- ✅ Tests unitaires et E2E avec Jest
+- ✅ Sécurité (CORS, Rate Limiting)
 - ✅ Hot reload en développement
 - ✅ ESLint + Prettier configurés
 - ✅ Docker ready pour déploiement
@@ -134,6 +132,11 @@ CREATE DATABASE mon_api_db;
 | `POSTGRES_DB` | Nom de la base de données | `mon_api_db` |
 | `JWT_SECRET` | Secret pour JWT | - |
 | `JWT_EXPIRES_IN` | Durée de validité du JWT | `1h` |
+| `REDIS_ENABLED` | Cache distribué Redis (`true`) ou mémoire locale (`false`) | `false` |
+| `REDIS_HOST` | Hôte Redis | `localhost` |
+| `REDIS_PORT` | Port Redis | `6379` |
+| `REDIS_PASSWORD` | Mot de passe Redis (optionnel) | - |
+| `REDIS_DB` | Index de base Redis | `0` |
 
 ### Configuration TypeORM
 
@@ -199,7 +202,10 @@ NestJS ──► PostgreSQL (données)
        └─► SMTP (emails)
 ```
 
-Le cache et les quotas sont gérés localement en mémoire. Les emails sont envoyés directement par le service SMTP.
+Le cache applicatif est servi par **Redis** en production (`REDIS_ENABLED=true`, partagé
+entre instances, survit aux redémarrages) et par un cache local en mémoire en développement
+(`REDIS_ENABLED=false`, zéro configuration). Les quotas sont gérés localement en mémoire.
+Les emails sont envoyés directement par le service SMTP.
 
 ### Démarrer les dépendances
 
@@ -212,6 +218,40 @@ docker compose up -d postgres minio
 ```
 
 📖 Détail complet : **[`documentation/architecture.md`](documentation/architecture.md)**
+
+---
+
+## 🔐 Sessions multi-appareils & présence temps réel
+
+Chaque connexion (`POST /auth/login`) crée une **session serveur unique** (table `user_sessions`) :
+appareil, navigateur, IP, `lastActivityAt`, `expiresAt`, `revokedAt`. Le jeton JWT embarque
+l'identifiant de session (`sid`) et un jeton de session aléatoire hashé en base (SHA-256).
+
+Le statut d'un utilisateur (🟢 en ligne / 🟡 inactif / ⚪ hors ligne) est **toujours calculé
+dynamiquement** depuis ses sessions — jamais stocké sur l'utilisateur.
+
+| Endpoint | Rôle |
+|---|---|
+| `POST /auth/login` | connexion → crée une session |
+| `GET /auth/session` · `GET /auth/sessions` | session courante / toutes mes sessions |
+| `POST /auth/logout` · `POST /auth/sessions/:id/revoke` | déconnexion d'une session précise |
+| `GET /admin/users/presence` | présence calculée de tous les utilisateurs (admin) |
+| `GET /admin/users/:userId/sessions` | sessions d'un utilisateur (admin) |
+| `POST /admin/users/:userId/sessions/:sessionId/revoke` · `.../revoke-all` | révocation admin |
+
+- **Expiration** : 15 min sans activité → `inactive` ; 30 min → `expired` (401, déconnexion
+  automatique). Chaque session a son propre compteur — déconnecter une session n'affecte
+  jamais les autres.
+- **Temps réel** : gateway Socket.IO (`presence:changed`, `session:changed`, `session:revoked`)
+  sur le même port HTTP.
+- **Audit** : événements `SESSION_CREATED / SESSION_ACTIVITY / SESSION_EXPIRED /
+  SESSION_REVOKED / SESSION_LOGOUT / ALL_SESSIONS_REVOKED` dans `activity_logs`.
+- **Configuration** : variables `SESSION_ACTIVE_WINDOW_MINUTES`, `SESSION_IDLE_EXPIRATION_MINUTES`,
+  `SESSION_MAX_TTL_DAYS`, `SESSION_ACTIVITY_WRITE_THROTTLE_SECONDS`, `SESSION_SWEEP_INTERVAL_MS`,
+  `SESSION_RETENTION_DAYS` (voir `.env.example`).
+- **Migration** : `npm run migration:run` (table `user_sessions` + colonne `activity_logs.sessionId`).
+
+📖 Détail complet : **`MISE_EN_OEUVRE_SESSIONS.md`** (à la racine du projet).
 
 ---
 
@@ -267,7 +307,7 @@ Endpoints : `POST /users/{id}/avatar`, `POST|PUT /partners`, `POST /upload/image
 
 | Route | Rôle | Codes |
 | --- | --- | --- |
-| `GET /health` | Rapport complet : PostgreSQL, MinIO, mémoire | `200` |
+| `GET /health` | Rapport complet : PostgreSQL, MinIO, Redis, mémoire | `200` |
 | `GET /health/live` | Vivacité du process (liveness) | `200` |
 | `GET /health/ready` | Disponibilité (readiness) | `200` / `503` |
 
@@ -305,10 +345,6 @@ mon-api/
 │   ├── app.controller.ts
 │   ├── app.service.ts
 │   └── main.ts                       # Point d'entrée
-├── 📂 test/
-│   ├── app.e2e-spec.ts
-│   ├── jest-e2e.json
-│   └── setup.ts
 ├── .env                              # Variables d'environnement
 ├── .env.example                      # Template de configuration
 ├── .gitignore
@@ -359,26 +395,7 @@ npm run format
 npm run lint
 
 # Corriger automatiquement les erreurs ESLint
-npm run lint:fix
-```
-
-### Tests
-
-```bash
-# Lancer les tests unitaires
-npm test
-
-# Tests en mode watch
-npm run test:watch
-
-# Tests avec couverture de code
-npm run test:cov
-
-# Tests E2E
-npm run test:e2e
-
-# Tests en mode debug
-npm run test:debug
+npm run lint
 ```
 
 ### Base de données
@@ -421,7 +438,6 @@ Cela génère automatiquement :
 - Module
 - DTOs (Create, Update)
 - Entity
-- Tests unitaires
 
 ### Exemple : Module Users
 
@@ -565,77 +581,6 @@ export class UsersService {
     await this.usersRepository.remove(user);
   }
 }
-```
-
----
-
-## 🧪 Tests
-
-### Tests unitaires
-
-```bash
-# Lancer tous les tests
-npm test
-
-# Tests en mode watch
-npm run test:watch
-
-# Tests avec couverture
-npm run test:cov
-```
-
-### Tests E2E
-
-```bash
-# Lancer les tests E2E
-npm run test:e2e
-```
-
-**Exemple de test E2E :**
-
-```typescript
-// test/users.e2e-spec.ts
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from './../src/app.module';
-
-describe('UsersController (e2e)', () => {
-  let app: INestApplication;
-
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-  });
-
-  it('/users (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/users')
-      .expect(200)
-      .expect('Content-Type', /json/);
-  });
-
-  it('/users (POST)', () => {
-    return request(app.getHttpServer())
-      .post('/users')
-      .send({
-        email: 'test@example.com',
-        password: 'password123',
-        firstName: 'John',
-        lastName: 'Doe'
-      })
-      .expect(201)
-      .expect('Content-Type', /json/);
-  });
-
-  afterAll(async () => {
-    await app.close();
-  });
-});
 ```
 
 ---

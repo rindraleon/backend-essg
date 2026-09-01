@@ -4,8 +4,6 @@
     "node_modules",
     "test",
     "dist",
-    "**/*spec.ts",
-    "render-templates.preview.ts",
-    "update-slugs.ts"
+    "**/*spec.ts"
   ]
 }

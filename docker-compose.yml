@@ -20,6 +20,24 @@ services:
     networks:
       - essg
 
+  redis:
+    image: redis:7-alpine
+    container_name: essg-redis
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - essg_redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - essg
+
   minio:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     container_name: essg-minio
@@ -55,6 +73,9 @@ services:
       POSTGRES_PORT: 5432
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
+      REDIS_ENABLED: 'true'
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       APP_PORT: ${APP_PORT:-3000}
     ports:
       - '${APP_PORT:-3000}:${APP_PORT:-3000}'
@@ -62,6 +83,8 @@ services:
       postgres:
         condition: service_healthy
       minio:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test:
@@ -79,6 +102,7 @@ services:
 volumes:
   essg_postgres_data:
   essg_minio_data:
+  essg_redis_data:
 
 networks:
   essg:

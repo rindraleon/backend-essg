@@ -1,4 +1,5 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
+import type { Server as HttpServer } from 'node:http';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -13,11 +14,16 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { createValidationException } from './common/utils/validation-messages';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+
+  // WebSocket (Socket.IO) sur le même port HTTP : présence temps réel du
+  // back-office (Spec §14).
+  app.useWebSocketAdapter(new IoAdapter(app.getHttpServer() as HttpServer));
 
   app.useGlobalPipes(
     new ValidationPipe({

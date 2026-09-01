@@ -30,7 +30,7 @@ export class CreatePartenaireDto {
 
   @IsString()
   @IsOptional()
-  @MaxLength(15)
+  @MaxLength(25)
   contact?: string;
 
   @IsDateString()

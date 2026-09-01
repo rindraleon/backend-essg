@@ -23,7 +23,7 @@ export class ProjectsService {
   ) {}
 
   private invalidateCache(): void {
-    this.cacheService.invalidateResource(CACHE_RESOURCE.projects, CACHE_RESOURCE.dashboard);
+    void this.cacheService.invalidateResource(CACHE_RESOURCE.projects, CACHE_RESOURCE.dashboard);
   }
 
   async findAll(paginationDto: QueryProjectDto): Promise<PaginatedData<Projet>> {

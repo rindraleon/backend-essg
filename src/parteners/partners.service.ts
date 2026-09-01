@@ -20,7 +20,7 @@ export class PartnersService {
   ) {}
 
   private invalidateCache(): void {
-    this.cacheService.invalidateResource(
+    void this.cacheService.invalidateResource(
       CACHE_RESOURCE.partners,
       CACHE_RESOURCE.projects,
       CACHE_RESOURCE.dashboard,

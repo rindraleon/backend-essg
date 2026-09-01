@@ -47,7 +47,7 @@ export class FormationsService {
   ) {}
 
   private invalidateCache(): void {
-    this.cacheService.invalidateResource(CACHE_RESOURCE.formations, CACHE_RESOURCE.dashboard);
+    void this.cacheService.invalidateResource(CACHE_RESOURCE.formations, CACHE_RESOURCE.dashboard);
   }
 
   async findAll(paginationDto: PaginationDto): Promise<PaginatedData<Formation>> {

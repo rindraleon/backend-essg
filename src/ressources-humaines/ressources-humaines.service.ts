@@ -58,7 +58,7 @@ export class RessourcesHumainesService {
   ) {}
 
   private invalidateCache(): void {
-    this.cacheService.invalidateResource(
+    void this.cacheService.invalidateResource(
       CACHE_RESOURCE.ressourcesHumaines,
       CACHE_RESOURCE.dashboard,
     );

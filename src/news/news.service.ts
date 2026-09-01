@@ -20,7 +20,7 @@ export class NewsService {
   ) {}
 
   private invalidateCache(): void {
-    this.cacheService.invalidateResource(CACHE_RESOURCE.news, CACHE_RESOURCE.dashboard);
+    void this.cacheService.invalidateResource(CACHE_RESOURCE.news, CACHE_RESOURCE.dashboard);
   }
 
   async findAll(paginationDto: QueryNewsDto): Promise<PaginatedData<Actualite>> {
