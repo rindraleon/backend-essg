@@ -1,13 +1,13 @@
 # Dependencies
 node_modules/
-dist/
-.vscode
 
 # Uploads
 uploads/
 
 # Environment variables
 .env
+.env.*
+!.env.example
 .env.local
 .env.*.local
 

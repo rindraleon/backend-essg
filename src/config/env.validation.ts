@@ -138,60 +138,6 @@ class EnvironmentVariables {
   @IsNumber()
   @IsOptional()
   HEALTH_MEMORY_LIMIT_MB: number = 512;
-
-  // ---- Redis (cache distribué) --------------------------------------------
-  @IsString()
-  @IsOptional()
-  REDIS_ENABLED: string = 'false';
-
-  @IsString()
-  @IsOptional()
-  REDIS_HOST: string = 'localhost';
-
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  REDIS_PORT: number = 6379;
-
-  @IsString()
-  @IsOptional()
-  REDIS_PASSWORD: string = '';
-
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  REDIS_DB: number = 0;
-
-  // ---- Sessions multi-appareils / présence --------------------------------
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  SESSION_ACTIVE_WINDOW_MINUTES: number = 15;
-
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  SESSION_IDLE_EXPIRATION_MINUTES: number = 30;
-
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  SESSION_MAX_TTL_DAYS: number = 7;
-
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  SESSION_ACTIVITY_WRITE_THROTTLE_SECONDS: number = 60;
-
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  SESSION_SWEEP_INTERVAL_MS: number = 60000;
-
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  SESSION_RETENTION_DAYS: number = 90;
 }
 
 export function validate(config: Record<string, unknown>): EnvironmentVariables {

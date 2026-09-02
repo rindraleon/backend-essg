@@ -4,7 +4,6 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { API_SIGNATURE, API_VERSION } from '../common/constants/api.constants';
 import { StorageService } from '../common/storage/storage.service';
-import { CacheService } from '../infrastructure/cache/cache.service';
 
 export type HealthStatus = 'ok' | 'degraded' | 'down';
 export type ComponentStatus = 'up' | 'down' | 'degraded' | 'skipped';
@@ -29,7 +28,6 @@ export interface HealthReport {
     database: ComponentHealth;
     storage: ComponentHealth;
     memory: ComponentHealth;
-    redis: ComponentHealth;
   };
 }
 
@@ -41,20 +39,15 @@ export class HealthService {
 
   constructor(
     private readonly storageService: StorageService,
-    private readonly cacheService: CacheService,
     @Optional() @InjectDataSource() private readonly dataSource?: DataSource,
     @Optional() private readonly configService?: ConfigService,
   ) {}
 
   async check(): Promise<HealthReport> {
-    const [database, storage, redis] = await Promise.all([
-      this.checkDatabase(),
-      this.checkStorage(),
-      this.checkRedis(),
-    ]);
+    const [database, storage] = await Promise.all([this.checkDatabase(), this.checkStorage()]);
     const memory = this.checkMemory();
 
-    const components = [database, storage, memory, redis];
+    const components = [database, storage, memory];
     const criticalDown = components.filter(
       (component) => component.status === 'down' && component.criticality !== 'optional',
     ).length;
@@ -79,7 +72,7 @@ export class HealthService {
       uptime: Math.round(process.uptime()),
       timestamp: new Date().toISOString(),
       storage: storage.status === 'up' ? 'minio' : 'unavailable',
-      checks: { database, storage, memory, redis },
+      checks: { database, storage, memory },
     };
   }
 
@@ -139,27 +132,6 @@ export class HealthService {
         details: error instanceof Error ? error.message : String(error),
       };
     }
-  }
-
-  private async checkRedis(): Promise<ComponentHealth> {
-    const startedAt = Date.now();
-    if (!this.cacheService.isRedisMode()) {
-      return {
-        status: 'skipped',
-        responseTime: 0,
-        details: 'Cache local en mémoire (REDIS_ENABLED=false)',
-        criticality: 'optional',
-      };
-    }
-    const ok = await this.cacheService.ping();
-    return {
-      status: ok ? 'up' : 'degraded',
-      responseTime: Date.now() - startedAt,
-      details: ok
-        ? 'Redis — PING OK (cache distribué actif)'
-        : "Redis injoignable — le cache est contourné, l'API reste opérationnelle",
-      criticality: 'optional',
-    };
   }
 
   private checkMemory(): ComponentHealth {

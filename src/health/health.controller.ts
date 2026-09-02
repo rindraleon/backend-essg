@@ -20,7 +20,6 @@ export class HealthController {
       '| --- | --- | --- |',
       '| `database` | `SELECT 1` sur PostgreSQL | API inutilisable (503 sur `/health/ready`) |',
       '| `storage` | `bucketExists` sur MinIO | Uploads d’images impossibles |',
-      '| `redis` | `PING` sur Redis (si activé) | Cache contourné — l’API reste opérationnelle |',
       '| `memory` | Ratio heap utilisé / heap total | Risque de saturation du process |',
       '',
       'États globaux : `ok` (tout est vert), `degraded` (une dépendance est tombée),',

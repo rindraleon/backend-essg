@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PresenceGateway } from '../sessions/presence.gateway';
 import { AppSetting } from './entities/setting.entity';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { CacheService } from '../infrastructure/cache/cache.service';
@@ -15,7 +14,6 @@ export class SettingsService {
     @InjectRepository(AppSetting)
     private readonly repo: Repository<AppSetting>,
     private readonly cacheService: CacheService,
-    private readonly presenceGateway: PresenceGateway,
   ) {}
 
   private async ensureRow(): Promise<AppSetting> {
@@ -48,13 +46,7 @@ export class SettingsService {
       setting.admissionsOuvertes = dto.admissionsOuvertes;
     }
     const saved = await this.repo.save(setting);
-    void this.cacheService.invalidateResource(CACHE_RESOURCE.settings);
-    // Synchronisation temps réel (Spec §12) : l'événement n'est émis
-    // qu'APRÈS la transaction en base, avec la valeur réellement enregistrée.
-    this.presenceGateway.broadcastSettingsUpdated({
-      settings: { admissionsOuvertes: saved.admissionsOuvertes },
-      updatedAt: saved.misAJourLe.toISOString(),
-    });
+    this.cacheService.invalidateResource(CACHE_RESOURCE.settings);
     return saved;
   }
 }

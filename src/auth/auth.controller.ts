@@ -24,20 +24,13 @@ export class AuthController {
   @ApiOperation({
     summary: 'Se connecter',
     description:
-      "Authentifie un utilisateur du Back-Office et **crée une session serveur unique** (appareil + navigateur + IP détectés). Renvoie un jeton JWT lié à cette session (`data.accessToken` + `data.sessionId`) à placer dans l'en-tête `Authorization: Bearer <token>`. Chaque connexion crée sa propre session : plusieurs utilisateurs et plusieurs sessions par utilisateur peuvent coexister.\n\n⚠️ Limitation de débit : 10 tentatives par tranche de 5 minutes et par couple IP + email (`429` au-delà, en-tête `Retry-After`).",
+      "Authentifie un utilisateur du Back-Office et renvoie un jeton JWT (`data.accessToken`) à placer dans l'en-tête `Authorization: Bearer <token>`.\n\n⚠️ Limitation de débit : 10 tentatives par tranche de 5 minutes et par couple IP + email (`429` au-delà, en-tête `Retry-After`).",
   })
   @ApiStandardResponse(undefined, { description: 'Opération effectuée avec succès' })
   @ApiStandardErrors({ auth: false })
   @ApiMessage('Connexion réussie')
-  async login(
-    @Body() dto: LoginDto,
-    @Request() req: { ip?: string; headers: Record<string, unknown> },
-  ) {
-    return this.authService.login(dto.email, dto.password, {
-      ipAddress: req.ip ?? null,
-      userAgent:
-        typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
-    });
+  async login(@Body() dto: LoginDto) {
+    return this.authService.login(dto.email, dto.password);
   }
 
   @UseGuards(JwtAuthGuard)

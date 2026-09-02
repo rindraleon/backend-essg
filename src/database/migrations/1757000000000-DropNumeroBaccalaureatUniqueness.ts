@@ -8,6 +8,9 @@ export class DropNumeroBaccalaureatUniqueness1757000000000 implements MigrationI
       return;
     }
 
+    // Le numéro d'inscription au baccalauréat n'est plus un critère de
+    // détection des doublons : suppression de toute contrainte/index unique
+    // portant sur cette colonne (nom généré par synchronize ou migration).
     await queryRunner.query(`
       DO $$
       DECLARE r record;

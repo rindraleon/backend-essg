@@ -27,8 +27,6 @@ import { RessourcesHumainesModule } from './ressources-humaines/ressources-humai
 import { SettingsModule } from './settings/settings.module';
 import { UploadModule } from './upload/upload.module';
 import { UsersModule } from './users/users.module';
-import { SessionsModule } from './sessions/sessions.module';
-import { SessionsActivityInterceptor } from './sessions/sessions.interceptor';
 
 @Module({
   imports: [
@@ -59,15 +57,8 @@ import { SessionsActivityInterceptor } from './sessions/sessions.interceptor';
     AdmissionsModule,
     ActivityLogsModule,
     SettingsModule,
-    SessionsModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    { provide: APP_INTERCEPTOR, useClass: PerformanceInterceptor },
-    // Touche d'activité de session : met à jour `lastActivityAt` de la session
-    // qui porte chaque requête authentifiée (Spec §8).
-    { provide: APP_INTERCEPTOR, useClass: SessionsActivityInterceptor },
-  ],
+  providers: [AppService, { provide: APP_INTERCEPTOR, useClass: PerformanceInterceptor }],
 })
 export class AppModule {}

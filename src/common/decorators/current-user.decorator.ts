@@ -7,8 +7,6 @@ export interface AuthUser {
   prenom: string;
   nom: string;
   avatar?: string;
-  /** Session serveur qui porte la requête (système multi-session). */
-  sessionId?: string;
 }
 
 interface RequestWithUser {
