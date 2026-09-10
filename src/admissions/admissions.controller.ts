@@ -169,7 +169,7 @@ export class AdmissionsController {
   @ApiOperation({
     summary: 'Vérifier un doublon de candidature',
     description:
-      'Contrôle si une candidature existe déjà pour ce numéro de bordereau, ou si l’email/le téléphone a déjà été utilisé pour l’année d’admission en cours (une seule candidature autorisée par an). Le numéro d’inscription au baccalauréat n’est plus un critère de détection des doublons.',
+      'Contrôle l’unicité du numéro de bordereau de versement (seule contrainte d’unicité conservée). Les vérifications par email et téléphone ne bloquent plus la création de candidature : un même candidat peut déposer plusieurs candidatures avec le même email/téléphone. Le numéro de bordereau doit rester unique sur l’ensemble des candidatures (contrainte DB).',
   })
   @ApiStandardResponse(undefined, { description: 'Opération effectuée avec succès' })
   @ApiStandardErrors({ auth: false })
